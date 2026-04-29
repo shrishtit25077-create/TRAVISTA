@@ -1,87 +1,104 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import {
-  Compass, Map as MapIcon, Heart, Calendar,
-  Settings, Plane, LogOut, User,
-  LayoutGrid, MessageSquare, ClipboardList,
-  ChevronLeft, Sparkles, PlusCircle
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { Compass, Map, Sparkles, Calendar, Heart, User, Settings, LogOut } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const SidebarLink = ({ to, icon: Icon, label }) => (
-  <NavLink
-    to={to}
-    className="outline-none"
-  >
-    {({ isActive }) => (
-      <div className={`
-        relative flex items-center gap-3 px-5 py-3 rounded-full
-        transition-all duration-300 group
-        ${isActive
-          ? 'sidebar-pill-active shadow-sm'
-          : 'text-[#6b7280] hover:bg-slate-50 hover:text-[#2F7F6D]'
-        }
-      `}>
-        <Icon
-          strokeWidth={1.5}
-          className={`w-4 h-4 transition-transform group-hover:scale-110 ${isActive ? 'text-[#2F7F6D]' : ''}`}
-        />
-        <span className="text-[14px] tracking-tight">{label}</span>
-      </div>
-    )}
-  </NavLink>
+const NavItem = ({ icon: Icon, label, path }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const active = location.pathname === path;
+
+  return (
+    <button 
+      onClick={() => navigate(path)}
+      className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group text-base font-medium mb-1 ${
+        active 
+          ? 'bg-emerald-100 text-emerald-700 border-l-4 border-emerald-700' 
+          : 'text-slate-600 hover:bg-slate-100 border-l-4 border-transparent'
+      }`}
+    >
+      <Icon 
+        size={18} 
+        className={`transition-transform duration-200 group-hover:scale-110 ${active ? 'text-emerald-700' : 'text-slate-400 group-hover:text-emerald-600'}`} 
+      />
+      <span>{label}</span>
+    </button>
+  );
+};
+
+const Section = ({ title, children }) => (
+  <div className="mt-6">
+    <div className="px-4 mb-3 text-xs uppercase tracking-wider text-slate-400 font-bold">
+      {title}
+    </div>
+    <div className="px-2">
+      {children}
+    </div>
+  </div>
 );
 
 const Sidebar = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   return (
-    <aside
-      className="fixed left-0 top-0 bottom-0 w-[240px] bg-white border-r border-slate-100 flex flex-col z-[100]"
-    >
-      {/* Brand Header */}
-      <div className="p-8 flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
-        <div className="w-9 h-9 rounded-xl bg-[#2F7F6D] flex items-center justify-center text-white shadow-lg shadow-emerald-900/10 transition-transform hover:scale-105">
-          <Plane strokeWidth={1.5} className="w-5 h-5 -rotate-45" />
-        </div>
-        <span className="font-bold text-xl tracking-tighter text-slate-900 uppercase italic">Travista</span>
-      </div>
-
-      {/* Navigation Groups */}
-      <nav className="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar">
-        <div className="px-5 text-[10px] font-black text-[#9ca3af] uppercase tracking-[0.3em] mb-3 mt-4">Discover</div>
-        <SidebarLink to="/" icon={PlusCircle} label="Inspiration" />
-        <SidebarLink to="/explore" icon={MapIcon} label="Explore Map" />
-
-        <div className="px-5 text-[10px] font-black text-[#9ca3af] uppercase tracking-[0.3em] mb-3 mt-8">My Trips</div>
-        <SidebarLink to="/saved" icon={Heart} label="Saved Places" />
-        <SidebarLink to="/bookings" icon={ClipboardList} label="Itineraries" />
-        <SidebarLink to="/ai-planner" icon={MessageSquare} label="AI Planner" />
-      </nav>
-
-      {/* Bottom Profile Section */}
-      <div className="p-6 border-t border-slate-50">
-        <div className="flex items-center justify-between group cursor-pointer" onClick={() => navigate('/settings')}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden transition-all group-hover:border-[#2F7F6D]/30">
-              <User strokeWidth={1.5} className="w-5 h-5 text-slate-400" />
-            </div>
-            <div>
-              <p className="text-[13px] font-bold text-slate-900 leading-tight">Demo User</p>
-              <p className="text-[11px] font-medium text-slate-400">View profile</p>
-            </div>
+    <div className="sidebar-fixed flex flex-col bg-white border-r border-slate-100 h-screen w-[260px] fixed top-0 left-0 z-50">
+      {/* Logo */}
+      <div className="p-6 pb-2">
+        <div 
+          className="flex items-center gap-3 cursor-pointer group" 
+          onClick={() => navigate('/')}
+        >
+          <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center shadow-md shadow-emerald-700/20 group-hover:scale-105 transition-transform">
+            <Compass size={20} className="text-white" />
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); logout(); navigate('/login'); }}
-            className="p-2 text-slate-300 hover:text-red-500 transition-colors focus:ring-2 focus:ring-red-500/20 rounded-lg outline-none"
-          >
-            <LogOut strokeWidth={1.5} className="w-4 h-4" />
-          </button>
+          <span className="font-black text-xl text-slate-900 tracking-tight">
+            Travista
+          </span>
         </div>
       </div>
-    </aside>
+
+      {/* Navigation */}
+      <div className="flex-1 overflow-y-auto no-scrollbar pb-6">
+        <Section title="Home">
+          <NavItem icon={Compass} label="Inspiration" path="/" />
+          <NavItem icon={Map} label="Explore Map" path="/map" />
+        </Section>
+
+        <Section title="Plan">
+          <NavItem icon={Sparkles} label="AI Planner" path="/planner" />
+        </Section>
+
+        <Section title="My Trips">
+          <NavItem icon={Calendar} label="Itineraries" path="/itineraries" />
+          <NavItem icon={Heart} label="Saved Places" path="/saved" />
+        </Section>
+
+        <Section title="Account">
+          <NavItem icon={User} label="Profile" path="/profile" />
+          <NavItem icon={Settings} label="Settings" path="/settings" />
+        </Section>
+      </div>
+
+      {/* User */}
+      <div className="p-4 border-t border-slate-100">
+        <div 
+          className="flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors" 
+          onClick={() => navigate('/profile')}
+        >
+          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-slate-100 shrink-0">
+            <img
+              src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=80"
+              alt="Demo User"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-slate-900 truncate">Demo User</div>
+            <div className="text-xs text-slate-400 mt-0.5 truncate">View profile</div>
+          </div>
+          <LogOut size={16} className="text-slate-300 hover:text-red-500 transition-colors shrink-0" />
+        </div>
+      </div>
+    </div>
   );
 };
 

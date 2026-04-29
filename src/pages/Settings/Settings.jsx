@@ -1,129 +1,224 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { User, Bell, Shield, CreditCard, Heart, MapPin, LogOut, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { User, Bell, Shield, Heart, MapPin, LogOut, ChevronRight, Check, Sun, Moon, Smartphone, Globe } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
+// ─── Reusable Toggle Switch ──────────────────────────────────────────────────
+const Toggle = ({ enabled, onToggle }) => (
+  <button
+    onClick={onToggle}
+    className={`relative w-12 h-6 rounded-full transition-all duration-300 ${enabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+  >
+    <span
+      className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ${enabled ? 'left-7' : 'left-1'}`}
+    />
+  </button>
+);
+
+// ─── Field Input ─────────────────────────────────────────────────────────────
+const Field = ({ label, name, type = 'text', value, onChange, placeholder }) => (
+  <div className="space-y-2">
+    <label className="text-xs font-black text-slate-400 uppercase tracking-widest">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 font-medium text-sm placeholder-slate-300 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
+    />
+  </div>
+);
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 const Settings = () => {
   const { user, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('Profile');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('Preferences');
+
+  // ── Settings State ───────────────────────────────────────────────────────
+  const [settings, setSettings] = useState({
+    notifications: true,
+    emailUpdates: false,
+    darkMode: false,
+    locationServices: true,
+    travelAlerts: true,
+    weeklyDigest: false,
+  });
+
+  useEffect(() => {
+    const storedSettings = JSON.parse(localStorage.getItem('settings'));
+    if (storedSettings) setSettings(storedSettings);
+  }, []);
+
+  const toggleSetting = (key) => {
+    const updated = { ...settings, [key]: !settings[key] };
+    setSettings(updated);
+    localStorage.setItem('settings', JSON.stringify(updated));
+    toast.success(`${key.replace(/([A-Z])/g, ' $1').trim()} ${updated[key] ? 'enabled' : 'disabled'}`);
+  };
+
+  // ── Logout ───────────────────────────────────────────────────────────────
+  const handleLogout = () => {
+    localStorage.clear();
+    logout();
+    navigate('/login');
+  };
 
   const tabs = [
-    { name: 'Profile', icon: User },
     { name: 'Preferences', icon: Heart },
     { name: 'Notifications', icon: Bell },
     { name: 'Security', icon: Shield },
-    { name: 'Billing', icon: CreditCard },
   ];
 
   return (
-    <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-12">
-      {/* Sidebar Tabs */}
-      <div className="w-full md:w-64 space-y-2">
-        {tabs.map(tab => (
-          <button 
-            key={tab.name}
-            onClick={() => setActiveTab(tab.name)}
-            className={`w-full flex items-center justify-between p-4 rounded-xl font-bold transition-all ${activeTab === tab.name ? 'bg-teal text-white shadow-lg' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-          >
-            <div className="flex items-center gap-3">
-              <tab.icon className="w-5 h-5" />
-              <span>{tab.name}</span>
-            </div>
-            <ChevronRight className={`w-4 h-4 transition-transform ${activeTab === tab.name ? 'rotate-90' : ''}`} />
-          </button>
-        ))}
-        
-        <button 
-          onClick={logout}
-          className="w-full flex items-center gap-3 p-4 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-all mt-10"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Logout</span>
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#fcfdfe] px-8 py-16 pb-32">
+      <div className="max-w-5xl mx-auto">
 
-      {/* Content Area */}
-      <div className="flex-1 space-y-8">
-        <h2 className="text-3xl font-bold">{activeTab} Settings</h2>
+        {/* Header */}
+        <div className="mb-12 space-y-2">
+          <h1 className="text-5xl font-black text-slate-900 tracking-tight">
+            App <span className="text-emerald-600">Settings.</span>
+          </h1>
+          <p className="text-slate-400 font-medium text-lg">Configure how Travista works for you.</p>
+        </div>
 
-        {activeTab === 'Profile' && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass-card p-8 rounded-3xl space-y-10"
-          >
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="relative group">
-                <div className="w-32 h-32 rounded-3xl bg-teal/10 flex items-center justify-center text-teal text-4xl font-black overflow-hidden border-4 border-white shadow-xl">
-                  {user?.name?.[0] || 'T'}
-                </div>
-                <button className="absolute -bottom-2 -right-2 p-2 bg-primary text-white rounded-xl shadow-lg border-2 border-white hover:scale-110 transition-all">
-                  <User className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="text-center md:text-left space-y-1">
-                <h3 className="text-2xl font-bold">{user?.name || 'Traveler'}</h3>
-                <p className="text-gray-500">{user?.email || 'traveler@example.com'}</p>
-                <div className="flex items-center gap-2 mt-2 px-3 py-1 bg-teal/10 text-teal text-xs font-bold rounded-full w-fit mx-auto md:mx-0">
-                  <Shield className="w-3 h-3" /> VERIFIED ACCOUNT
-                </div>
-              </div>
-            </div>
+        <div className="flex flex-col md:flex-row gap-8">
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Full Name</label>
-                <input type="text" className="w-full input-field" defaultValue={user?.name} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Email</label>
-                <input type="email" className="w-full input-field" defaultValue={user?.email} />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Location</label>
-                <input type="text" className="w-full input-field" placeholder="London, UK" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Phone</label>
-                <input type="tel" className="w-full input-field" placeholder="+44 7123 456789" />
-              </div>
-            </div>
+          {/* Left Nav */}
+          <div className="w-full md:w-56 space-y-1 shrink-0">
+            {tabs.map(tab => (
+              <button
+                key={tab.name}
+                onClick={() => setActiveTab(tab.name)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-200 ${
+                  activeTab === tab.name
+                    ? 'bg-emerald-100 text-emerald-700 border-l-4 border-emerald-600'
+                    : 'text-slate-500 hover:bg-slate-100 border-l-4 border-transparent'
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.name}</span>
+              </button>
+            ))}
 
-            <div className="flex justify-end gap-4 pt-4 border-t border-gray-100">
-              <button className="px-8 py-3 rounded-xl border border-gray-200 font-bold hover:bg-gray-50 transition-all">Cancel</button>
-              <button className="btn-primary px-8 py-3">Save Changes</button>
+            <div className="pt-6">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-sm text-red-500 hover:bg-red-50 transition-all border-l-4 border-transparent"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out</span>
+              </button>
             </div>
-          </motion.div>
-        )}
+          </div>
 
-        {activeTab === 'Preferences' && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass-card p-8 rounded-3xl space-y-8"
-          >
-            <div className="space-y-6">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <Heart className="text-teal w-6 h-6" /> Travel Interests
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {['Culture', 'Adventure', 'Food', 'Relaxation', 'Luxury', 'Budget', 'Nightlife', 'Hiking', 'Photography'].map(item => (
-                  <label key={item} className="flex items-center gap-3 p-4 bg-gray-50/50 rounded-2xl cursor-pointer hover:bg-teal/5 transition-all border border-transparent hover:border-teal/20">
-                    <input type="checkbox" className="w-5 h-5 accent-teal" defaultChecked={['Culture', 'Food'].includes(item)} />
-                    <span className="font-bold text-gray-600">{item}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+          {/* Content Panel */}
+          <div className="flex-1">
+            <AnimatePresence mode="wait">
 
-            <div className="space-y-6 pt-8 border-t border-gray-100">
-              <h3 className="text-xl font-bold flex items-center gap-2">
-                <MapPin className="text-teal w-6 h-6" /> Home Base
-              </h3>
-              <input type="text" className="w-full input-field" placeholder="Which city do you usually fly from?" />
-            </div>
-          </motion.div>
-        )}
+              {/* ── PREFERENCES TAB ─────────────────────────────────── */}
+              {activeTab === 'Preferences' && (
+                <motion.div
+                  key="preferences"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-8"
+                >
+                  <h3 className="font-black text-slate-900 text-xl">App Preferences</h3>
+
+                  {[
+                    { key: 'darkMode', label: 'Dark Mode', desc: 'Switch to a dark interface theme', icon: Moon },
+                    { key: 'locationServices', label: 'Location Services', desc: 'Allow Travista to use your location for better suggestions', icon: Globe },
+                    { key: 'travelAlerts', label: 'Travel Alerts', desc: 'Get notified about price drops and availability', icon: Bell },
+                  ].map(({ key, label, desc, icon: Icon }) => (
+                    <div key={key} className="flex items-center justify-between py-4 border-b border-slate-50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">{label}</p>
+                          <p className="text-slate-400 text-xs font-medium mt-0.5">{desc}</p>
+                        </div>
+                      </div>
+                      <Toggle enabled={settings[key]} onToggle={() => toggleSetting(key)} />
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+
+              {/* ── NOTIFICATIONS TAB ───────────────────────────────── */}
+              {activeTab === 'Notifications' && (
+                <motion.div
+                  key="notifications"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-6"
+                >
+                  <h3 className="font-black text-slate-900 text-xl">Notification Settings</h3>
+
+                  {[
+                    { key: 'notifications', label: 'Push Notifications', desc: 'Receive in-app notifications for activity', icon: Bell },
+                    { key: 'emailUpdates', label: 'Email Updates', desc: 'Get product updates via email', icon: Globe },
+                    { key: 'weeklyDigest', label: 'Weekly Digest', desc: 'A curated roundup of travel inspiration every week', icon: Smartphone },
+                  ].map(({ key, label, desc, icon: Icon }) => (
+                    <div key={key} className="flex items-center justify-between py-4 border-b border-slate-50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                          <Icon className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-800 text-sm">{label}</p>
+                          <p className="text-slate-400 text-xs font-medium mt-0.5">{desc}</p>
+                        </div>
+                      </div>
+                      <Toggle enabled={settings[key]} onToggle={() => toggleSetting(key)} />
+                    </div>
+                  ))}
+                </motion.div>
+              )}
+
+              {/* ── SECURITY TAB ────────────────────────────────────── */}
+              {activeTab === 'Security' && (
+                <motion.div
+                  key="security"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-8"
+                >
+                  <h3 className="font-black text-slate-900 text-xl">Security</h3>
+
+                  <div className="space-y-4">
+                    <Field label="Current Password" name="currentPassword" type="password" value="" onChange={() => {}} placeholder="••••••••••" />
+                    <Field label="New Password" name="newPassword" type="password" value="" onChange={() => {}} placeholder="••••••••••" />
+                    <Field label="Confirm New Password" name="confirmPassword" type="password" value="" onChange={() => {}} placeholder="••••••••••" />
+                  </div>
+
+                  <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                    <p className="text-amber-700 text-sm font-bold">⚠ Password changes are not persisted in demo mode.</p>
+                  </div>
+
+                  <div className="pt-4 border-t border-slate-100">
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-6 py-3 rounded-xl bg-red-50 text-red-600 font-bold text-sm hover:bg-red-100 transition-all"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Log Out & Clear Session
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </div>
   );

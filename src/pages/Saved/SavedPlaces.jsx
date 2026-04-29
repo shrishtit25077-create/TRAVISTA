@@ -6,19 +6,12 @@ import { useAuth } from '../../context/AuthContext';
 import Masonry from 'react-masonry-css';
 
 const SavedPlaces = () => {
-  const { user, updateUser } = useAuth();
+  const { savedPlaces, toggleSave } = useAuth();
   const navigate = useNavigate();
-  const savedPlaces = useMemo(() => user?.preferences?.savedPlaces || [], [user]);
 
-  const handleUnsave = (e, placeId) => {
+  const handleUnsave = (e, place) => {
     e.stopPropagation();
-    const newSaved = savedPlaces.filter(p => p.id !== placeId);
-    updateUser({
-      preferences: {
-        ...user.preferences,
-        savedPlaces: newSaved
-      }
-    });
+    toggleSave(place);
   };
 
   const masonryBreakpoints = {
@@ -70,7 +63,7 @@ const SavedPlaces = () => {
                 
                 <div className="absolute top-4 right-4 z-20">
                   <button 
-                    onClick={(e) => handleUnsave(e, place.id)}
+                    onClick={(e) => handleUnsave(e, place)}
                     className="p-3 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all transform active:scale-90"
                   >
                     <Heart className="w-4 h-4 fill-white" />

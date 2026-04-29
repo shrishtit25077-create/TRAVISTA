@@ -8,7 +8,7 @@ function generatePrice() {
 }
 
 function getRandomTag() {
-  const tags = ["Beach", "Mountains", "Culture", "Luxury", "Adventure", "Food", "City"];
+  const tags = ["Beach", "Adventure", "Culture", "Food", "Weekend", "Hill", "Spiritual", "Budget"];
   return tags[Math.floor(Math.random() * tags.length)];
 }
 

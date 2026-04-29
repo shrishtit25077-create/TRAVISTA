@@ -7,21 +7,12 @@ const DashboardLayout = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   return (
-    <div className="min-h-screen bg-[#f4f4f2] flex selection:bg-[#2a7a5a] selection:text-white">
-      {/* Travista Fixed Sidebar */}
+    <div className="layout-root">
       <Sidebar />
-
-      {/* Main Perspective Area */}
-      <main className="flex-1 ml-[240px] flex flex-col relative z-0 min-h-screen">
-
-        {/* Transparent Top Bar Layer */}
+      <div className="main-content">
         <Navbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-
-        {/* Full-Bleed Content Layer */}
-        <div className="flex-1 px-8 pb-20">
-          <Outlet context={{ searchTerm, setSearchTerm }} />
-        </div>
-      </main>
+        <Outlet context={{ searchTerm, setSearchTerm }} />
+      </div>
     </div>
   );
 };

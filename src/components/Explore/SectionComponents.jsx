@@ -8,18 +8,13 @@ import Masonry from 'react-masonry-css';
 
 const Card = ({ data, size = 'medium' }) => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuth();
-  const [isSaved, setIsSaved] = useState(false);
-
-  useEffect(() => {
-    if (user?.preferences?.savedPlaces) {
-      setIsSaved(user.preferences.savedPlaces.some(p => p.id === data.id));
-    }
-  }, [user, data.id]);
+  const { savedPlaces, toggleSave } = useAuth();
+  
+  const isSaved = savedPlaces.some((p) => p.id === data.id);
 
   const handleSave = (e) => {
     e.stopPropagation();
-    toggleSavePlace(user, data, updateUser);
+    toggleSave(data);
   };
 
   const heightClass = {
@@ -30,10 +25,11 @@ const Card = ({ data, size = 'medium' }) => {
 
   return (
     <motion.div
+      onClick={() => navigate(`/destination/${data.id}`, { state: data })}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      whileHover={{ y: -8 }}
+      whileHover={{ y: -8, scale: 1.03 }}
       className="bg-white rounded-[2rem] overflow-hidden border border-gray-100 shadow-soft hover:shadow-premium transition-all duration-500 mb-8 cursor-pointer group"
     >
       <div className={`relative ${heightClass} overflow-hidden`}>
