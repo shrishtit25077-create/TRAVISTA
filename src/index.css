@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-main: #F7F9FB;
+  --bg-card: #FFFFFF;
+  --bg-border: #E6EEF5;
+  --primary-green: #2F7D69;
+  --accent-mint: #34D399;
+  --text-main: #111827;
+  --text-muted: #6B7280;
+}
+
+* {
+  font-family: 'Outfit', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  min-height: 100vh;
+}
+
+@layer components {
+  .card-premium {
+    @apply bg-white rounded-[32px] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.06)] transition-all duration-300;
+  }
+
+  /* Cinematic Left-to-Right Navy Gradient */
+  .cinematic-navy-overlay-fade {
+    background: linear-gradient(90deg, rgba(5,10,25,0.85) 0%, rgba(5,10,25,0.6) 35%, rgba(0,0,0,0) 70%);
+  }
+
+  /* Premium Glass Material (Hero Search) */
+  .glass-search-premium {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    @apply border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.25)];
+  }
+
+  /* Dark Destination Glass */
+  .glass-destination-dark {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px);
+    @apply border border-white/10 shadow-2xl;
+  }
+
+  .btn-premium-cta-green {
+    background: #2F7D69;
+    @apply text-white font-bold rounded-full shadow-md transition-all duration-300;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Fixed Sidebar Active State (Soft Green Pill) */
+  .sidebar-pill-active {
+    background-color: rgba(52, 211, 153, 0.12);
+    @apply text-[#2F7D69] font-bold border border-[#34D399]/10 outline-none;
+  }
+}
+
+/* Custom Selection */
+::selection {
+  background: #2F7D69;
+  color: white;
+}
