@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Search } from 'lucide-react';
+import { useDestinationSearch } from '../hooks/useTravista';
+import { DestinationResultCard } from './DestinationCard';
 
 const heroImages = {
   beach:   'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=2000',
@@ -45,6 +47,17 @@ export default function HeroSection({
 }) {
   const navigate = useNavigate();
   const sectionRef = useRef(null);
+  
+  const { search, loading } = useDestinationSearch();
+  const [results, setResults] = useState(null);
+
+  const handleGenerateTrip = async () => {
+    if (!searchValue || !searchValue.trim()) return;
+    const res = await search(searchValue);
+    if (res) {
+      setResults(res);
+    }
+  };
 
   // ── Parallax (mouse) ──────────────────────────────────
   const mouseX = useMotionValue(0);
@@ -81,6 +94,7 @@ export default function HeroSection({
   ];
 
   return (
+    <>
     <section
       ref={sectionRef}
       onMouseMove={onMouseMove}
@@ -88,15 +102,15 @@ export default function HeroSection({
     >
       {/* ── Background with parallax ── */}
       <AnimatePresence mode="popLayout">
-        <motion.div key={activeTheme}
+        <motion.div key={results?.photos?.[0]?.full || activeTheme}
           className="absolute inset-[-3%] z-0"
           style={{ x: bgX, y: bgY }}
           initial={{ opacity:0, scale:1.08 }}
           animate={{ opacity:1, scale:1 }}
           exit={{ opacity:0 }}
           transition={{ duration:1.3, ease:[0.22,1,0.36,1] }}>
-          <img src={heroImages[activeTheme] || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=2000'} alt="Hero"
-            className="w-full h-full object-cover"
+          <img src={results?.photos?.[0]?.full || results?.photos?.[0]?.url || heroImages[activeTheme] || 'https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&q=80&w=2000'} alt="Hero"
+            className="w-full h-full object-cover transition-all duration-1000"
             style={{ filter:'brightness(0.88) contrast(1.07) saturate(1.12)' }} />
         </motion.div>
       </AnimatePresence>
@@ -210,11 +224,11 @@ export default function HeroSection({
                   className="w-9 h-9 bg-[#F9FAFB] hover:bg-[#F3F4F6] rounded-full flex items-center justify-center border border-[#E5E7EB] transition-colors" title="Surprise Me">
                   <span className="text-base">🎲</span>
                 </motion.button>
-                <motion.button onClick={() => navigate('/ai-generator')}
+                <motion.button onClick={handleGenerateTrip} disabled={loading}
                   whileHover={{ scale:1.05, y:-1 }} whileTap={{ scale:0.96 }}
                   className="relative overflow-hidden px-6 py-2.5 rounded-full font-bold text-sm text-white whitespace-nowrap focus:outline-none group"
                   style={{ background:'linear-gradient(135deg,#2f6f5e 0%,#3f8f78 100%)', boxShadow:'0 6px 22px rgba(47,111,94,0.42)' }}>
-                  <span className="relative z-10">Generate Trip ✨</span>
+                  <span className="relative z-10">{loading ? "Searching..." : "Generate Trip ✨"}</span>
                   <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
                 </motion.button>
               </div>
@@ -334,5 +348,12 @@ export default function HeroSection({
           className="text-base" style={{ color:'rgba(255,255,255,0.55)' }}>↓</motion.div>
       </motion.div>
     </section>
+    
+    {results && (
+      <div className="relative z-20 px-6 md:px-12 mt-12 mb-16 max-w-[1600px] mx-auto">
+        <DestinationResultCard results={results} />
+      </div>
+    )}
+    </>
   );
 }

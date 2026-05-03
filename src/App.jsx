@@ -80,14 +80,18 @@ function AnimatedRoutes() {
   );
 }
 
+import { LocationProvider } from './context/LocationContext';
+
 function App() {
   return (
     <AuthProvider>
-      <SmoothScroll />
-      <Toaster position="bottom-right" toastOptions={{ duration: 3000, style: { background: '#111827', color: '#fff', fontSize: '12px' } }} />
-      <Router>
-        <AnimatedRoutes />
-      </Router>
+      <LocationProvider>
+        <SmoothScroll />
+        <Toaster position="bottom-right" toastOptions={{ duration: 3000, style: { background: '#111827', color: '#fff', fontSize: '12px' } }} />
+        <Router>
+          <AnimatedRoutes />
+        </Router>
+      </LocationProvider>
     </AuthProvider>
   );
 }

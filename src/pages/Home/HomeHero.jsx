@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { Search, Sparkles, Globe, Mountain, Landmark, Palmtree, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useDestinationSearch } from '../../hooks/useTravista';
+import { DestinationResultCard } from '../../components/DestinationCard';
 
 import { useAuth } from '../../context/AuthContext';
 
@@ -30,8 +32,11 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
   const [phIdx, setPhIdx] = useState(0);
   const navigate = useNavigate();
   const { addItinerary, addToHistory } = useAuth();
+  
+  const { search, loading } = useDestinationSearch();
+  const [results, setResults] = useState(null);
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!searchQuery.trim()) {
       toast.error('Please enter a destination');
       return;
@@ -39,20 +44,10 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
 
     addToHistory(searchQuery);
 
-    const newTrip = {
-      id: Date.now(),
-      destination: searchQuery,
-      days: 3,
-      plan: [
-        "Day 1: Arrival & local exploration",
-        "Day 2: Main attractions",
-        "Day 3: Relax & return"
-      ]
-    };
-    
-    addItinerary(newTrip);
-
-    navigate('/planner', { state: { destination: searchQuery } });
+    const res = await search(searchQuery);
+    if (res) {
+      setResults(res);
+    }
   };
 
   useEffect(() => {
@@ -65,9 +60,9 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
       <div className="hero-image-box">
         {/* Background */}
         <img
-          src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=90&w=2000"
-          alt="Beach"
-          className="hero-bg-img"
+          src={results?.photos?.[0]?.full || results?.photos?.[0]?.url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=90&w=2000"}
+          alt={results?.photos?.[0]?.alt || "Beach"}
+          className="hero-bg-img transition-all duration-1000"
         />
         <div className="hero-gradient" />
 
@@ -102,8 +97,8 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
               placeholder={`Try: ${placeholders[phIdx]}...`}
             />
             <Globe size={17} className="hero-search-globe" />
-            <button className="hero-search-btn" onClick={handleSearch}>
-              Generate Trip <Sparkles size={14} />
+            <button className="hero-search-btn" onClick={handleSearch} disabled={loading}>
+              {loading ? "Searching..." : "Generate Trip"} <Sparkles size={14} />
             </button>
           </div>
 
@@ -146,6 +141,13 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           <ChevronDown size={16} className="scroll-arrow" />
         </div>
       </div>
+      
+      {/* Display Results Below Hero */}
+      {results && (
+        <div className="relative z-10 px-4 -mt-10 mb-20">
+          <DestinationResultCard results={results} />
+        </div>
+      )}
     </div>
   );
 }

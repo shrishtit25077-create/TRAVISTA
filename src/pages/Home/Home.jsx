@@ -1,123 +1,153 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Navigation, Sparkles, ChevronRight, ChevronLeft, MapPin, Star, ArrowRight } from 'lucide-react';
+import { Heart, Navigation, Sparkles, ArrowRight, MapPin, Star, MessageSquare, X, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { destinations as allDestinations } from '../../data/destinations';
 import HomeHero from './HomeHero';
+import { useDestinationPhotos, usePlace, useWeather } from '../../hooks/useTravista';
+import { useDestinationTime } from '../../hooks/useDestinationTime';
+import { useLocationContext } from '../../context/LocationContext';
+import WeatherTimeChip from '../../components/WeatherTimeChip';
 
-export const DestinationCard = ({ item, size = 'medium' }) => {
+export const DestinationCard = ({ item, size = 'medium', layout = 'grid' }) => {
   const navigate = useNavigate();
   const { savedPlaces, toggleSave } = useAuth();
   
   const isSaved = savedPlaces.some((p) => p.id === item.id);
 
-  const handleClick = (destination) => {
-    navigate(`/destination/${destination.id}`, { state: destination });
+  const { photos } = useDestinationPhotos(item.name, 1);
+  const { place } = usePlace(item.name);
+  const { weather: destWeather, loading: weatherLoading } = useWeather(item.name);
+  const { userWeather } = useLocationContext();
+  const destTime = useDestinationTime(destWeather?.timezone);
+
+  const imageUrl = photos?.[0]?.url || item.image; 
+  const rating = place?.rating || item.rating;
+  const temp = destWeather?.temp ? `${destWeather.temp}°C` : '';
+
+  const handleClick = () => {
+    navigate(`/destination/${item.id}`, { state: item });
   };
+
+  const catColors = {
+    'Beach': 'bg-blue-500/80 text-blue-100',
+    'Culture': 'bg-purple-500/80 text-purple-100',
+    'Weekend': 'bg-teal-500/80 text-teal-100',
+    'Adventure': 'bg-amber-500/80 text-amber-100',
+  };
+  const badgeClass = catColors[item.category] || 'bg-gray-500/80 text-gray-100';
+
+  let containerClass = 'h-[320px]'; // hidden gems
+  if (layout === 'luxury') containerClass = 'h-[500px]';
+  else if (layout === 'trending' || layout === 'personalized') containerClass = 'h-[400px]';
 
   return (
     <motion.div
-      onClick={() => handleClick(item)}
-      whileHover={{ scale: 1.03, filter: 'brightness(1.05)' }}
+      onClick={handleClick}
+      whileHover={{ scale: 1.02, filter: 'brightness(1.05)' }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className={`relative rounded-[2rem] overflow-hidden cursor-pointer group shadow-sm flex flex-col ${size === 'small' ? 'h-[400px] min-w-[300px]' : 'h-[500px] min-w-[380px]'
-        }`}
+      className={`relative rounded-[1.5rem] overflow-hidden cursor-pointer group shadow-xl flex flex-col ${containerClass} bg-[#1e293b]`}
     >
       <img
-        src={item.image}
+        src={imageUrl}
         loading="lazy"
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         alt={item.name}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent opacity-80" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90" />
 
-      <div className="absolute top-6 right-6 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-500">
+      {/* Top Left: Category Badge */}
+      <div className="absolute top-4 left-4 z-10">
+        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md ${badgeClass}`}>
+          {item.category}
+        </span>
+      </div>
+
+      {/* Top Right: Actions */}
+      <div className="absolute top-4 right-4 z-10 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300">
         <button 
           onClick={(e) => { e.stopPropagation(); toggleSave(item); }}
-          className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center border transition-all ${isSaved ? 'bg-red-500 text-white border-red-500' : 'bg-white/20 text-white border-white/10 hover:bg-white hover:text-red-500'}`}
+          className={`w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all ${isSaved ? 'bg-red-500/90 text-white' : 'bg-black/40 text-white hover:bg-[#1D9E75]'}`}
         >
           <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
         </button>
         <button
-          className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/10 hover:bg-white hover:text-green-500 transition-all"
+          className="w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#1D9E75] transition-all"
           onClick={(e) => { e.stopPropagation(); navigate(`/map?focus=${item.id}`); }}
         >
           <MapPin className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="absolute inset-0 p-8 flex flex-col justify-end">
-        <div className="space-y-1.5">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-[9px] font-black uppercase text-green-400 tracking-[0.3em]">{item.category}</span>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
-              <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
-              <span className="text-[10px] font-bold text-white/90">{item.rating}</span>
-            </div>
+      <WeatherTimeChip 
+        userWeather={userWeather} 
+        destWeather={destWeather} 
+        destTime={destTime} 
+        isDay={destWeather?.isDay} 
+        loading={weatherLoading} 
+      />
+
+      {/* Bottom Content */}
+      <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end z-10">
+        {/* Rating */}
+        {rating && (
+          <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-1 rounded-lg w-fit mb-2">
+            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+            <span className="text-[11px] font-bold text-white">{rating}</span>
           </div>
-          <h3 className="text-2xl font-black text-white tracking-tight leading-tight group-hover:text-green-400 transition-colors">
-            {item.name}
-          </h3>
-          <p className="text-sm font-bold text-white/50">{item.price}</p>
+        )}
+
+        <h3 className="text-xl font-bold text-white tracking-wide group-hover:text-[#1D9E75] transition-colors">
+          {item.name}
+        </h3>
+        <p className="text-sm font-medium text-white/70 line-clamp-1 mt-1">
+          {item.description || item.location}
+        </p>
+        <div className="flex justify-between items-center mt-3">
+          <p className="text-sm font-bold text-white">{item.price} <span className="text-white/50 text-xs font-normal">per person</span></p>
+          {temp && (
+             <p className="text-sm font-bold text-teal-300">{temp}</p>
+          )}
         </div>
       </div>
     </motion.div>
   );
 };
 
-const SectionRow = ({ title, data, subtitle }) => {
-  const scrollRef = useRef(null);
-
-  const scroll = (direction) => {
-    const { current } = scrollRef;
-    if (current) {
-      const scrollAmount = direction === 'left' ? -current.offsetWidth * 0.8 : current.offsetWidth * 0.8;
-      current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
-  };
+const SectionRow = ({ title, data, subtitle, layout }) => {
+  let gridClass = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
+  if (layout === 'luxury') gridClass = "grid grid-cols-1 md:grid-cols-2 gap-8";
+  else if (layout === 'hidden') gridClass = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4";
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto px-8">
+    <div className="space-y-6 max-w-[1400px] mx-auto px-6">
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">{title}</h2>
-            {subtitle && (
-              <span className="text-[10px] font-black bg-green-100 text-green-600 px-3 py-1 rounded-full uppercase tracking-widest">
-                {subtitle}
-              </span>
-            )}
-          </div>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{title}</h2>
+          {subtitle && (
+            <span className="text-[10px] font-bold bg-[#1D9E75]/20 text-[#1D9E75] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#1D9E75]/30">
+              {subtitle}
+            </span>
+          )}
         </div>
-        <div className="flex items-center gap-6">
-          <button className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-green-600 transition-colors flex items-center gap-2">
-            View all <ArrowRight className="w-4 h-4" />
-          </button>
-          <div className="flex gap-2">
-            <button onClick={() => scroll('left')} className="w-10 h-10 flex items-center justify-center rounded-full border border-slate-100 bg-white hover:bg-slate-50 transition-colors shadow-sm">
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <button onClick={() => scroll('right')} className="w-10 h-10 flex items-center justify-center rounded-full border border-slate-100 bg-white hover:bg-slate-50 transition-colors shadow-sm">
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
+        <button className="text-sm font-medium text-slate-400 hover:text-[#1D9E75] transition-colors flex items-center gap-1">
+          View all <ArrowRight className="w-4 h-4" />
+        </button>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4"
-      >
+      <div className={gridClass}>
         {data.map((item) => (
-          <div key={item.id} className="snap-start">
-            <DestinationCard item={item} size={title === 'Luxury Escapes' ? 'large' : title === 'Hidden Gems' ? 'small' : 'medium'} />
-          </div>
+          <DestinationCard key={item.id} item={item} layout={layout} />
         ))}
       </div>
     </div>
   );
 };
+
+
+
+
 
 const Home = () => {
   const { user } = useAuth();
@@ -149,7 +179,6 @@ const Home = () => {
   const filteredData = useMemo(() => {
     let data = allDestinations;
 
-    // Search Filter
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       data = data.filter(d => 
@@ -161,7 +190,6 @@ const Home = () => {
       );
     }
 
-    // Category Filter
     if (activeCategory !== 'All') {
       const cat = categoryMap[activeCategory];
       if (cat === 'Budget') {
@@ -177,82 +205,84 @@ const Home = () => {
   const sections = useMemo(() => {
     if (filteredData.length === 0) return [];
 
-    const trending = [...filteredData].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 8);
-    const luxury = filteredData.filter(d => d.numericPrice > 140000).slice(0, 8);
+    const trending = [...filteredData].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 6);
+    const luxury = filteredData.filter(d => d.numericPrice > 140000).slice(0, 4);
     const gems = filteredData.filter(d => (d.popularity || 0) < 85 && d.rating >= 4.7).slice(0, 8);
     
-    // Personalized Logic
     const interests = user?.preferences?.interests || ['beach', 'culture'];
     const personalized = filteredData.filter(d => 
       d.tags?.some(t => interests.includes(t)) || 
       interests.includes(d.type)
-    ).slice(0, 8);
+    ).slice(0, 6);
 
     const result = [];
-    if (trending.length > 0) result.push({ id: 'trending', title: 'Trending Now', data: trending });
-    if (personalized.length > 0) result.push({ id: 'personalized', title: `Because you like Discovery`, subtitle: 'Personalized', data: personalized });
-    if (luxury.length > 0) result.push({ id: 'luxury', title: 'Luxury Escapes', data: luxury });
-    if (gems.length > 0) result.push({ id: 'gems', title: 'Hidden Gems', data: gems });
+    if (trending.length > 0) result.push({ id: 'trending', title: 'Trending Now', data: trending, layout: 'trending' });
+    if (personalized.length > 0) result.push({ id: 'personalized', title: `Because you like Discovery`, subtitle: 'Personalized', data: personalized, layout: 'personalized' });
+    if (luxury.length > 0) result.push({ id: 'luxury', title: 'Luxury Escapes', data: luxury, layout: 'luxury' });
+    if (gems.length > 0) result.push({ id: 'gems', title: 'Hidden Gems', data: gems, layout: 'hidden' });
 
     return result;
   }, [filteredData, user]);
 
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
-      <div className="max-w-7xl mx-auto px-8 pt-8">
-        <HomeHero 
-          activeCategory={activeCategory} 
-          setActiveCategory={setActiveCategory}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-        />
-
-        <div className="space-y-24 pb-40">
-          <AnimatePresence mode="wait">
-            {isSearching ? (
-              <motion.div 
-                key="skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.6 }}
-                exit={{ opacity: 0 }}
-                className="max-w-7xl mx-auto px-8 space-y-12 py-10"
-              >
-                <div className="h-10 bg-slate-200 rounded-full w-1/4 animate-pulse mb-8" />
-                <div className="flex gap-6 overflow-hidden">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="min-w-[400px] h-[500px] bg-slate-100 rounded-[2.5rem] animate-pulse" />
-                  ))}
-                </div>
-              </motion.div>
-            ) : sections.length === 0 ? (
-              <motion.div 
-                key="empty"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="py-32 text-center"
-              >
-                <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Navigation className="w-10 h-10 text-slate-300 transform -rotate-45" />
-                </div>
-                <h3 className="text-2xl font-black text-slate-800 tracking-tight italic mb-2">No destinations found.</h3>
-                <p className="text-slate-400 font-medium max-w-sm mx-auto">Try adjusting your search or filters to explore more places.</p>
-              </motion.div>
-            ) : (
-              sections.map((section) => (
-                <motion.div 
-                  key={section.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <SectionRow title={section.title} subtitle={section.subtitle} data={section.data} />
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
+      <div className="pt-8">
+        <div className="max-w-7xl mx-auto px-8">
+          <HomeHero 
+            activeCategory={activeCategory} 
+            setActiveCategory={setActiveCategory}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
         </div>
       </div>
+
+      <div className="space-y-24 pb-40">
+        <AnimatePresence mode="wait">
+          {isSearching ? (
+            <motion.div 
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+              exit={{ opacity: 0 }}
+              className="max-w-[1400px] mx-auto px-6 space-y-12 py-10"
+            >
+              <div className="h-10 bg-slate-200 rounded-full w-1/4 animate-pulse mb-8" />
+              <div className="flex gap-6 overflow-hidden">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="min-w-[400px] h-[400px] bg-slate-100 rounded-[1.5rem] animate-pulse" />
+                ))}
+              </div>
+            </motion.div>
+          ) : sections.length === 0 ? (
+            <motion.div 
+              key="empty"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="py-32 text-center"
+            >
+              <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm border border-slate-100">
+                <Navigation className="w-10 h-10 text-slate-300 transform -rotate-45" />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-800 tracking-tight italic mb-2">No destinations found.</h3>
+              <p className="text-slate-400 font-medium max-w-sm mx-auto">Try adjusting your search or filters to explore more places.</p>
+            </motion.div>
+          ) : (
+            sections.map((section) => (
+              <motion.div 
+                key={section.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <SectionRow title={section.title} subtitle={section.subtitle} data={section.data} layout={section.layout} />
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
+      </div>
+
     </div>
   );
 };
