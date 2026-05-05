@@ -1,22 +1,32 @@
 import { useState } from "react";
-import { login } from "../services/auth";
+import { login, loginWithGoogle } from "../services/auth";
 import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const nav = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
+    console.log(email, password);
     setLoading(true);
     try {
       await login(email, password);
-      nav("/");
+      navigate("/");
     } catch (err) {
-      alert("Invalid email or password");
+      alert(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      navigate("/");
+    } catch (err) {
+      alert("Google login failed: " + err.message);
     }
   };
 
@@ -27,7 +37,7 @@ export default function Login() {
 
         <input
           className="w-full mb-3 p-3 border rounded-xl"
-          placeholder="Email"
+          placeholder="Email Address"
           onChange={(e) => setEmail(e.target.value)}
         />
 
@@ -41,14 +51,21 @@ export default function Login() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full bg-blue-500 text-white p-3 rounded-xl hover:scale-[1.02] transition"
+          className="w-full bg-teal-500 text-white p-3 rounded-xl hover:scale-[1.02] transition mb-3"
         >
-          {loading ? "Logging in..." : "Login"}
+          {loading ? "Logging in..." : "Start Planning"}
+        </button>
+
+        <button 
+          onClick={handleGoogleLogin}
+          className="w-full bg-white text-gray-700 border border-gray-200 p-3 rounded-xl hover:scale-[1.02] transition font-medium shadow-sm"
+        >
+          Sign in with Google
         </button>
 
         <p className="text-sm mt-4 text-center">
           Don’t have an account?{" "}
-          <Link to="/signup" className="text-blue-500">
+          <Link to="/signup" className="text-teal-500 font-semibold">
             Sign up
           </Link>
         </p>
