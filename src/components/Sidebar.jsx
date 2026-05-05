@@ -60,7 +60,7 @@ const Sidebar = () => {
       <div className="flex-1 overflow-y-auto no-scrollbar pb-6">
         <Section title="Home">
           <NavItem icon={Compass} label="Inspiration" path="/" />
-          <NavItem icon={Map} label="Explore Map" path="/map" />
+          <NavItem icon={Map} label="Explore" path="/map" />
         </Section>
 
         <Section title="Plan">

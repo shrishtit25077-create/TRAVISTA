@@ -1,14 +1,27 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, MapPin, Star, Sparkles, Navigation, Calendar, Wallet } from 'lucide-react';
+import { ArrowLeft, Heart, MapPin, Star, Sparkles, Navigation, Calendar, Wallet, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
+import { track } from '../../services/trackingService';
 
 const DestinationDetail = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { savedPlaces, toggleSave, addItinerary } = useAuth();
   const data = location.state;
+  const { photoUrl, loading: photoLoading } = useDestinationPhoto(data?.name);
+
+  React.useEffect(() => {
+    if (!data) return;
+    const start = Date.now();
+    return () => {
+      const end = Date.now();
+      const seconds = Math.floor((end - start) / 1000);
+      track.timeSpent(data.name, seconds);
+    };
+  }, [data]);
 
   if (!data) return (
     <div className="h-screen flex items-center justify-center bg-slate-50">
@@ -47,15 +60,22 @@ const DestinationDetail = () => {
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <div className="relative h-[60vh] overflow-hidden">
-        <motion.img 
-          initial={{ scale: 1.1 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.5 }}
-          src={data.image} 
-          className="absolute inset-0 w-full h-full object-cover"
-          alt={data.name} 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/20" />
+        {photoLoading ? (
+          <div className="absolute inset-0 shimmer" />
+        ) : (
+          <motion.img 
+            initial={{ scale: 1.1 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 1.5 }}
+            src={photoUrl} 
+            className="absolute inset-0 w-full h-full object-cover"
+            alt={data.name} 
+            onError={(e) => {
+              e.target.src = `https://picsum.photos/seed/${encodeURIComponent(data.name)}/1600/900`;
+            }}
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-black/40 z-[1]" />
         
         {/* Top Actions */}
         <div className="absolute top-8 left-8 right-8 flex justify-between items-center z-10">

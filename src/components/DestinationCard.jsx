@@ -5,6 +5,7 @@
 
 import React, { useState } from "react";
 import { useDestinationPhotos, useWeather, useDestinationSearch } from "../hooks/useTravista";
+import { useDestinationPhoto } from "../hooks/useDestinationPhoto";
 
 // ── WeatherBadge ─────────────────────────────
 // Small weather chip — great for destination cards
@@ -72,21 +73,16 @@ export function DestinationPhotoGrid({ destination, count = 6 }) {
 
   return (
     <div className="photo-grid">
-      {photos.map((photo) => (
-        <div key={photo.id} className="photo-grid__item">
+      {[1, 2, 3, 4, 5, 6].slice(0, count).map((idx) => (
+        <div key={idx} className="photo-grid__item">
           <img
-            src={photo.url}
-            alt={photo.alt}
+            src={`https://source.unsplash.com/800x600/?${encodeURIComponent(destination)},travel,${idx}`}
+            alt={`${destination} ${idx}`}
             loading="lazy"
+            onError={(e) => {
+              e.target.src = `https://picsum.photos/seed/${encodeURIComponent(destination)}-${idx}/800/600`;
+            }}
           />
-          <a
-            href={photo.creditLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="photo-grid__credit"
-          >
-            📷 {photo.credit}
-          </a>
         </div>
       ))}
     </div>
@@ -139,25 +135,34 @@ export function DestinationResultCard({ results }) {
   if (!results) return null;
 
   const { destination, photos, place, weather } = results;
-  const heroPhoto = photos[0];
+  const { photoUrl, loading: photoLoading } = useDestinationPhoto(destination);
 
   return (
     <div className="destination-result-card bg-white rounded-2xl shadow-xl overflow-hidden mt-8 max-w-4xl mx-auto">
       {/* Hero Photo */}
-      {heroPhoto && (
-        <div className="destination-result-card__hero relative h-64 sm:h-80 w-full">
-          <img src={heroPhoto.url} alt={heroPhoto.alt} className="w-full h-full object-cover" />
-          <div className="destination-result-card__overlay absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
-            <h2 className="text-3xl font-bold text-white mb-2">{destination}</h2>
-            {weather && (
-              <span className="weather-chip inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-white font-medium w-fit">
-                <img src={weather.icon} alt={weather.condition} className="w-6 h-6 drop-shadow-md" />
-                {weather.temp}°C
-              </span>
-            )}
-          </div>
+      <div className="destination-result-card__hero relative h-64 sm:h-80 w-full">
+        {photoLoading ? (
+          <div className="absolute inset-0 shimmer" />
+        ) : (
+          <img 
+            src={photoUrl} 
+            alt={destination} 
+            className="w-full h-full object-cover" 
+            onError={(e) => {
+              e.target.src = `https://picsum.photos/seed/${encodeURIComponent(destination)}/1200/800`;
+            }}
+          />
+        )}
+        <div className="destination-result-card__overlay absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6 z-[1]">
+          <h2 className="text-3xl font-bold text-white mb-2 relative z-[2]">{destination}</h2>
+          {weather && (
+            <span className="weather-chip inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-white font-medium w-fit relative z-[2]">
+              <img src={weather.icon} alt={weather.condition} className="w-6 h-6 drop-shadow-md" />
+              {weather.temp}°C
+            </span>
+          )}
         </div>
-      )}
+      </div>
 
       <div className="destination-result-card__body p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Place Info */}

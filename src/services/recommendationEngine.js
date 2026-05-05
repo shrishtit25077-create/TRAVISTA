@@ -1,40 +1,70 @@
-/**
- * AI-Powered Recommendation Engine
- * Scores destinations based on user preferences (budget, interests, style)
- */
+import { destinationFeatures, toVector } from '../data/destinationFeatures';
+import { getAllSignals } from './trackingService';
 
-export function getPersonalizedData(destinations, user) {
-  if (!user || !user.preferences) return destinations;
+function cosineSimilarity(a, b) {
+  const dot = a.reduce((s, x, i) => s + x * b[i], 0);
+  const magA = Math.sqrt(a.reduce((s, x) => s + x * x, 0));
+  const magB = Math.sqrt(b.reduce((s, x) => s + x * x, 0));
+  return magA && magB ? dot / (magA * magB) : 0;
+}
 
-  const { budget, interests, travelStyle } = user.preferences;
+function buildUserVector() {
+  const signals = getAllSignals();
+  const allDests = Object.keys(destinationFeatures);
 
-  return destinations
-    .map(dest => {
-      let score = 0;
+  // Collect weighted destination interactions
+  const weights = {};
+  allDests.forEach(d => {
+    weights[d] = 0;
+    if (signals.viewed[d]) weights[d] += signals.viewed[d];
+    if (signals.saved[d]) weights[d] += signals.saved[d];
+    if (signals.itinerary[d]) weights[d] += signals.itinerary[d];
+    if (signals.timespent[d]) weights[d] += signals.timespent[d];
+  });
 
-      // 1. Interest Match (Weight: 3)
-      // Check if destination category matches any user interests
-      const destCategory = dest.category.toLowerCase();
-      if (interests.some(interest => destCategory.includes(interest.toLowerCase()))) {
-        score += 3;
-      }
+  const totalWeight = Object.values(weights).reduce((s, w) => s + w, 0);
+  if (totalWeight === 0) return null; // new user — no profile yet
 
-      // 2. Budget Match (Weight: 2)
-      // Low: ₹, Mid: k, High: L
-      const price = dest.price;
-      if (budget === "low" && price.includes("₹")) score += 2;
-      if (budget === "mid" && price.includes("k")) score += 2;
-      if (budget === "high" && price.includes("L")) score += 2;
+  // Weighted average of destination vectors
+  const firstDestKey = Object.keys(destinationFeatures)[0];
+  const vectorLength = toVector(destinationFeatures[firstDestKey]).length;
+  const userVec = new Array(vectorLength).fill(0);
+  allDests.forEach(d => {
+    if (weights[d] > 0) {
+      const vec = toVector(destinationFeatures[d]);
+      vec.forEach((v, i) => { userVec[i] += v * (weights[d] / totalWeight); });
+    }
+  });
+  return userVec;
+}
 
-      // 3. Travel Style Match (Weight: 3)
-      if (travelStyle === "luxury" && dest.category === "Luxury") score += 3;
-      if (travelStyle === "adventure" && dest.category === "Adventure") score += 3;
-      if (travelStyle === "relaxed" && (dest.category === "Beach" || dest.category === "Spiritual")) score += 3;
+export function getRecommendations(limit = 6, exclude = []) {
+  const userVec = buildUserVector();
+  const allDests = Object.keys(destinationFeatures).filter(d => !exclude.includes(d));
 
-      // 4. Quality Multiplier
-      score += parseFloat(dest.rating) * 0.5;
+  if (!userVec) {
+    // New user — return popular destinations
+    return allDests
+      .sort((a, b) => destinationFeatures[b].popularity - destinationFeatures[a].popularity)
+      .slice(0, limit)
+      .map(d => ({ destination: d, score: destinationFeatures[d].popularity, reason: 'Trending worldwide' }));
+  }
 
-      return { ...dest, aiScore: score };
-    })
-    .sort((a, b) => b.aiScore - a.aiScore);
+  // Score all destinations against user vector
+  const scored = allDests.map(d => ({
+    destination: d,
+    score: cosineSimilarity(userVec, toVector(destinationFeatures[d])),
+  }));
+
+  return scored
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}
+
+export function hasEnoughData() {
+  const signals = getAllSignals();
+  const totalInteractions = Object.values(signals).reduce(
+    (s, obj) => s + Object.values(obj).reduce((a, b) => a + b, 0), 0
+  );
+  return totalInteractions >= 5; // need at least 5 interactions
 }

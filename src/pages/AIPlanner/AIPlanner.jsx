@@ -4,6 +4,7 @@ import { Send, Sparkles, User, Bot, MapPin, Calendar, Wallet, Download, Map as M
 import { useAuth } from '../../context/AuthContext';
 import { generateTrip } from '../../services/ai';
 import TypingText from '../../components/UI/TypingText';
+import { track } from '../../services/trackingService';
 import toast from 'react-hot-toast';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -99,6 +100,7 @@ const AIPlanner = () => {
       
       addItinerary(tripObj);
       setItinerary(tripObj);
+      track.itinerary(text);
     } catch (error) {
       toast.error("AI service temporarily unavailable");
       setMessages(prev => [...prev, { 

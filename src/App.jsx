@@ -15,9 +15,11 @@ import SavedPlaces from './pages/Saved/SavedPlaces';
 import Itineraries from './pages/Itineraries/Itineraries';
 import ItineraryDetail from './pages/Itineraries/ItineraryDetail';
 import DestinationDetail from './pages/Destination/DestinationDetail';
+import TripPlan from './pages/TripPlan/TripPlan';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import SmoothScroll from './components/Effects/SmoothScroll';
+import { LocationProvider } from './context/LocationContext';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -74,13 +76,12 @@ function AnimatedRoutes() {
           <Route path="profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
           <Route path="settings" element={<AnimatedPage><Settings /></AnimatedPage>} />
           <Route path="destination/:id" element={<AnimatedPage><DestinationDetail /></AnimatedPage>} />
+          <Route path="trip-plan/:destination" element={<AnimatedPage><TripPlan /></AnimatedPage>} />
         </Route>
       </Routes>
     </AnimatePresence>
   );
 }
-
-import { LocationProvider } from './context/LocationContext';
 
 function App() {
   return (

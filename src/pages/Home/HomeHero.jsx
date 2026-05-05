@@ -7,6 +7,7 @@ import { useDestinationSearch } from '../../hooks/useTravista';
 import { DestinationResultCard } from '../../components/DestinationCard';
 
 import { useAuth } from '../../context/AuthContext';
+import { track } from '../../services/trackingService';
 
 const chips = [
   'All',
@@ -28,7 +29,7 @@ const suggestions = [
 
 const placeholders = ['Manali', 'Bali', 'Kyoto', 'Santorini', 'Goa'];
 
-export default function HomeHero({ activeCategory, setActiveCategory, searchQuery, setSearchQuery }) {
+export default function HomeHero({ activeCategory, setActiveCategory, searchQuery, setSearchQuery, onPlanTrip }) {
   const [phIdx, setPhIdx] = useState(0);
   const navigate = useNavigate();
   const { addItinerary, addToHistory } = useAuth();
@@ -44,9 +45,23 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
 
     addToHistory(searchQuery);
 
+    track.searched(searchQuery);
+
     const res = await search(searchQuery);
     if (res) {
       setResults(res);
+      track.itinerary(res.destination);
+      if (onPlanTrip) {
+        onPlanTrip({
+          name: res.destination,
+          country: res.place?.formatted_address || 'India',
+          flag: '🇮🇳',
+          category: 'Adventure', 
+          price: '₹₹',
+          lat: res.weather?.coord?.lat || 20,
+          lon: res.weather?.coord?.lon || 78
+        });
+      }
     }
   };
 
@@ -76,9 +91,9 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           <div className="hero-eyebrow">TRAVISTA · EDITORIAL COLLECTION</div>
 
           <div className="hero-heading-white">Curate your</div>
-          <div className="hero-heading-teal">perfect journey.</div>
+          <div className="hero-heading-teal">perfect journey</div>
 
-          <p className="hero-sub">
+          <p className="hero-sub" style={{ color: '#ffffff', fontWeight: 600 }}>
             Discover destinations, plan itineraries, and explore<br />
             the world effortlessly.
           </p>
@@ -107,7 +122,7 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
             {chips.slice(0, 4).map((c, i) => (
               <motion.button
                 key={c}
-                onClick={() => setActiveCategory(c)}
+                onClick={() => { setActiveCategory(c); track.categoryClick(c); }}
                 className={`chip ${activeCategory === c ? 'active' : ''}`}
                 style={activeCategory === c ? { background: 'linear-gradient(135deg, #00c6ff, #00f2a1)', color: 'white', border: 'none' } : {}}
                 initial={{ opacity: 0, y: 8 }}
@@ -122,7 +137,7 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
             {chips.slice(4).map((c, i) => (
               <motion.button
                 key={c}
-                onClick={() => setActiveCategory(c)}
+                onClick={() => { setActiveCategory(c); track.categoryClick(c); }}
                 className={`chip ${activeCategory === c ? 'active' : ''}`}
                 style={activeCategory === c ? { background: 'linear-gradient(135deg, #00c6ff, #00f2a1)', color: 'white', border: 'none' } : {}}
                 initial={{ opacity: 0, y: 8 }}

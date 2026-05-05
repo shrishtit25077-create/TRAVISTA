@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchDestinations } from '../../services/api';
 import useInfiniteScroll from '../../hooks/useInfiniteScroll';
 import { DestinationCard } from '../Home/Home';
+import BudgetModal from '../../components/BudgetModal';
 
 const FilterChip = ({ label, active, onClick }) => (
   <button 
@@ -28,6 +29,7 @@ const Explore = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [sortBy, setSortBy] = useState('Recommended');
+  const [selectedDest, setSelectedDest] = useState(null);
 
   const categories = ['All', 'Beach', 'Mountain', 'Luxury', 'Culture', 'Adventure', 'Food'];
 
@@ -105,7 +107,12 @@ const Explore = () => {
       {/* Results Grid - Restored to Image Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredItems.map((item, idx) => (
-          <DestinationCard key={`${item.id}-${idx}`} item={item} size="small" />
+          <DestinationCard 
+            key={`${item.id}-${idx}`} 
+            item={item} 
+            size="small" 
+            onPlanTrip={(dest) => setSelectedDest(dest)}
+          />
         ))}
       </div>
 
@@ -119,6 +126,15 @@ const Explore = () => {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {selectedDest && (
+          <BudgetModal 
+            destination={selectedDest} 
+            onClose={() => setSelectedDest(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

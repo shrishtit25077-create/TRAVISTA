@@ -4,6 +4,8 @@ import { User, MapPin, Check, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { clearSignals } from '../../services/trackingService';
+import { RefreshCw } from 'lucide-react';
 
 // ─── Field Input ─────────────────────────────────────────────────────────────
 const Field = ({ label, name, type = 'text', value, onChange, placeholder }) => (
@@ -67,6 +69,14 @@ const Profile = () => {
     }
   };
 
+  const handleResetPreferences = () => {
+    clearSignals();
+    toast.success('Travel preferences reset!');
+    // Trigger a re-render or reload if necessary, 
+    // but the clearSignals itself handles the storage.
+    window.location.reload(); 
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     logout();
@@ -128,13 +138,22 @@ const Profile = () => {
 
           {/* Action Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-6 pt-8 border-t border-slate-100">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-3 text-slate-400 font-bold text-sm hover:text-red-500 transition-all"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Log Out</span>
-            </button>
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 text-slate-400 font-bold text-sm hover:text-red-500 transition-all"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log Out</span>
+              </button>
+              <button
+                onClick={handleResetPreferences}
+                className="flex items-center gap-3 text-slate-400 font-bold text-sm hover:text-[#1D9E75] transition-all"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Reset my preferences</span>
+              </button>
+            </div>
             
             <div className="flex gap-4 w-full sm:w-auto">
               <button
