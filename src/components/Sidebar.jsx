@@ -1,5 +1,5 @@
 import React from 'react';
-import { Compass, Map, Sparkles, Calendar, Heart, User, Settings, LogOut } from 'lucide-react';
+import { Compass, Map, Sparkles, Calendar, Heart, User, Settings, LogOut, Globe, Bell } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const NavItem = ({ icon: Icon, label, path }) => {
@@ -12,13 +12,13 @@ const NavItem = ({ icon: Icon, label, path }) => {
       onClick={() => navigate(path)}
       className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 group text-base font-medium mb-1 ${
         active 
-          ? 'bg-emerald-100 text-emerald-700 border-l-4 border-emerald-700' 
-          : 'text-slate-600 hover:bg-slate-100 border-l-4 border-transparent'
+          ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 border-l-4 border-emerald-700 dark:border-emerald-500' 
+          : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border-l-4 border-transparent'
       }`}
     >
       <Icon 
         size={18} 
-        className={`transition-transform duration-200 group-hover:scale-110 ${active ? 'text-emerald-700' : 'text-slate-400 group-hover:text-emerald-600'}`} 
+        className={`transition-transform duration-200 group-hover:scale-110 ${active ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-400 group-hover:text-emerald-600'}`} 
       />
       <span>{label}</span>
     </button>
@@ -40,7 +40,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="sidebar-fixed flex flex-col bg-white border-r border-slate-100 h-screen w-[260px] fixed top-0 left-0 z-50">
+    <div className="sidebar-fixed flex flex-col bg-white dark:bg-[#0f0f0f] border-r border-slate-100 dark:border-[#2a2a2a] h-screen w-[260px] fixed top-0 left-0 z-50">
       {/* Logo */}
       <div className="p-6 pb-2">
         <div 
@@ -50,7 +50,7 @@ const Sidebar = () => {
           <div className="w-10 h-10 bg-emerald-700 rounded-xl flex items-center justify-center shadow-md shadow-emerald-700/20 group-hover:scale-105 transition-transform">
             <Compass size={20} className="text-white" />
           </div>
-          <span className="font-black text-xl text-slate-900 tracking-tight">
+          <span className="font-black text-xl text-slate-900 dark:text-white tracking-tight">
             Travista
           </span>
         </div>
@@ -65,11 +65,13 @@ const Sidebar = () => {
 
         <Section title="Plan">
           <NavItem icon={Sparkles} label="AI Planner" path="/planner" />
+          <NavItem icon={Globe} label="Translator" path="/translator" />
         </Section>
 
         <Section title="My Trips">
           <NavItem icon={Calendar} label="Itineraries" path="/itineraries" />
           <NavItem icon={Heart} label="Saved Places" path="/saved" />
+          <NavItem icon={Bell} label="Alerts" path="/alerts" />
         </Section>
 
         <Section title="Account">

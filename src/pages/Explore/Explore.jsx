@@ -5,7 +5,7 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchDestinations } from '../../services/api';
 import useInfiniteScroll from '../../hooks/useInfiniteScroll';
-import { DestinationCard } from '../Home/Home';
+import { DestinationCard, DestinationSkeleton } from '../Home/Home';
 import BudgetModal from '../../components/BudgetModal';
 
 const FilterChip = ({ label, active, onClick }) => (
@@ -121,7 +121,7 @@ const Explore = () => {
         {loading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1, 2, 3].map(i => (
-              <div key={i} className="aspect-[4/5] bg-gray-100 rounded-[2.5rem] animate-pulse" />
+              <DestinationSkeleton key={i} size="small" />
             ))}
           </div>
         )}

@@ -22,35 +22,9 @@ const BudgetModal = ({ destination, onClose }) => {
   const handleSubmit = () => {
     if (!budget || budget <= 0) return;
     
-    // Tier detection
-    const totalBudget = parseInt(budget);
-    const budgetPerDay = totalBudget / duration;
-    
-    let tier = 'Budget';
-    if (budgetPerDay < 1500) tier = 'ultraBudget';
-    else if (budgetPerDay < 4000) tier = 'budget';
-    else if (budgetPerDay < 10000) tier = 'midRange';
-    else tier = 'premium';
-
-    localStorage.setItem('travista_trip_params', JSON.stringify({
-      totalBudget, 
-      duration, 
-      travellerType, 
-      destination: destination.name,
-      originalData: destination,
-      tier
-    }));
-
-    navigate(`/trip-plan/${encodeURIComponent(destination.name)}?budget=${totalBudget}&duration=${duration}&type=${travellerType}`, {
-      state: {
-        totalBudget,
-        duration,
-        travellerType,
-        tier,
-        destination: destination.name,
-        originalData: destination
-      }
-    });
+    const params = { budget, duration, travellerType, destination: destination.name };
+    localStorage.setItem('travista_trip_params', JSON.stringify(params));
+    navigate(`/trip-plan/${encodeURIComponent(destination.name)}?budget=${budget}&duration=${duration}&type=${travellerType}`);
     onClose();
   };
 

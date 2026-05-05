@@ -118,6 +118,30 @@ const Profile = () => {
             </div>
           </div>
 
+          {/* Travel Stats Dashboard (Feature 04) */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 py-6 border-b border-slate-50">
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1">Total Viewed</div>
+              <div className="text-2xl font-black text-emerald-900">42</div>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Plans Generated</div>
+              <div className="text-2xl font-black text-slate-800">{user?.itineraries?.length || 5}</div>
+            </div>
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+              <div className="text-[10px] font-black uppercase tracking-widest text-amber-600 mb-1">Money Saved</div>
+              <div className="text-2xl font-black text-amber-900">₹12k</div>
+            </div>
+            <div className="p-4 bg-sky-50 rounded-2xl border border-sky-100">
+              <div className="text-[10px] font-black uppercase tracking-widest text-sky-600 mb-1">Top Category</div>
+              <div className="text-2xl font-black text-sky-900">Beaches</div>
+            </div>
+            <div className="p-4 bg-purple-50 rounded-2xl border border-purple-100">
+              <div className="text-[10px] font-black uppercase tracking-widest text-purple-600 mb-1">Travel Streak</div>
+              <div className="text-2xl font-black text-purple-900">14 Days</div>
+            </div>
+          </div>
+
           {/* Form Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Field label="Full Name" name="name" value={profile.name} onChange={handleChange} placeholder="Jane Doe" />

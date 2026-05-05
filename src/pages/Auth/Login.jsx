@@ -3,19 +3,30 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Mail, Lock, Globe } from 'lucide-react';
-
+import toast from 'react-hot-toast';
 
 const Login = () => {
+  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login } = useAuth();
+  const { login, signup } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
-    // Simulate login
-    login({ name: 'Traveler', email });
-    navigate('/onboarding');
+    try {
+      if (isLogin) {
+        await login(email, password);
+        toast.success("Welcome back!");
+        window.location.href = "/";
+      } else {
+        await signup(email, password);
+        toast.success("Account created successfully!");
+        window.location.href = "/onboarding";
+      }
+    } catch (err) {
+      toast.error(err.message || "Invalid credentials");
+    }
   };
 
   return (
@@ -29,20 +40,20 @@ const Login = () => {
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative glass-card p-8 rounded-2xl w-full max-w-md shadow-2xl"
+        className="relative glass-card p-8 rounded-2xl w-full max-w-md shadow-2xl bg-black/40 border border-white/10"
       >
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">TRAVISTA</h1>
-          <p className="text-white/80">Plan your next adventure with ease</p>
+          <p className="text-white/80">{isLogin ? 'Plan your next adventure with ease' : 'Join the ultimate travel planner'}</p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4">
+        <form onSubmit={handleAuth} className="space-y-4">
           <div className="relative">
             <Mail className="absolute left-3 top-3 text-white/60 w-5 h-5" />
             <input 
               type="email" 
               placeholder="Email Address" 
-              className="w-full bg-white/20 border border-white/30 rounded-xl px-10 py-3 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-teal-light transition-all"
+              className="w-full bg-white/20 border border-white/30 rounded-xl px-10 py-3 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-[#1D9E75] transition-all"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -54,7 +65,7 @@ const Login = () => {
             <input 
               type="password" 
               placeholder="Password" 
-              className="w-full bg-white/20 border border-white/30 rounded-xl px-10 py-3 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-teal-light transition-all"
+              className="w-full bg-white/20 border border-white/30 rounded-xl px-10 py-3 text-white placeholder-white/60 outline-none focus:ring-2 focus:ring-[#1D9E75] transition-all"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -64,31 +75,18 @@ const Login = () => {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-full btn-accent py-4 font-semibold text-lg"
+            className="w-full bg-[#1D9E75] hover:bg-[#15825f] text-white py-4 rounded-xl font-bold text-lg transition-all"
             type="submit"
           >
-            Start Planning
+            {isLogin ? 'Start Planning' : 'Create Account'}
           </motion.button>
         </form>
 
-        <div className="mt-6 flex flex-col items-center space-y-4">
-          <div className="flex items-center w-full space-x-2">
-            <div className="h-[1px] bg-white/30 flex-grow" />
-            <span className="text-white/60 text-sm">Or continue with</span>
-            <div className="h-[1px] bg-white/30 flex-grow" />
-          </div>
-
-          <motion.button 
-            whileHover={{ scale: 1.02 }}
-            className="w-full flex items-center justify-center space-x-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl py-3 text-white transition-all"
-          >
-            <Globe className="w-5 h-5" />
-            <span>Sign in with Google</span>
-          </motion.button>
-        </div>
-
         <p className="text-center mt-6 text-white/70 text-sm">
-          Don't have an account? <span className="text-accent font-semibold cursor-pointer">Sign Up</span>
+          {isLogin ? "Don't have an account? " : "Already have an account? "}
+          <span onClick={() => setIsLogin(!isLogin)} className="text-[#1D9E75] font-semibold cursor-pointer">
+            {isLogin ? 'Sign Up' : 'Log In'}
+          </span>
         </p>
       </motion.div>
     </div>

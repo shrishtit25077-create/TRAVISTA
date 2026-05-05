@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Login from './pages/Auth/Login';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
 import Onboarding from './pages/Onboarding/Onboarding';
 import DashboardLayout from './components/DashboardLayout';
 import Home from './pages/Home/Home';
@@ -16,6 +17,8 @@ import Itineraries from './pages/Itineraries/Itineraries';
 import ItineraryDetail from './pages/Itineraries/ItineraryDetail';
 import DestinationDetail from './pages/Destination/DestinationDetail';
 import TripPlan from './pages/TripPlan/TripPlan';
+import Translator from './pages/Translator/Translator';
+import Alerts from './pages/Alerts/Alerts';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import SmoothScroll from './components/Effects/SmoothScroll';
@@ -39,22 +42,7 @@ const AnimatedPage = ({ children }) => (
   </motion.div>
 );
 
-const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return (
-    <div className="h-screen w-screen flex items-center justify-center bg-[#F7F9FC]">
-      <motion.div
-        animate={{ opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center"
-      >
-        <div className="w-4 h-4 rounded-full bg-emerald-500" />
-      </motion.div>
-    </div>
-  );
-  if (!user) return <Navigate to="/login" />;
-  return children;
-};
+import ProtectedRoute from './components/ProtectedRoute';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -62,6 +50,7 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<AnimatedPage><Login /></AnimatedPage>} />
+        <Route path="/signup" element={<AnimatedPage><Signup /></AnimatedPage>} />
         <Route path="/onboarding" element={<ProtectedRoute><AnimatedPage><Onboarding /></AnimatedPage></ProtectedRoute>} />
         <Route path="/" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
           <Route index element={<AnimatedPage><Home /></AnimatedPage>} />
@@ -73,6 +62,8 @@ function AnimatedRoutes() {
           <Route path="itineraries" element={<AnimatedPage><Itineraries /></AnimatedPage>} />
           <Route path="itinerary/:id" element={<AnimatedPage><ItineraryDetail /></AnimatedPage>} />
           <Route path="bookings" element={<Navigate to="/itineraries" replace />} />
+          <Route path="alerts" element={<AnimatedPage><Alerts /></AnimatedPage>} />
+          <Route path="translator" element={<AnimatedPage><Translator /></AnimatedPage>} />
           <Route path="profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
           <Route path="settings" element={<AnimatedPage><Settings /></AnimatedPage>} />
           <Route path="destination/:id" element={<AnimatedPage><DestinationDetail /></AnimatedPage>} />
@@ -83,17 +74,33 @@ function AnimatedRoutes() {
   );
 }
 
+import { ThemeProvider } from './context/ThemeContext';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './services/firebase';
+
 function App() {
+  React.useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      const path = window.location.pathname;
+      if (!user && path !== "/login" && path !== "/signup") {
+        window.location.href = "/login";
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
-    <AuthProvider>
-      <LocationProvider>
-        <SmoothScroll />
-        <Toaster position="bottom-right" toastOptions={{ duration: 3000, style: { background: '#111827', color: '#fff', fontSize: '12px' } }} />
-        <Router>
-          <AnimatedRoutes />
-        </Router>
-      </LocationProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <LocationProvider>
+          <SmoothScroll />
+          <Toaster position="bottom-right" toastOptions={{ duration: 3000, style: { background: '#111827', color: '#fff', fontSize: '12px' } }} />
+          <Router>
+            <AnimatedRoutes />
+          </Router>
+        </LocationProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../services/firebase';
+import { login as fbLogin, signup as fbSignup, logout as fbLogout } from '../services/auth';
 
 const AuthContext = createContext();
 
@@ -7,51 +10,33 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem('travista_user');
-
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+        });
       } else {
-        // TEMP: auto-login so app doesn't stay blank
-        const tempUser = {
-          id: 1,
-          name: "Demo User",
-          onboardingCompleted: false,
-          preferences: {
-            budget: "mid",
-            interests: ["beach", "culture", "nature"],
-            travelStyle: "relaxed"
-          }
-        };
-
-        setUser(tempUser);
-        localStorage.setItem('travista_user', JSON.stringify(tempUser));
+        setUser(null);
       }
-    } catch (error) {
-      console.error("Auth error:", error);
-      localStorage.removeItem('travista_user');
-    } finally {
       setLoading(false);
-    }
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const login = (userData) => {
-    try {
-      setUser(userData);
-      localStorage.setItem('travista_user', JSON.stringify(userData));
-    } catch (error) {
-      console.error("Login error:", error);
-    }
+  const login = async (email, password) => {
+    await fbLogin(email, password);
   };
 
-  const logout = () => {
-    try {
-      setUser(null);
-      localStorage.removeItem('travista_user');
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
+  const signup = async (email, password) => {
+    await fbSignup(email, password);
+  };
+
+  const logout = async () => {
+    await fbLogout();
+    localStorage.removeItem('travista_user');
   };
 
   const [savedPlaces, setSavedPlaces] = useState(() => {
@@ -136,6 +121,7 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         login,
+        signup,
         logout,
         updateUser,
         savedPlaces,

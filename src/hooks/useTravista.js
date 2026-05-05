@@ -7,8 +7,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   searchPhotos,
   getHeroPhoto,
-  searchPlace,
-  getPlaceDetails,
   getWeather,
   getWeatherForecast,
 } from "../services/api";
@@ -61,53 +59,7 @@ export function useHeroPhoto(destination) {
   return { photo, loading, error };
 }
 
-// ─── PLACES ──────────────────────────────────
-
-/**
- * Search for a place by name
- * Usage: const { place, loading } = usePlace("Eiffel Tower Paris")
- */
-export function usePlace(query) {
-  const [place, setPlace] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!query) return;
-    setLoading(true);
-    setError(null);
-
-    searchPlace(query)
-      .then(setPlace)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [query]);
-
-  return { place, loading, error };
-}
-
-/**
- * Get detailed place info by place_id
- * Usage: const { details, loading } = usePlaceDetails(placeId)
- */
-export function usePlaceDetails(placeId) {
-  const [details, setDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!placeId) return;
-    setLoading(true);
-    setError(null);
-
-    getPlaceDetails(placeId)
-      .then(setDetails)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [placeId]);
-
-  return { details, loading, error };
-}
+import { searchLocation } from '../services/freeLocation';
 
 // ─── WEATHER ─────────────────────────────────
 
@@ -160,7 +112,7 @@ export function useForecast(city) {
 // ─── SEARCH (combined) ────────────────────────
 
 /**
- * Combined search hook — fetches photos + place + weather in parallel
+ * Combined search hook — fetches photos + location + weather in parallel
  * Perfect for your "Generate Trip" button or search bar
  *
  * Usage:
@@ -178,16 +130,16 @@ export function useDestinationSearch() {
     setError(null);
 
     try {
-      const [photos, place, weather] = await Promise.allSettled([
+      const [photos, location, weather] = await Promise.allSettled([
         searchPhotos(destination, 6),
-        searchPlace(destination),
+        searchLocation(destination),
         getWeather(destination),
       ]);
 
       const searchResults = {
         destination,
         photos: photos.status === "fulfilled" ? photos.value : [],
-        place: place.status === "fulfilled" ? place.value : null,
+        location: location.status === "fulfilled" ? location.value : null,
         weather: weather.status === "fulfilled" ? weather.value : null,
       };
 

@@ -19,8 +19,16 @@ export function useDestinationPhoto(destinationName) {
       return;
     }
 
+    const key = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+    if (!key || key.includes('YOUR_') || key.includes('HERE')) {
+      // Use picsum fallback — no key needed
+      setPhotoUrl(`https://picsum.photos/seed/${encodeURIComponent(cleanName)}/800/600`);
+      setLoading(false);
+      return;
+    }
+
     const query = destinationQueries[cleanName] || `${cleanName} travel landmark`;
-    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape&client_id=${import.meta.env.VITE_UNSPLASH_ACCESS_KEY}`;
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=landscape&client_id=${key}`;
 
     fetch(url)
       .then(r => r.json())

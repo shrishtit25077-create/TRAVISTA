@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, MapPin, Star, Sparkles, Navigation, Calendar, Wallet, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Heart, MapPin, Star, Sparkles, Navigation, Calendar, Wallet, ArrowRight, Type, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
 import { track } from '../../services/trackingService';
+import { generateCaptions } from '../../services/ai';
 
 const DestinationDetail = () => {
   const location = useLocation();
@@ -56,10 +57,32 @@ const DestinationDetail = () => {
     navigate(`/itinerary/${newTrip.id}`);
   };
 
+  const [captions, setCaptions] = useState([]);
+  const [loadingCaptions, setLoadingCaptions] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+
+  const handleGenerateCaptions = async () => {
+    setLoadingCaptions(true);
+    try {
+      const result = await generateCaptions(data.name);
+      setCaptions(result);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingCaptions(false);
+    }
+  };
+
+  const handleCopy = (text, idx) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(idx);
+    setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
-      <div className="relative h-[60vh] overflow-hidden">
+      <div className="relative h-[60vh] overflow-hidden group">
         {photoLoading ? (
           <div className="absolute inset-0 shimmer" />
         ) : (
@@ -95,7 +118,7 @@ const DestinationDetail = () => {
       </div>
 
       {/* Content Section */}
-      <div className="max-w-4xl mx-auto px-8 -translate-y-20 relative z-10">
+      <div className="max-w-4xl mx-auto px-8 -translate-y-20 relative z-10 pb-20">
         <div className="bg-white rounded-[3rem] p-12 shadow-2xl border border-slate-100 space-y-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] w-fit">
@@ -120,6 +143,34 @@ const DestinationDetail = () => {
               <p className="text-slate-500 font-medium leading-relaxed">
                 Experience the magic of {data.name}. This destination offers a unique blend of {data.tags?.join(', ')} and stunning landscapes. Whether you're looking for a peaceful retreat or an adventurous getaway, {data.name.split(',')[0]} has something for everyone.
               </p>
+
+              {/* AI Captions Block */}
+              <div className="pt-6">
+                <button 
+                  onClick={handleGenerateCaptions}
+                  disabled={loadingCaptions}
+                  className="px-5 py-2.5 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  <Type className="w-4 h-4" /> 
+                  {loadingCaptions ? "Writing..." : "Generate IG Captions"}
+                </button>
+                
+                {captions.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    {captions.map((cap, i) => (
+                      <div key={i} className="flex justify-between items-start gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                        <p className="text-sm font-medium text-slate-700 italic">"{cap}"</p>
+                        <button 
+                          onClick={() => handleCopy(cap, i)}
+                          className="shrink-0 text-slate-400 hover:text-emerald-500 transition-all p-1"
+                        >
+                          {copiedIndex === i ? <Check className="w-4 h-4 text-emerald-500" /> : <span className="text-[10px] font-bold uppercase tracking-wider">Copy</span>}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
             <div className="space-y-6">

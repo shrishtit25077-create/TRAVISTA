@@ -3,9 +3,118 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 import { Trash2, Edit2, Map, Calendar } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Clock, CheckSquare } from 'lucide-react';
+
+const CountdownBanner = ({ itineraries }) => {
+  const [closestTrip, setClosestTrip] = useState(null);
+  const [timeLeft, setTimeLeft] = useState('');
+  const [checkedItems, setCheckedItems] = useState({});
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('travista_checklist');
+      if (stored) setCheckedItems(JSON.parse(stored));
+    } catch (e) {}
+  }, []);
+
+  const toggleCheck = (id) => {
+    const newChecked = { ...checkedItems, [id]: !checkedItems[id] };
+    setCheckedItems(newChecked);
+    localStorage.setItem('travista_checklist', JSON.stringify(newChecked));
+  };
+
+  useEffect(() => {
+    // find upcoming trip
+    const tripsWithDates = itineraries.filter(t => t.travelDate);
+    if (!tripsWithDates.length) {
+      setClosestTrip(null);
+      return;
+    }
+
+    const now = new Date();
+    let closest = null;
+    let minDiff = Infinity;
+
+    tripsWithDates.forEach(t => {
+      const date = new Date(t.travelDate);
+      const diff = date - now;
+      if (diff > 0 && diff < minDiff) {
+        minDiff = diff;
+        closest = { ...t, diff };
+      }
+    });
+
+    setClosestTrip(closest);
+  }, [itineraries]);
+
+  useEffect(() => {
+    if (!closestTrip) return;
+    const interval = setInterval(() => {
+      const now = new Date();
+      const date = new Date(closestTrip.travelDate);
+      const diff = date - now;
+      if (diff <= 0) {
+        setTimeLeft('Trip Started!');
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / 1000 / 60) % 60);
+      const secs = Math.floor((diff / 1000) % 60);
+      setTimeLeft(`${days}d ${hours}h ${mins}m ${secs}s`);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [closestTrip]);
+
+  if (!closestTrip) return null;
+
+  const daysUntil = Math.floor(closestTrip.diff / (1000 * 60 * 60 * 24));
+
+  return (
+    <div className="bg-emerald-900 rounded-3xl p-8 shadow-xl text-white relative overflow-hidden group">
+      <div className="absolute -right-20 -top-20 w-64 h-64 bg-emerald-500 rounded-full blur-3xl opacity-20 group-hover:opacity-40 transition-opacity" />
+      <div className="relative z-10 space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-emerald-800 rounded-2xl flex items-center justify-center">
+            <Clock className="w-6 h-6 text-emerald-400" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold">Your {closestTrip.destination} trip is in</h3>
+            <div className="text-4xl font-black tracking-tight text-emerald-400">{timeLeft || 'Calculating...'}</div>
+          </div>
+        </div>
+        
+        <div className="bg-emerald-800/50 rounded-2xl p-6 border border-emerald-700/50">
+          <h4 className="text-sm font-bold uppercase tracking-widest text-emerald-300 mb-4 flex items-center gap-2">
+            <CheckSquare className="w-4 h-4" /> Smart Packing Checklist
+          </h4>
+          <div className="space-y-3">
+            <label className={`flex items-center gap-3 cursor-pointer ${daysUntil <= 28 ? 'opacity-100' : 'opacity-40 select-none'}`}>
+              <input type="checkbox" disabled={daysUntil > 28} checked={checkedItems['chk1'] || false} onChange={() => toggleCheck('chk1')} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer" />
+              <span className="font-medium">4+ weeks before: Book flights & hotels</span>
+            </label>
+            <label className={`flex items-center gap-3 cursor-pointer ${daysUntil <= 14 ? 'opacity-100' : 'opacity-40 select-none'}`}>
+              <input type="checkbox" disabled={daysUntil > 14} checked={checkedItems['chk2'] || false} onChange={() => toggleCheck('chk2')} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer" />
+              <span className="font-medium">2 weeks before: Apply for visa, get travel insurance</span>
+            </label>
+            <label className={`flex items-center gap-3 cursor-pointer ${daysUntil <= 7 ? 'opacity-100' : 'opacity-40 select-none'}`}>
+              <input type="checkbox" disabled={daysUntil > 7} checked={checkedItems['chk3'] || false} onChange={() => toggleCheck('chk3')} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer" />
+              <span className="font-medium">1 week before: Pack clothes, download offline maps</span>
+            </label>
+            <label className={`flex items-center gap-3 cursor-pointer ${daysUntil <= 1 ? 'opacity-100' : 'opacity-40 select-none'}`}>
+              <input type="checkbox" disabled={daysUntil > 1} checked={checkedItems['chk4'] || false} onChange={() => toggleCheck('chk4')} className="w-5 h-5 accent-emerald-500 rounded cursor-pointer" />
+              <span className="font-medium">1 day before: Charge devices, print documents</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 function Itineraries() {
-  const { itineraries, deleteItinerary } = useAuth();
+  const { itineraries, deleteItinerary, setItineraries } = useAuth();
   const navigate = useNavigate();
 
   return (
@@ -20,6 +129,9 @@ function Itineraries() {
             Your generated travel plans and upcoming adventures.
           </p>
         </div>
+
+        {/* Countdown Banner */}
+        <CountdownBanner itineraries={itineraries} />
 
         {itineraries.length === 0 ? (
           <div className="py-24 text-center space-y-6 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
@@ -105,9 +217,22 @@ function Itineraries() {
                     )}
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                  <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <input 
+                        type="date" 
+                        value={trip.travelDate || ''}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          const updated = itineraries.map(t => t.id === trip.id ? {...t, travelDate: e.target.value} : t);
+                          setItineraries(updated);
+                        }}
+                        className="text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-emerald-500 w-full"
+                      />
+                    </div>
                     <button onClick={(e) => { e.stopPropagation(); navigate(`/itinerary/${trip.id}`); }}
-                      className="text-xs font-bold text-slate-400 hover:text-emerald-600 uppercase tracking-widest transition-colors">
+                      className="text-xs font-bold text-slate-400 hover:text-emerald-600 uppercase tracking-widest transition-colors whitespace-nowrap">
                       Open Full Planner →
                     </button>
                   </div>

@@ -167,7 +167,11 @@ const AIPlanner = () => {
       <div className="pb-8 space-y-6">
         {!itinerary && !isTyping && (
           <div className="flex flex-wrap gap-2.5 justify-center">
-            {["5-day Bali Trip", "Luxury Paris", "Kyoto Culture"].map(s => (
+            {[
+              "5-day Bali Trip", 
+              "Warm weather, low humidity in October under ₹50k", 
+              "Compare Paris for Solo vs Group"
+            ].map(s => (
               <SuggestionChip key={s} label={s} onClick={(l) => handleSend(l)} />
             ))}
           </div>

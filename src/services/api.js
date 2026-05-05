@@ -5,35 +5,69 @@
 // ─────────────────────────────────────────────
 
 const UNSPLASH_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
-const GOOGLE_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
 const WEATHER_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
+
+export function checkApiKeys() {
+  const keys = {
+    Gemini: import.meta.env.VITE_GEMINI_API_KEY,
+    Unsplash: import.meta.env.VITE_UNSPLASH_ACCESS_KEY,
+    OpenWeather: import.meta.env.VITE_OPENWEATHER_API_KEY,
+  };
+  Object.entries(keys).forEach(([name, val]) => {
+    if (!val || val.includes('your_') || val.includes('HERE')) {
+      console.warn(`⚠️ ${name} API key is missing or placeholder in .env`);
+    } else {
+      console.log(`✅ ${name} key loaded: ${val.slice(0,8)}...`);
+    }
+  });
+}
 
 // ─── UNSPLASH ────────────────────────────────
 
+if (!UNSPLASH_KEY) {
+  console.warn('⚠️ Unsplash Access Key is missing in .env');
+}
+
 /**
- * Search photos by destination keyword
- * @param {string} query  e.g. "Santorini"
- * @param {number} count  number of photos to return (default 6)
- * @returns {Promise<Array>} array of photo objects
+ * Search photos from Unsplash
+ * @param {string} query - e.g. "Goa beach sunset"
+ * @param {number} count - number of photos (default 6)
+ * @returns {Promise<Array>} Array of photo objects
  */
 export async function searchPhotos(query, count = 6) {
-  const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(
-    query
-  )}&per_page=${count}&orientation=landscape&client_id=${UNSPLASH_KEY}`;
+  try {
+    const url = `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape`;
 
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Unsplash error: ${res.status}`);
-  const data = await res.json();
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Client-ID ${UNSPLASH_KEY}`,
+      },
+    });
 
-  return data.results.map((photo) => ({
-    id: photo.id,
-    url: photo.urls.regular,       // good quality, reasonable size
-    thumb: photo.urls.small,       // for thumbnails / cards
-    full: photo.urls.full,         // for hero sections
-    alt: photo.alt_description || query,
-    credit: photo.user.name,
-    creditLink: photo.user.links.html,
-  }));
+    if (!response.ok) {
+      throw new Error(`Unsplash API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Transform to cleaner format for your components
+    return data.results.map(photo => ({
+      id: photo.id,
+      url: photo.urls.regular,           // Good balance of quality/size
+      thumb: photo.urls.thumb,
+      full: photo.urls.full,
+      alt: photo.alt_description || photo.description || query,
+      photographer: photo.user.name,
+      photographerUrl: photo.user.links.html,
+      credit: photo.user.name,
+      creditLink: photo.user.links.html,
+      downloadLocation: photo.links.download_location, // Important!
+    }));
+
+  } catch (error) {
+    console.error('Unsplash search failed:', error);
+    return []; // Let your component handle fallback
+  }
 }
 
 /**
@@ -44,94 +78,7 @@ export async function getHeroPhoto(destination) {
   return photos[0] || null;
 }
 
-// ─── GOOGLE PLACES ───────────────────────────
-
-/**
- * Search for a place and get its details
- * @param {string} query  e.g. "Eiffel Tower Paris"
- * @returns {Promise<Object>} place details
- */
-export async function searchPlace(query) {
-  // Using the Places Text Search endpoint via a CORS-safe proxy approach
-  // NOTE: Google Places API requires a backend proxy to hide your key safely.
-  // For dev/testing you can use the URL below; for production, move this to your backend.
-  const url = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(
-    query
-  )}&key=${GOOGLE_KEY}`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Google Places error: ${res.status}`);
-  const data = await res.json();
-
-  if (!data.results?.length) return null;
-
-  const place = data.results[0];
-  return {
-    placeId: place.place_id,
-    name: place.name,
-    address: place.formatted_address,
-    rating: place.rating,
-    totalRatings: place.user_ratings_total,
-    location: place.geometry.location, // { lat, lng }
-    types: place.types,
-    openNow: place.opening_hours?.open_now ?? null,
-  };
-}
-
-/**
- * Get detailed info for a place using its place_id
- * @param {string} placeId
- * @returns {Promise<Object>} detailed place info
- */
-export async function getPlaceDetails(placeId) {
-  const fields = [
-    "name",
-    "rating",
-    "formatted_address",
-    "formatted_phone_number",
-    "opening_hours",
-    "website",
-    "photo",
-    "review",
-    "price_level",
-    "editorial_summary",
-  ].join(",");
-
-  const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=${fields}&key=${GOOGLE_KEY}`;
-
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Google Places Details error: ${res.status}`);
-  const { result } = await res.json();
-
-  return {
-    name: result.name,
-    address: result.formatted_address,
-    phone: result.formatted_phone_number,
-    rating: result.rating,
-    website: result.website,
-    description: result.editorial_summary?.overview || "",
-    isOpen: result.opening_hours?.open_now ?? null,
-    hours: result.opening_hours?.weekday_text || [],
-    priceLevel: result.price_level, // 0–4
-    reviews: (result.reviews || []).slice(0, 3).map((r) => ({
-      author: r.author_name,
-      rating: r.rating,
-      text: r.text,
-      time: r.relative_time_description,
-    })),
-    // To get a photo URL: getPlacePhotoUrl(result.photos[0].photo_reference)
-    photoRefs: (result.photos || []).map((p) => p.photo_reference),
-  };
-}
-
-/**
- * Build a Google Places photo URL from a photo_reference
- * @param {string} photoRef
- * @param {number} maxWidth  (default 800)
- */
-export function getPlacePhotoUrl(photoRef, maxWidth = 800) {
-  return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoRef}&key=${GOOGLE_KEY}`;
-}
+// ─── GOOGLE PLACES REMOVED (Replaced by Free Alternative) ───────────────
 
 // ─── OPENWEATHERMAP ──────────────────────────
 
@@ -141,6 +88,7 @@ export function getPlacePhotoUrl(photoRef, maxWidth = 800) {
  * @returns {Promise<Object>} weather data
  */
 export async function getWeather(query) {
+  if (!WEATHER_KEY || WEATHER_KEY.includes('your_')) return null;
   let url = '';
   if (typeof query === 'string') {
     url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(query)}&appid=${WEATHER_KEY}&units=metric`;
@@ -191,6 +139,7 @@ export async function getWeather(query) {
  * @returns {Promise<Array>} array of daily forecasts
  */
 export async function getWeatherForecast(city) {
+  if (!WEATHER_KEY || WEATHER_KEY.includes('your_')) return [];
   const url = `https://api.openweathermap.org/data/2.5/forecast?q=${encodeURIComponent(
     city
   )}&appid=${WEATHER_KEY}&units=metric&cnt=40`;
