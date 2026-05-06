@@ -78,7 +78,7 @@ const Translator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] px-6 py-12 pb-32 transition-colors duration-300">
+    <div className="min-h-screen px-4 sm:px-6 md:px-8 py-8 md:py-12 pb-24 md:pb-32 transition-colors duration-300" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto space-y-10">
 
         {/* Header */}

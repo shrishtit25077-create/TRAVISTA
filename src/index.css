@@ -50,25 +50,31 @@ body {
 }
 
 /* ─── Layout ─────────────────────────────────── */
+/* layout-root is now flex in DashboardLayout directly */
 .layout-root {
-  display: flex;
-  min-height: 100vh;
   background-color: var(--bg-primary);
 }
 
 .main-content {
-  margin-left: 240px;
   flex: 1;
+  min-width: 0;
   min-height: 100vh;
   background-color: var(--bg-primary);
   transition: background-color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Ensure no horizontal scroll globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* ─── Sidebar Nav ─────────────────────────────── */
 .sidebar-fixed {
   position: fixed;
   top: 0; left: 0;
-  width: 240px; height: 100vh;
+  width: 220px; height: 100vh;
   background: var(--sidebar-bg);
   border-right: 1px solid var(--sidebar-border);
   display: flex; flex-direction: column;
@@ -109,37 +115,39 @@ body {
 
 /* ─── Navbar ──────────────────────────────────── */
 .top-navbar {
-  height: 64px;
+  min-height: 56px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  background: #f8fafc;
   position: sticky;
   top: 0;
-  z-index: 40;
+  z-index: 100;
+  background: var(--card-bg);
+  width: 100%;
 }
 
 .navbar-search {
   position: relative;
+  flex: 1;
+  min-width: 0;
+  max-width: 560px;
 }
 
 .navbar-search input {
-  width: 340px;
-  background: white;
-  border: 1px solid #e2e8f0;
+  width: 100%;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
   border-radius: 999px;
   padding: 9px 16px 9px 40px;
   font-size: 13.5px;
-  color: #0f172a;
+  color: var(--text-primary);
   outline: none;
   transition: all 0.2s;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-search input:focus {
-  border-color: #cbd5e1;
-  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+  border-color: #00c9a7;
+  box-shadow: 0 0 0 3px rgba(0, 201, 167, 0.12);
 }
 
 .navbar-search .search-icon {
@@ -152,19 +160,53 @@ body {
   height: 15px;
 }
 
-/* ─── Hero Section ───────────────────────────── */
+/* ─── Hero Section ────────────────────────────────────────────────────── */
 .hero-wrapper {
-  padding: 0 24px 24px;
+  width: 100%;
+  box-sizing: border-box;
+  /* Tight on mobile, breathable on desktop */
+  padding: 0 8px 16px;
 }
 
+@media (min-width: 640px) {
+  .hero-wrapper { padding: 0 16px 20px; }
+}
+
+@media (min-width: 1024px) {
+  .hero-wrapper { padding: 0 24px 24px; }
+}
+
+/* The image+content box */
 .hero-image-box {
   position: relative;
-  border-radius: 28px;
+  border-radius: 16px;
   overflow: hidden;
-  height: 500px;
+  width: 100%;
+  /* Mobile: tall enough for stacked content */
+  min-height: 620px;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .hero-image-box {
+    border-radius: 20px;
+    min-height: 660px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-image-box {
+    border-radius: 28px;
+    min-height: 520px;
+    height: clamp(480px, 44vw, 640px);
+  }
 }
 
 .hero-bg-img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -173,88 +215,160 @@ body {
 }
 
 @keyframes slowZoom {
-  from {
-    transform: scale(1);
-  }
-
-  to {
-    transform: scale(1.06);
-  }
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
 }
 
+/* Gradient — stronger on mobile for text readability */
 .hero-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right,
-      rgba(0, 0, 0, 0.60) 0%,
-      rgba(0, 0, 0, 0.30) 55%,
-      rgba(0, 0, 0, 0.05) 100%);
+  /* Mobile: stronger bottom-up gradient for stacked text */
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.90) 0%,
+    rgba(0, 0, 0, 0.65) 40%,
+    rgba(0, 0, 0, 0.30) 70%,
+    rgba(0, 0, 0, 0.10) 100%
+  );
 }
 
-/* ─── Hero Content (floats directly on image) ── */
+@media (min-width: 1024px) {
+  .hero-gradient {
+    /* Desktop: left-to-right cinematic gradient */
+    background: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.75) 0%,
+      rgba(0, 0, 0, 0.45) 50%,
+      rgba(0, 0, 0, 0.10) 100%
+    );
+  }
+}
+
+/* ── Hero Content ── */
+/* Mobile: stacks naturally at bottom of the flex container */
 .hero-content {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 0 56px 60px 56px;
-  z-index: 10;
+  justify-content: flex-end;
+  flex: 1;
+  /* Mobile: tight padding */
+  padding: 24px 20px 28px;
+}
+
+@media (min-width: 640px) {
+  .hero-content {
+    padding: 32px 32px 36px;
+  }
+}
+
+@media (min-width: 1024px) {
+  /* Desktop: absolute so image fills full height */
+  .hero-content {
+    position: absolute;
+    inset: 0;
+    justify-content: center;
+    padding: 0 clamp(40px, 6vw, 80px) clamp(40px, 5vw, 72px);
+  }
 }
 
 .hero-eyebrow {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.35em;
+  letter-spacing: 0.30em;
   color: rgba(255, 255, 255, 0.55);
   text-transform: uppercase;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
+@media (min-width: 640px) {
+  .hero-eyebrow {
+    font-size: 10px;
+    margin-bottom: 16px;
+  }
+}
+
+/* Mobile-first fluid heading */
 .hero-heading-white {
-  font-size: 58px;
+  font-size: clamp(28px, 8vw, 72px);
   font-weight: 900;
   color: #ffffff;
-  line-height: 1.05;
-  letter-spacing: -1.5px;
-  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  line-height: 1.08;
+  letter-spacing: -1px;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5);
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .hero-heading-teal {
-  font-size: 58px;
+  font-size: clamp(28px, 8vw, 72px);
   font-weight: 900;
   font-style: italic;
-  line-height: 1.05;
-  letter-spacing: -1.5px;
+  line-height: 1.08;
+  letter-spacing: -1px;
   background: linear-gradient(90deg, #00C9A7, #00e5ff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: none;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+@media (min-width: 1024px) {
+  .hero-heading-white,
+  .hero-heading-teal {
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+  }
 }
 
 .hero-sub {
-  font-size: 14.5px;
+  font-size: 13px;
   font-weight: 500;
   color: rgba(255, 255, 255, 0.75);
   line-height: 1.6;
-  margin-top: 14px;
-  margin-bottom: 28px;
-  max-width: 380px;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  max-width: 100%;
 }
 
-/* ─── Hero Search Bar ─────────────────────────── */
+@media (min-width: 640px) {
+  .hero-sub {
+    font-size: 14px;
+    margin-top: 12px;
+    margin-bottom: 24px;
+    max-width: 420px;
+  }
+}
+
+/* ── Hero Search Bar ── */
+/* Mobile: stacked column layout */
 .hero-search-bar {
   display: flex;
-  align-items: center;
-  background: white;
-  border-radius: 999px;
-  padding: 5px 5px 5px 20px;
-  max-width: 520px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-  margin-bottom: 20px;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 16px;
 }
 
+@media (min-width: 520px) {
+  /* Tablet+: back to horizontal pill layout */
+  .hero-search-bar {
+    flex-direction: row;
+    align-items: center;
+    background: white;
+    border-radius: 999px;
+    padding: 5px 5px 5px 20px;
+    width: min(100%, 560px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+    gap: 0;
+    margin-bottom: 20px;
+  }
+}
+
+/* Mobile input styles */
 .hero-search-bar input {
   flex: 1;
   border: none;
@@ -262,7 +376,21 @@ body {
   font-size: 14px;
   font-weight: 500;
   color: #1e293b;
-  background: transparent;
+  background: white;
+  border-radius: 999px;
+  padding: 12px 16px;
+  width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+@media (min-width: 520px) {
+  .hero-search-bar input {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    width: auto;
+  }
 }
 
 .hero-search-bar input::placeholder {
@@ -273,6 +401,12 @@ body {
   color: #cbd5e1;
   margin: 0 12px;
   flex-shrink: 0;
+  /* Hide divider icon on mobile stacked layout */
+  display: none;
+}
+
+@media (min-width: 520px) {
+  .hero-search-globe { display: block; }
 }
 
 .hero-search-btn {
@@ -280,16 +414,26 @@ body {
   color: white;
   font-weight: 800;
   font-size: 13.5px;
-  padding: 10px 22px;
+  /* Mobile: full-width pill button */
+  width: 100%;
+  padding: 13px 22px;
   border-radius: 999px;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   transition: all 0.2s;
   flex-shrink: 0;
   box-shadow: 0 4px 14px rgba(26, 92, 58, 0.4);
+}
+
+@media (min-width: 520px) {
+  .hero-search-btn {
+    width: auto;
+    padding: 10px 22px;
+  }
 }
 
 .hero-search-btn:hover {
@@ -297,21 +441,28 @@ body {
   box-shadow: 0 6px 20px rgba(26, 92, 58, 0.5);
 }
 
-/* ─── Category Chips ─────────────────────────── */
+/* ── Category Chips ── */
 .chips-row {
   display: flex;
-  gap: 10px;
-  max-width: 560px;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 100%;
 }
 
-.chips-row+.chips-row {
-  margin-top: 10px;
+.chips-row + .chips-row {
+  margin-top: 6px;
+}
+
+@media (min-width: 640px) {
+  .chips-row { gap: 8px; }
+  .chips-row + .chips-row { margin-top: 8px; }
 }
 
 .chip {
-  padding: 8px 16px;
+  /* Mobile: smaller touch-friendly chips */
+  padding: 6px 12px;
   border-radius: 999px;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   border: 1px solid rgba(255, 255, 255, 0.3);
   background: rgba(255, 255, 255, 0.12);
@@ -321,13 +472,30 @@ body {
   white-space: nowrap;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   backdrop-filter: blur(4px);
+  /* Touch-friendly min height */
+  min-height: 32px;
+}
+
+@media (min-width: 640px) {
+  .chip {
+    padding: 7px 14px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .chip {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
 }
 
 .chip:hover {
   background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .chip.active {
@@ -336,6 +504,7 @@ body {
   color: white;
   box-shadow: 0 4px 15px rgba(0, 201, 167, 0.4);
 }
+
 
 /* ─── Bottom Row (scroll text) ────────── */
 .scroll-hint {
@@ -397,10 +566,81 @@ body {
 }
 
 @keyframes shimmer {
-  0% {
-    background-position: 200% 0;
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Responsive Utilities ────────────────────────────────────────────── */
+
+/* Touch-friendly minimum tap targets */
+button, a, [role="button"] {
+  min-height: 36px;
+}
+
+/* Responsive iframes / maps — never overflow */
+iframe, .leaflet-container {
+  max-width: 100%;
+}
+
+/* Map container responsive height */
+.map-responsive {
+  width: 100%;
+  height: clamp(300px, 50vw, 600px);
+}
+
+/* Prevent text overflow on small screens */
+h1, h2, h3, h4 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Fluid hero typography */
+.hero-title {
+  font-size: clamp(2rem, 6vw, 5rem);
+  line-height: 1.1;
+}
+
+.hero-subtitle {
+  font-size: clamp(0.9rem, 2vw, 1.25rem);
+}
+
+/* Cinema mode — full screen, no overflow */
+.cinema-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* Mobile: reduce heavy animations for performance */
+@media (max-width: 640px) {
+  .motion-reduce {
+    transition-duration: 0.15s !important;
+    animation-duration: 0.15s !important;
   }
-  100% {
-    background-position: -200% 0;
+
+  /* Prevent hover-only effects from breaking touch UI */
+  .hover-only {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Tablet sidebar — matches the lg:hidden breakpoint in Sidebar.jsx */
+@media (max-width: 1023px) {
+  .sidebar-fixed {
+    display: none;
+  }
+}
+
+/* Fix Leaflet map on all devices */
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Responsive bottom padding for mobile nav areas */
+@media (max-width: 640px) {
+  .page-pad-bottom {
+    padding-bottom: 5rem;
   }
 }

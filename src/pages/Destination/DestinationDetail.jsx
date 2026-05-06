@@ -129,8 +129,7 @@ Keep each bullet under 15 words.`;
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
-      {/* Hero Section */}
-      <div className="relative h-[60vh] overflow-hidden group">
+      <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] overflow-hidden group">
         {photoLoading ? (
           <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700 animate-pulse" />
         ) : (

@@ -118,7 +118,7 @@ function Itineraries() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen px-8 py-16 pb-32 transition-colors duration-300" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-screen px-4 sm:px-6 md:px-8 py-8 md:py-16 pb-24 md:pb-32 transition-colors duration-300" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto space-y-12">
         
         <div className="space-y-4">

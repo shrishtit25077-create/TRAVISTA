@@ -94,8 +94,7 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           <div className="hero-heading-teal">perfect journey</div>
 
           <p className="hero-sub" style={{ color: '#ffffff', fontWeight: 600 }}>
-            Discover destinations, plan itineraries, and explore<br />
-            the world effortlessly.
+            Discover destinations, plan itineraries, and explore the world effortlessly.
           </p>
 
           {/* Search bar */}
@@ -150,8 +149,8 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           </div>
         </motion.div>
 
-        {/* Scroll hint — perfectly centered */}
-        <div className="scroll-hint">
+        {/* Scroll hint — hidden on mobile to save space */}
+        <div className="scroll-hint hidden sm:flex">
           <span>SCROLL TO EXPLORE</span>
           <ChevronDown size={16} className="scroll-arrow" />
         </div>

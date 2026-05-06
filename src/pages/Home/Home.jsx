@@ -73,9 +73,9 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
   };
   const badgeClass = catColors[item.category] || 'bg-gray-500/80 text-gray-100';
 
-  let containerClass = 'h-[320px]'; // hidden gems
-  if (layout === 'luxury') containerClass = 'h-[500px]';
-  else if (layout === 'trending' || layout === 'personalized') containerClass = 'h-[400px]';
+  let containerClass = 'h-[260px] sm:h-[300px]'; // hidden gems
+  if (layout === 'luxury') containerClass = 'h-[380px] sm:h-[440px] md:h-[500px]';
+  else if (layout === 'trending' || layout === 'personalized') containerClass = 'h-[300px] sm:h-[360px] md:h-[400px]';
 
   return (
     <>
@@ -254,15 +254,22 @@ export const DestinationSkeleton = ({ layout = 'grid' }) => {
 };
 
 const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
-  let gridClass = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6";
-  if (layout === 'luxury') gridClass = "grid grid-cols-1 md:grid-cols-2 gap-8";
-  else if (layout === 'hidden') gridClass = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4";
+  // Auto-fit grid: fills all available space, min 280px per card
+  let gridClass = 'grid gap-4 md:gap-6';
+  let gridStyle = { gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' };
+
+  if (layout === 'luxury') {
+    gridStyle = { gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))' };
+  } else if (layout === 'hidden') {
+    gridStyle = { gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' };
+  }
 
   return (
-    <div className="space-y-6 max-w-[1400px] mx-auto px-6">
+    // Full width — no outer max-width, padding provides breathing room
+    <div className="space-y-5 w-full px-4 sm:px-6 lg:px-8">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h2>
+        <div className="flex items-center gap-3 min-w-0">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</h2>
           {subtitle && (
             <span className="text-[10px] font-bold bg-[#1D9E75]/20 text-[#1D9E75] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#1D9E75]/30">
               {subtitle}
@@ -274,13 +281,13 @@ const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
         </button>
       </div>
 
-      <div className={gridClass}>
+      <div className={gridClass} style={gridStyle}>
         {data.map((item) => (
-          <DestinationCard 
-            key={item.id} 
-            item={item} 
-            layout={layout} 
-            reasonChip={item.reason} 
+          <DestinationCard
+            key={item.id}
+            item={item}
+            layout={layout}
+            reasonChip={item.reason}
             onPlanTrip={onPlanTrip}
           />
         ))}
@@ -396,19 +403,18 @@ const Home = () => {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
-      <div className="pt-8">
-        <div className="max-w-7xl mx-auto px-8">
-          <HomeHero 
-            activeCategory={activeCategory} 
-            setActiveCategory={setActiveCategory}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            onPlanTrip={(dest) => setSelectedDest(dest)}
-          />
-        </div>
+      {/* Hero — full width, zero outer container */}
+      <div className="pt-4 md:pt-6">
+        <HomeHero
+          activeCategory={activeCategory}
+          setActiveCategory={setActiveCategory}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          onPlanTrip={(dest) => setSelectedDest(dest)}
+        />
       </div>
 
-      <div className="space-y-24 pb-40">
+      <div className="space-y-16 md:space-y-24 pb-24 md:pb-40">
         <AnimatePresence mode="wait">
           {isSearching ? (
             <motion.div 
