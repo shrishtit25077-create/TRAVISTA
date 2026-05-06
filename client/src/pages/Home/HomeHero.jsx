@@ -7,7 +7,6 @@ import { useDestinationSearch } from '../../hooks/useTravista';
 import { DestinationResultCard } from '../../components/DestinationCard';
 
 import { useAuth } from '../../context/AuthContext';
-import { track } from '../../services/trackingService';
 
 const chips = [
   'All',
@@ -29,11 +28,11 @@ const suggestions = [
 
 const placeholders = ['Manali', 'Bali', 'Kyoto', 'Santorini', 'Goa'];
 
-export default function HomeHero({ activeCategory, setActiveCategory, searchQuery, setSearchQuery, onPlanTrip }) {
+export default function HomeHero({ activeCategory, setActiveCategory, searchQuery, setSearchQuery }) {
   const [phIdx, setPhIdx] = useState(0);
   const navigate = useNavigate();
   const { addItinerary, addToHistory } = useAuth();
-
+  
   const { search, loading } = useDestinationSearch();
   const [results, setResults] = useState(null);
 
@@ -45,23 +44,9 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
 
     addToHistory(searchQuery);
 
-    track.searched(searchQuery);
-
     const res = await search(searchQuery);
     if (res) {
       setResults(res);
-      track.itinerary(res.destination);
-      if (onPlanTrip) {
-        onPlanTrip({
-          name: res.destination,
-          country: res.place?.formatted_address || 'India',
-          flag: '🇮🇳',
-          category: 'Adventure',
-          price: '₹₹',
-          lat: res.weather?.coord?.lat || 20,
-          lon: res.weather?.coord?.lon || 78
-        });
-      }
     }
   };
 
@@ -91,10 +76,11 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           <div className="hero-eyebrow">TRAVISTA · EDITORIAL COLLECTION</div>
 
           <div className="hero-heading-white">Curate your</div>
-          <div className="hero-heading-teal">perfect journey</div>
+          <div className="hero-heading-teal">perfect journey.</div>
 
-          <p className="hero-sub" style={{ color: '#ffffff', fontWeight: 600 }}>
-            Discover destinations, plan itineraries, and explore the world effortlessly.
+          <p className="hero-sub">
+            Discover destinations, plan itineraries, and explore<br />
+            the world effortlessly.
           </p>
 
           {/* Search bar */}
@@ -121,8 +107,9 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
             {chips.slice(0, 4).map((c, i) => (
               <motion.button
                 key={c}
-                onClick={() => { setActiveCategory(c); track.categoryClick(c); }}
+                onClick={() => setActiveCategory(c)}
                 className={`chip ${activeCategory === c ? 'active' : ''}`}
+                style={activeCategory === c ? { background: 'linear-gradient(135deg, #00c6ff, #00f2a1)', color: 'white', border: 'none' } : {}}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.05 }}
@@ -135,8 +122,9 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
             {chips.slice(4).map((c, i) => (
               <motion.button
                 key={c}
-                onClick={() => { setActiveCategory(c); track.categoryClick(c); }}
+                onClick={() => setActiveCategory(c)}
                 className={`chip ${activeCategory === c ? 'active' : ''}`}
+                style={activeCategory === c ? { background: 'linear-gradient(135deg, #00c6ff, #00f2a1)', color: 'white', border: 'none' } : {}}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + i * 0.05 }}
@@ -147,13 +135,13 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           </div>
         </motion.div>
 
-        {/* Scroll hint — hidden on mobile to save space */}
-        <div className="scroll-hint hidden sm:flex">
+        {/* Scroll hint — perfectly centered */}
+        <div className="scroll-hint">
           <span>SCROLL TO EXPLORE</span>
           <ChevronDown size={16} className="scroll-arrow" />
         </div>
       </div>
-
+      
       {/* Display Results Below Hero */}
       {results && (
         <div className="relative z-10 px-4 -mt-10 mb-20">

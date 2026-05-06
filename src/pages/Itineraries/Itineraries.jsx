@@ -119,7 +119,7 @@ function Itineraries() {
 
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-8 py-8 md:py-16 pb-24 md:pb-32 transition-colors duration-300" style={{ background: 'var(--bg-primary)' }}>
-      <div className="max-w-4xl mx-auto space-y-12">
+      <div className="flex-1 min-w-0 w-full space-y-12">
         
         <div className="space-y-4">
         <h1 className="text-5xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
@@ -152,15 +152,19 @@ function Itineraries() {
         ) : (
           <div className="space-y-6">
             {itineraries.map((trip, idx) => {
-              // Support both new format (days array) and old format (plan array)
-              const isNewFormat = Array.isArray(trip.days) && typeof trip.days[0] === 'object';
-              const dayCount = isNewFormat ? trip.days.length : (trip.days || trip.plan?.length || 0);
+              // Normalise plan data — may be an array, object, or missing
+              const planArray = Array.isArray(trip.plan) ? trip.plan : [];
+              const daysArray = Array.isArray(trip.days) ? trip.days : [];
+
+              // Determine format: new format has days[] of objects with .activities
+              const isNewFormat = daysArray.length > 0 && typeof daysArray[0] === 'object' && daysArray[0] !== null;
+              const dayCount = isNewFormat ? daysArray.length : (planArray.length || 0);
               const activityCount = isNewFormat
-                ? trip.days.reduce((acc, d) => acc + d.activities.length, 0)
-                : (trip.plan?.length || 0);
+                ? daysArray.reduce((acc, d) => acc + (Array.isArray(d.activities) ? d.activities.length : 0), 0)
+                : planArray.length;
               const previewItems = isNewFormat
-                ? trip.days.slice(0, 2).map(d => ({ label: `Day ${d.day}`, text: d.activities[0]?.title || '—' }))
-                : (trip.plan || []).slice(0, 3).map((p, i) => ({ label: `Day ${i+1}`, text: p.replace(/^Day \d+:\s*/, '') }));
+                ? daysArray.slice(0, 2).map(d => ({ label: `Day ${d.day || '?'}`, text: d.activities?.[0]?.title || d.morning || '—' }))
+                : planArray.slice(0, 3).map((p, i) => ({ label: `Day ${i + 1}`, text: typeof p === 'string' ? p.replace(/^Day \d+:\s*/, '') : JSON.stringify(p).slice(0, 60) }));
 
               return (
                 <motion.div
@@ -210,9 +214,9 @@ function Itineraries() {
                         <span className="text-slate-600 font-medium text-sm truncate">{item.text}</span>
                       </div>
                     ))}
-                    {((isNewFormat ? trip.days.length : trip.plan?.length) || 0) > previewItems.length && (
+                    {dayCount > previewItems.length && (
                       <p className="text-xs text-slate-400 font-bold text-center pt-1">
-                        +{((isNewFormat ? trip.days.length : trip.plan?.length) || 0) - previewItems.length} more days →
+                        +{dayCount - previewItems.length} more days →
                       </p>
                     )}
                   </div>

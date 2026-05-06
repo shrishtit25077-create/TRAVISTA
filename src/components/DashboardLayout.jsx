@@ -32,13 +32,7 @@ const DashboardLayout = () => {
         />
 
         <main className="flex-1 min-w-0 overflow-x-hidden w-full">
-          {/*
-            ── Global composition container ──────────────────────────────
-            max-w-[1440px] keeps the layout cinematic on ultrawide screens
-            without boxing it on standard 1280–1440px desktops.
-            mx-auto centers it. Each page adds its own local padding.
-          */}
-          <div className="w-full max-w-[1440px] mx-auto">
+          <div className="flex-1 min-w-0 w-full">
             <Outlet context={{ searchTerm, setSearchTerm }} />
           </div>
         </main>

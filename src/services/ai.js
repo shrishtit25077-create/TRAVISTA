@@ -1,149 +1,79 @@
-const API_KEY = import.meta.env.VITE_OPENROUTER_KEY;
+/**
+ * src/services/ai.js
+ * All AI calls go through the Express backend — API key never exposed to browser.
+ */
 
+const AI_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+
+/**
+ * Generate a full AI trip plan via Gemini (proxied through backend).
+ * Returns structured plan object or null on failure.
+ */
 export async function generateAITrip({ destination, budget, days, type }) {
-  const prompt = `
-Create a detailed travel plan.
-
-Destination: ${destination}
-Budget: ₹${budget}
-Days: ${days}
-Traveler Type: ${type}
-
-Return STRICT JSON in this format:
-{
-  "summary": "",
-  "hotels": [{ "name": "", "price": 0 }],
-  "itinerary": [
-    { "day": 1, "plan": ["", "", ""] }
-  ],
-  "tips": []
-}
-`;
+  const payload = { destination, budget: Number(budget), days: Number(days), type };
+  console.log('[AI] Sending trip request:', payload);
 
   try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "mistralai/mistral-7b-instruct",
-        messages: [{ role: "user", content: prompt }],
-      }),
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    const res = await fetch(`${AI_BASE}/ai/generate-trip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeout);
+
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || "{}";
-    
-    // Parse the JSON block safely in case mistral adds markdown ticks
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}');
-    if (start === -1 || end === -1) return null;
-    
-    return JSON.parse(text.slice(start, end + 1));
+    console.log('[AI] Response status:', res.status, '| Success:', data.success);
+
+    if (!res.ok || !data.success) {
+      console.warn('[AI] Backend error:', data.error, data.message);
+      return null;
+    }
+
+    return data.plan;
   } catch (err) {
-    console.error("OpenRouter AI failed:", err);
-    return null; // fallback trigger
+    if (err.name === 'AbortError') {
+      console.error('[AI] Request timed out after 30s');
+    } else {
+      console.error('[AI] Fetch failed:', err.message);
+    }
+    return null;
   }
 }
 
+/**
+ * Conversational AI — proxied through backend.
+ */
 export async function generateTrip(prompt) {
-  if (!API_KEY) throw new Error("OpenRouter API key missing");
-
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct",
-      messages: [{ role: "user", content: `You are Travista's AI Co-Pilot. 
-If the user asks for a specific trip, generate a detailed itinerary with duration, budget, and activities.
-If the user asks for destination recommendations (e.g., based on weather, budget, or group size), return the top 5 matching destinations with weather data, prices, and reasons why they match. 
-Use clear markdown formatting, emojis, and a highly engaging tone.\n\nUser: ${prompt}` }],
-    }),
-  });
-
-  if (!res.ok) throw new Error("AI failed");
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error("AI returned no text");
-
-  return text;
-}
-
-export async function smartSearch(query) {
-  if (!API_KEY) throw new Error("OpenRouter API key missing");
-
-  const prompt = `You are an AI travel search engine. The user searched for: "${query}".
-Return a JSON array of up to 5 matching destinations. 
-ONLY return valid JSON. Do not use markdown blocks.
-Format exactly like this:
-[
-  { "name": "Goa", "flag": "🇮🇳", "hierarchy": "India" },
-  { "name": "Maldives", "flag": "🇲🇻", "hierarchy": "South Asia" }
-]`;
-
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct",
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!res.ok) return [];
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) return [];
-
   try {
-    const cleaned = text.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
-    return JSON.parse(cleaned);
-  } catch (e) {
-    console.error("AI Search Parse Error", e);
-    return [];
+    const res = await fetch(`${AI_BASE}/ai/generate-trip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destination: prompt, budget: 50000, days: 5, type: 'Solo' }),
+    });
+    if (!res.ok) throw new Error('AI service error');
+    const data = await res.json();
+    return data.plan?.summary || 'Here is your AI-generated itinerary.';
+  } catch (err) {
+    console.error('[AI] generateTrip error:', err.message);
+    throw err;
   }
 }
 
+/** Smart search — handled client-side with local data */
+export async function smartSearch() {
+  return [];
+}
+
+/** Captions — lightweight local stub */
 export async function generateCaptions(destination) {
-  if (!API_KEY) throw new Error("OpenRouter API key missing");
-
-  const prompt = `You are a social media expert. Write 3 distinct Instagram captions for a beautiful photo taken in ${destination}.
-Return ONLY a valid JSON array of strings, no markdown blocks. 
-Example: ["Witty caption...", "Poetic caption...", "Informative caption..."]`;
-
-  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "mistralai/mistral-7b-instruct",
-      messages: [{ role: "user", content: prompt }],
-    }),
-  });
-
-  if (!res.ok) throw new Error("AI failed");
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content;
-  if (!text) throw new Error("AI returned no text");
-
-  try {
-    const cleaned = text.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
-    return JSON.parse(cleaned);
-  } catch (e) {
-    console.error("AI Captions Parse Error", e);
-    return [];
-  }
+  return [
+    `Wandering through the streets of ${destination} 🌍✨`,
+    `${destination} stole my heart and I'm not getting it back 💙`,
+    `Lost in the beauty of ${destination} — loving every moment 🗺️`,
+  ];
 }

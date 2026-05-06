@@ -91,7 +91,7 @@ const AIArchitect = () => {
   const suggestions = ["5-day Bali Trip", "Luxury Weekend in Paris", "Budget Solo Trip to Kyoto", "Cultural Tour of Rome"];
 
   return (
-    <div className="flex flex-col h-[calc(100vh-160px)] flex-1 min-w-0 w-full relative px-4 lg:px-8 xl:px-12">
+    <div className="flex-1 min-w-0 w-full flex flex-col h-[calc(100vh-160px)] relative px-4 md:px-8">
       
       {/* Chat Console */}
       <div className="flex-1 overflow-y-auto no-scrollbar pb-12 pt-8 space-y-4">

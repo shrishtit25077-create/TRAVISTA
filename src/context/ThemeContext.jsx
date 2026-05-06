@@ -4,8 +4,7 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem('travista_theme') === 'dark' || 
-      (!('travista_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    return localStorage.getItem('travista_theme') === 'dark';
   });
 
   useEffect(() => {
