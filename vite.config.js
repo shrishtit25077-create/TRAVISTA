@@ -5,6 +5,9 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
 
+  // Ensures all assets use absolute paths from root — required for Vercel SPA
+  base: '/',
+
   server: {
     port: 5173,
     strictPort: true,
