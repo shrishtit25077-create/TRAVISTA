@@ -112,7 +112,7 @@ const Profile = () => {
         {/* Header */}
         <div className="mb-12 space-y-2">
           <h1 className="text-5xl font-black text-slate-900 tracking-tight">
-            My <span className="text-emerald-600">Profile.</span>
+            My <span className="text-emerald-600">Profile</span>
           </h1>
           <p className="text-slate-400 font-medium text-lg">Manage your personal identity and contact info.</p>
         </div>

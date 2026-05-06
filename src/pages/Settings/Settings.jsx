@@ -80,7 +80,7 @@ const Settings = () => {
         {/* Header */}
         <div className="mb-12 space-y-2">
           <h1 className="text-5xl font-black text-slate-900 tracking-tight">
-            App <span className="text-emerald-600">Settings.</span>
+            App <span className="text-emerald-600">Settings</span>
           </h1>
           <p className="text-slate-400 font-medium text-lg">Configure how Travista works for you.</p>
         </div>

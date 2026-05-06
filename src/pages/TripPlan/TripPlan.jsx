@@ -42,6 +42,10 @@ const TripPlan = () => {
 
   const { photoUrl } = useDestinationPhoto(destination);
 
+  // ── Weather + Forecast (safe — both default to null/[]) ──
+  const { weather } = useWeather(destination);
+  const { forecast } = useForecast(destination);
+
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
   const errorMessages = {
@@ -154,240 +158,320 @@ const TripPlan = () => {
 
   if (!plan) return null;
 
-  // Format forecast for chart
-  const forecastData = forecast ? forecast.map(f => ({
-    name: new Date(f.date).toLocaleDateString('en-US', { weekday: 'short' }),
-    temp: f.temp
-  })) : [];
+  // Format forecast for chart — safe: forecast defaults to []
+  const forecastData = Array.isArray(forecast)
+    ? forecast.map(f => ({
+        name: new Date(f.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        temp: f.temp
+      }))
+    : [];
+
+  // Safe tier extraction from plan
+  const tier = plan?.tier || 'Standard';
+
+  const vibeTags = plan?.tags || [preferences, travellerType, 'AI Optimised'].filter(Boolean);
+  const totalSpent = (plan?.totalBreakdown?.stay||0)+(plan?.totalBreakdown?.food||0)+(plan?.totalBreakdown?.transport||0)+(plan?.totalBreakdown?.activities||0);
+  const budgetUsed = totalSpent > 0 ? Math.min(Math.round((totalSpent/budget)*100),100) : 72;
+  const breakdownItems = [
+    { label:'Stay',       val: plan?.totalBreakdown?.stay       || Math.round(budget*0.40), icon:Hotel,     color:'#3b82f6', bg:'#eff6ff', pct:40 },
+    { label:'Food',       val: plan?.totalBreakdown?.food       || Math.round(budget*0.25), icon:Utensils,  color:'#f97316', bg:'#fff7ed', pct:25 },
+    { label:'Transport',  val: plan?.totalBreakdown?.transport  || Math.round(budget*0.20), icon:Car,       color:'#8b5cf6', bg:'#f5f3ff', pct:20 },
+    { label:'Activities', val: plan?.totalBreakdown?.activities || Math.round(budget*0.15), icon:Sparkles,  color:'#ec4899', bg:'#fdf2f8', pct:15 },
+  ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
-      {/* Hero Section */}
-      <div className="relative h-[50vh] overflow-hidden rounded-b-[3rem] shadow-lg">
-        {photoUrl && <img src={photoUrl} className="absolute inset-0 w-full h-full object-cover" alt={destination} />}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent z-[1]" />
-        
-        <div className="absolute top-8 left-8 z-20">
-          <button onClick={() => navigate(-1)} className="w-12 h-12 bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl flex items-center justify-center text-white hover:bg-white/40 transition-all">
-            <ArrowLeft size={24} />
+    <div className="min-h-screen pb-32" style={{ background:'var(--bg-primary)' }}>
+      {/* ══ CINEMATIC HERO ══ */}
+      <div className="relative h-[56vh] min-h-[380px] overflow-hidden shadow-2xl">
+        {photoUrl && <img src={photoUrl} className="absolute inset-0 w-full h-full object-cover scale-105" alt={destination} />}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-slate-800/10 z-[1]" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/40 to-transparent z-[1]" />
+        <div className="absolute top-6 left-6 z-20">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 px-4 py-2.5 bg-white/15 backdrop-blur-md border border-white/25 rounded-xl text-white text-sm font-semibold hover:bg-white/25 transition-all">
+            <ArrowLeft size={16} /> Back
           </button>
         </div>
-
-        <div className="absolute bottom-12 left-8 md:left-12 z-20 space-y-4">
-          <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-lg">{destination}</h1>
-          <div className="flex flex-wrap gap-3">
-            <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
-               {tier} Budget
+        <div className="absolute top-6 right-6 z-20 flex gap-2">
+          <button onClick={generatePlan} className="flex items-center gap-2 px-4 py-2.5 bg-white/15 backdrop-blur-md border border-white/25 rounded-xl text-white text-sm font-semibold hover:bg-white/25 transition-all">
+            <RefreshCw size={14} /> Regenerate
+          </button>
+          <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2.5 bg-[#15803d]/80 backdrop-blur-md border border-green-400/30 rounded-xl text-white text-sm font-bold hover:bg-[#15803d] transition-all">
+            <Save size={14} /> Save Trip
+          </button>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 z-20 p-8 md:p-12">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="flex items-center gap-1.5 bg-[#15803d]/90 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full">
+              <Sparkles size={10} /> AI Optimised
             </span>
-            <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
-              <Wallet size={14} /> ₹{budget.toLocaleString()}
-            </span>
-            <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2">
-              <Calendar size={14} /> {duration} Days
-            </span>
+            {weather && (
+              <span className="flex items-center gap-1.5 bg-white/15 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full border border-white/20">
+                <Cloud size={10} /> {weather.temp}° {weather.condition}
+              </span>
+            )}
+          </div>
+          <h1 className="text-5xl md:text-6xl font-black text-white tracking-tight drop-shadow-xl mb-4" style={{ fontFamily:"'Playfair Display',serif" }}>{destination}</h1>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {[`${tier} Budget`, `₹${budget.toLocaleString()}`, `${duration} Days`, travellerType, ...vibeTags.slice(0,2)].map((tag,i) => (
+              <span key={i} className="bg-white/15 backdrop-blur-sm border border-white/25 text-white px-3 py-1.5 rounded-lg text-xs font-semibold">{tag}</span>
+            ))}
+          </div>
+          <div className="max-w-xs">
+            <div className="flex justify-between text-white/70 text-[10px] font-bold uppercase tracking-widest mb-1.5">
+              <span>Budget used</span><span>{budgetUsed}%</span>
+            </div>
+            <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-400 rounded-full" style={{ width:`${budgetUsed}%` }} />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-8 mt-8 space-y-8">
-        
-        {/* Controls & Warning */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
-          <button 
-            onClick={() => setShowModal(true)}
-            className="px-8 py-4 bg-white/70 backdrop-blur-xl border border-gray-200 rounded-2xl font-black text-xs uppercase tracking-widest text-slate-900 hover:border-[#1D9E75] hover:text-[#1D9E75] transition-all flex items-center gap-2 shadow-sm"
-          >
-            <RefreshCw size={16} /> Edit Budget & Preferences
-          </button>
-        </div>
+      {/* ══ MAIN CONTENT ══ */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Cost & Weather */}
-          <div className="lg:col-span-4 space-y-8">
-            
-            {/* Cost Breakdown */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-gray-200 shadow-lg">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
-                <Wallet size={16} className="text-[#1D9E75]" /> AI Cost Breakdown
-              </h3>
-              
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-4 space-y-5">
+
+            {/* Plan summary */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Your Plan</p>
+                  <h2 className="text-xl font-black text-slate-900">{plan?.tier || 'Smart Itinerary'}</h2>
+                  <p className="text-sm text-slate-500 mt-1 leading-relaxed">{plan?.summary || `A perfectly curated ${duration}-day journey through ${destination}.`}</p>
+                </div>
+                <div className="shrink-0 w-12 h-12 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center justify-center">
+                  <Sparkles size={20} className="text-emerald-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* Cost breakdown with bars */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <Wallet size={14} className="text-emerald-600" /> Budget
+                </h3>
+                <span className="text-lg font-black text-emerald-600">₹{budget.toLocaleString()}</span>
+              </div>
               <div className="space-y-4">
-                {[
-                  { label: 'Stay', val: plan?.totalBreakdown?.stay || 0, icon: Hotel, color: 'text-blue-500', bg: 'bg-blue-100' },
-                  { label: 'Food', val: plan?.totalBreakdown?.food || 0, icon: Utensils, color: 'text-orange-500', bg: 'bg-orange-100' },
-                  { label: 'Transport', val: plan?.totalBreakdown?.transport || 0, icon: Navigation, color: 'text-indigo-500', bg: 'bg-indigo-100' },
-                  { label: 'Activities', val: plan?.totalBreakdown?.activities || 0, icon: Sparkles, color: 'text-pink-500', bg: 'bg-pink-100' }
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 hover:bg-white/50 rounded-xl transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${item.bg} ${item.color}`}>
-                        <item.icon size={14} />
+                {breakdownItems.map((item,i) => (
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background:item.bg }}>
+                          <item.icon size={13} style={{ color:item.color }} />
+                        </div>
+                        <span className="text-[13px] font-semibold text-slate-700">{item.label}</span>
                       </div>
-                      <span className="text-xs font-black text-slate-500 uppercase tracking-widest">{item.label}</span>
+                      <div className="text-right">
+                        <span className="text-[13px] font-bold text-slate-900">₹{item.val.toLocaleString()}</span>
+                        <span className="text-[10px] text-slate-400 ml-1">{item.pct}%</span>
+                      </div>
                     </div>
-                    <span className="text-sm font-bold text-slate-900">₹{item.val.toLocaleString()}</span>
+                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <motion.div className="h-full rounded-full" style={{ background:item.color }}
+                        initial={{ width:0 }} animate={{ width:`${item.pct}%` }} transition={{ duration:0.7, delay:i*0.1 }} />
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-6 border-t border-gray-100 flex justify-between items-center">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Target Budget</span>
-                <span className="text-2xl font-black text-[#1D9E75]">₹{budget.toLocaleString()}</span>
-              </div>
             </div>
 
-            {/* Weather & Map Card */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-8 border border-gray-200 shadow-lg space-y-6">
-              <div className="flex justify-between items-start">
-                <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                  <Cloud size={16} className="text-[#1D9E75]" /> Weather Forecast
+            {/* Weather */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <Cloud size={14} className="text-blue-500" /> Weather
                 </h3>
-                {weather && (
-                  <div className="text-right">
-                    <span className="text-3xl font-black text-slate-900">{weather.temp}°</span>
-                    <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">{weather.condition}</span>
-                  </div>
-                )}
+                {weather && <div className="flex items-center gap-2"><span className="text-2xl font-black text-slate-900">{weather.temp}°</span><span className="text-[11px] text-slate-400 font-semibold">{weather.condition}</span></div>}
               </div>
-
-              {forecastData.length > 0 && (
-                <div className="h-40 w-full">
+              {forecastData.length > 0 ? (
+                <div className="h-32 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={forecastData}>
+                    <AreaChart data={forecastData} margin={{ top:4, right:4, bottom:0, left:-24 }}>
                       <defs>
                         <linearGradient id="colorTemp" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#1D9E75" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#1D9E75" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#15803d" stopOpacity={0.25}/>
+                          <stop offset="95%" stopColor="#15803d" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#94a3b8', fontWeight: 'bold'}} />
-                      <RechartsTooltip cursor={{stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '3 3'}} contentStyle={{borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
-                      <Area type="monotone" dataKey="temp" stroke="#1D9E75" strokeWidth={3} fillOpacity={1} fill="url(#colorTemp)" />
+                      <CartesianGrid strokeDasharray="2 4" vertical={false} stroke="#f1f5f9" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize:10, fill:'#94a3b8', fontWeight:600 }} />
+                      <RechartsTooltip contentStyle={{ borderRadius:'12px', border:'1px solid #e2e8f0', fontSize:12 }} />
+                      <Area type="monotone" dataKey="temp" stroke="#15803d" strokeWidth={2.5} fillOpacity={1} fill="url(#colorTemp)" dot={{ fill:'#15803d', strokeWidth:0, r:3 }} />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
+              ) : (
+                <div className="h-20 bg-gradient-to-br from-blue-50 to-emerald-50 rounded-xl flex items-center justify-center">
+                  <p className="text-sm text-slate-400 font-medium">Loading forecast...</p>
+                </div>
               )}
+            </div>
 
-              {/* Map Section (Leaflet) */}
-              <div className="mt-4">
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-3">Explore Destination</h4>
-                {dataState.location ? (
-                  <MapView location={dataState.location} />
-                ) : (
-                  <div className="w-full h-48 bg-slate-100 rounded-2xl flex items-center justify-center border border-slate-200">
-                    <p className="text-slate-400 font-medium text-sm">Location mapping unavailable</p>
+            {/* Local Insights */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+              <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Lightbulb size={14} className="text-amber-500" /> Local Insights
+              </h3>
+              <div className="space-y-3">
+                {[
+                  { icon:'🗓️', label:'Best Season', val: plan?.bestSeason||'Oct – Mar' },
+                  { icon:'👥', label:'Crowd Level', val: plan?.crowdLevel||'Moderate' },
+                  { icon:'🛡️', label:'Safety',      val: plan?.safetyScore||'High' },
+                  { icon:'💱', label:'Currency',    val: 'INR (₹)' },
+                ].map(({ icon,label,val }) => (
+                  <div key={label} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                    <span className="flex items-center gap-2 text-[13px] text-slate-500"><span>{icon}</span>{label}</span>
+                    <span className="text-[13px] font-semibold text-slate-800">{val}</span>
                   </div>
-                )}
+                ))}
               </div>
             </div>
+
+            {/* Map */}
+            {dataState.location && (
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+                <div className="px-5 py-4 border-b border-slate-100">
+                  <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                    <MapPin size={14} className="text-emerald-600" /> Destination Map
+                  </h3>
+                </div>
+                <MapView location={dataState.location} />
+              </div>
+            )}
           </div>
 
-          {/* Right Column: Hotels & Itinerary */}
-          <div className="lg:col-span-8 space-y-8">
-            
-            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-gray-200 shadow-md p-8">
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight italic">{plan?.tier || 'Your Trip Plan'}</h2>
-              <p className="text-slate-500 mt-2 font-medium">{plan?.summary || ''}</p>
+          {/* RIGHT COLUMN: Itinerary */}
+          <div className="lg:col-span-8 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-black text-slate-900" style={{ fontFamily:"'Playfair Display',serif" }}>
+                AI Generated <span className="text-emerald-600">Itinerary</span>
+              </h2>
+              <button onClick={() => setShowModal(true)} className="flex items-center gap-2 text-[13px] font-semibold text-slate-500 hover:text-emerald-600 border border-slate-200 hover:border-emerald-300 px-4 py-2 rounded-xl transition-all">
+                <RefreshCw size={13} /> Edit Trip
+              </button>
             </div>
 
-            {/* AI Itinerary */}
-            <div>
-              <h2 className="text-2xl font-black text-slate-900 tracking-tight italic mb-6">AI Generated <span className="text-[#1D9E75]">Itinerary.</span></h2>
-              <div className="space-y-4">
-                {(plan?.days || []).map((day, i) => (
-                  <div key={i} className="bg-white/70 backdrop-blur-xl rounded-[2rem] border border-gray-200 shadow-md overflow-hidden transition-all hover:shadow-lg">
-                    <button 
-                      onClick={() => setExpandedDay(expandedDay === day.day ? null : day.day)}
-                      className="w-full p-6 flex items-center justify-between hover:bg-white/40 transition-all"
-                    >
-                      <div className="flex items-center gap-6">
-                        <div className="w-14 h-14 bg-slate-100 rounded-2xl flex flex-col items-center justify-center text-slate-800 shrink-0 border border-slate-200">
-                          <span className="text-[10px] font-black uppercase tracking-widest leading-none">Day</span>
-                          <span className="text-2xl font-black">{day.day || (i+1)}</span>
-                        </div>
-                        <div className="text-left">
-                          <h4 className="text-lg font-black text-slate-900">{day.title || 'Explore'}</h4>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-xs font-bold text-[#1D9E75]">₹{day.cost?.toLocaleString() || '0'}</span>
-                            <div className="w-1 h-1 bg-slate-300 rounded-full" />
-                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Planned Activities</span>
-                          </div>
+            {/* Day cards */}
+            <div className="space-y-4">
+              {(plan?.days || []).map((day,i) => {
+                const dayNum = day.day || i+1;
+                const isOpen = expandedDay === dayNum;
+                const activities = [
+                  day.morning   && { time:'Morning',   emoji:'🌅', text:day.morning,   color:'#f97316' },
+                  day.afternoon && { time:'Afternoon',  emoji:'☀️', text:day.afternoon, color:'#3b82f6' },
+                  day.evening   && { time:'Evening',    emoji:'🌙', text:day.evening,   color:'#8b5cf6' },
+                ].filter(Boolean);
+                return (
+                  <motion.div key={i} initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.07 }}
+                    className="bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                    <button onClick={() => setExpandedDay(isOpen ? null : dayNum)}
+                      className="w-full px-6 py-5 flex items-center gap-5 hover:bg-slate-50/80 transition-colors text-left">
+                      <div className="shrink-0 w-14 h-14 rounded-2xl flex flex-col items-center justify-center text-white font-black"
+                        style={{ background:'linear-gradient(135deg,#15803d,#059669)' }}>
+                        <span className="text-[9px] uppercase tracking-widest opacity-80">Day</span>
+                        <span className="text-2xl leading-tight">{dayNum}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-[16px] font-black text-slate-900 truncate">{day.title || `Day ${dayNum} — Explore`}</h4>
+                        <div className="flex items-center flex-wrap gap-3 mt-1">
+                          <span className="text-xs font-semibold text-emerald-600">₹{(day.cost||Math.round(budget/(duration||1))).toLocaleString()}</span>
+                          <span className="w-1 h-1 rounded-full bg-slate-300" />
+                          <span className="text-xs text-slate-400 font-medium">{activities.length} activities</span>
                         </div>
                       </div>
-                      {expandedDay === day.day ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
+                      <div className="shrink-0 w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400">
+                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </div>
                     </button>
-
                     <AnimatePresence>
-                      {expandedDay === day.day && (
-                        <motion.div 
-                          initial={{ height: 0 }}
-                          animate={{ height: 'auto' }}
-                          exit={{ height: 0 }}
-                          className="overflow-hidden bg-slate-50/50"
-                        >
-                          <div className="p-8 pt-4 space-y-6 border-t border-gray-100">
-                            {day?.morning && (
-                              <div className="flex gap-4 items-start">
-                                <span className="text-xl">🌅</span>
-                                <p className="text-sm font-medium text-slate-700">{day.morning}</p>
+                      {isOpen && (
+                        <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }} exit={{ height:0, opacity:0 }} transition={{ duration:0.22 }} className="overflow-hidden">
+                          <div className="border-t border-slate-100 px-6 pb-6 pt-5">
+                            <div className="relative pl-5">
+                              <div className="absolute left-0 top-2 bottom-2 w-px bg-gradient-to-b from-orange-300 via-blue-300 to-purple-300" />
+                              <div className="space-y-4">
+                                {activities.map((act,ai) => (
+                                  <div key={ai} className="relative flex gap-4 items-start">
+                                    <div className="absolute -left-5 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm" style={{ background:act.color }} />
+                                    <div className="flex-1 bg-slate-50 rounded-xl p-3.5 border border-slate-100">
+                                      <div className="flex items-center gap-2 mb-1.5">
+                                        <span className="text-base">{act.emoji}</span>
+                                        <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{act.time}</span>
+                                      </div>
+                                      <p className="text-[13px] text-slate-700 leading-relaxed font-medium">{act.text}</p>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                            )}
-                            {day?.afternoon && (
-                              <div className="flex gap-4 items-start">
-                                <span className="text-xl">☀️</span>
-                                <p className="text-sm font-medium text-slate-700">{day.afternoon}</p>
-                              </div>
-                            )}
-                            {day?.evening && (
-                              <div className="flex gap-4 items-start">
-                                <span className="text-xl">🌙</span>
-                                <p className="text-sm font-medium text-slate-700">{day.evening}</p>
-                              </div>
-                            )}
+                            </div>
+                            <div className="flex items-center gap-3 mt-5 pt-4 border-t border-slate-100 flex-wrap">
+                              <span className="flex items-center gap-1.5 text-[12px] text-slate-500"><Hotel size={12} className="text-blue-400" /> {plan?.accommodation?.type||'Hotel'}</span>
+                              <span className="flex items-center gap-1.5 text-[12px] text-slate-500"><Utensils size={12} className="text-orange-400" /> {plan?.food?.style||'Local cuisine'}</span>
+                              <span className="flex items-center gap-1.5 text-[12px] text-slate-500"><Car size={12} className="text-purple-400" /> {plan?.transport?.mode||'Auto / Taxi'}</span>
+                            </div>
                           </div>
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </div>
-                ))}
-              </div>
+                  </motion.div>
+                );
+              })}
             </div>
 
-            {/* Food & Tips Section */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4">
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-md">
-                <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-4">
-                  <Utensils size={14} className="text-orange-500" /> Food Plan
+            {/* Food + Tips */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Utensils size={13} className="text-orange-500" /> Food Plan
                 </h4>
-                <p className="text-sm font-bold text-slate-700 mb-2">{plan?.food?.style || "Local Dining"}</p>
-                <p className="text-xs font-medium text-slate-500">Average Meal: ₹{plan?.food?.avgMeal || 0}</p>
+                <p className="text-[15px] font-bold text-slate-800 mb-1">{plan?.food?.style||'Local Dining'}</p>
+                <p className="text-[13px] text-slate-500 mb-3">Avg meal: <span className="font-bold text-slate-700">₹{plan?.food?.avgMeal||Math.round(budget*0.008)}</span></p>
+                <div className="flex flex-wrap gap-1.5">
+                  {['Street Food','Local Dhabas','Cafés'].map(t => (
+                    <span key={t} className="text-[10px] px-2.5 py-1 rounded-full bg-orange-50 border border-orange-100 text-orange-600 font-semibold">{t}</span>
+                  ))}
+                </div>
               </div>
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-md">
-                <h4 className="text-xs font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-4">
-                  <Sparkles size={14} className="text-[#1D9E75]" /> Pro Tips
+              <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5">
+                <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 mb-4">
+                  <Lightbulb size={13} className="text-amber-500" /> Pro Tips
                 </h4>
-                <ul className="space-y-2">
-                  {(plan?.tips || []).map((tip, i) => (
-                    <li key={i} className="text-xs font-medium text-slate-600 flex items-start gap-2">
-                      <span className="text-[#1D9E75]">💡</span> {tip}
+                <ul className="space-y-2.5">
+                  {(plan?.tips||['Book hotels early for savings','Use local transport','Carry cash for street food']).slice(0,3).map((tip,i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-[13px] text-slate-600 font-medium">
+                      <span className="text-emerald-500 shrink-0 mt-0.5">✓</span> {tip}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
+            {/* Action bar */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-wrap gap-3 items-center justify-between">
+              <p className="text-[13px] text-slate-400 font-medium hidden sm:block">✦ Your AI plan is ready</p>
+              <div className="flex flex-wrap gap-2 ml-auto">
+                <button onClick={generatePlan} className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[13px] font-semibold rounded-xl transition-all">
+                  <RefreshCw size={13} /> Regenerate
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[13px] font-semibold rounded-xl transition-all">
+                  <ExternalLink size={13} /> Export PDF
+                </button>
+                <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-5 py-2.5 bg-[#15803d] hover:bg-[#166534] text-white text-[13px] font-bold rounded-xl shadow-sm transition-all">
+                  <Save size={13} /> Save Plan
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       <AnimatePresence>
-        {showModal && (
-          <BudgetModal 
-            destination={{name: destination}} 
-            onClose={() => setShowModal(false)} 
-          />
-        )}
+        {showModal && <BudgetModal destination={{ name:destination }} onClose={() => setShowModal(false)} />}
       </AnimatePresence>
     </div>
   );

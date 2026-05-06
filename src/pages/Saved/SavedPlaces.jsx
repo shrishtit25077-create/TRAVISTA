@@ -36,7 +36,7 @@ const SavedPlaces = () => {
             <span className="text-[10px] font-black uppercase tracking-widest">Your Private Collection</span>
           </motion.div>
           <h1 className="text-6xl font-black text-slate-900 tracking-tight leading-none">
-            Saved <span className="text-[#1f6f63]">Wonders.</span>
+            Saved <span className="text-[#1f6f63]">Wonders</span>
           </h1>
           <p className="text-xl text-slate-400 font-medium max-w-xl">
             A curated list of destinations that caught your eye. Ready to turn these dreams into itineraries?

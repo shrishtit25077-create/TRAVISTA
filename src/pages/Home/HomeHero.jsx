@@ -33,7 +33,7 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
   const [phIdx, setPhIdx] = useState(0);
   const navigate = useNavigate();
   const { addItinerary, addToHistory } = useAuth();
-  
+
   const { search, loading } = useDestinationSearch();
   const [results, setResults] = useState(null);
 
@@ -56,7 +56,7 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           name: res.destination,
           country: res.place?.formatted_address || 'India',
           flag: '🇮🇳',
-          category: 'Adventure', 
+          category: 'Adventure',
           price: '₹₹',
           lat: res.weather?.coord?.lat || 20,
           lon: res.weather?.coord?.lon || 78
@@ -155,7 +155,7 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           <ChevronDown size={16} className="scroll-arrow" />
         </div>
       </div>
-      
+
       {/* Display Results Below Hero */}
       {results && (
         <div className="relative z-10 px-4 -mt-10 mb-20">

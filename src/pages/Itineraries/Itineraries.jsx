@@ -123,7 +123,7 @@ function Itineraries() {
         
         <div className="space-y-4">
         <h1 className="text-5xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
-            My <span className="text-emerald-600">Itineraries.</span>
+            My <span className="text-emerald-600">Itineraries</span>
           </h1>
           <p className="text-xl text-slate-400 font-medium">
             Your generated travel plans and upcoming adventures.

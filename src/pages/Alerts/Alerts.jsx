@@ -117,7 +117,7 @@ const Alerts = () => {
       <div className="max-w-4xl mx-auto space-y-12">
         <div className="space-y-4">
           <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
-            Price Drop <span className="text-emerald-600">Alerts.</span>
+            Price Drop <span className="text-emerald-600">Alerts</span>
           </h1>
           <p className="text-xl text-slate-400 font-medium">
             We're watching the skies for you.

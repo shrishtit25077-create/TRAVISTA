@@ -22,8 +22,8 @@ const NavItem = ({ icon: Icon, label, path, onClose }) => {
         text-[15px] font-medium tracking-[-0.01em]
         transition-all duration-150 group border-l-2
         ${active
-          ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-600 dark:border-emerald-500 font-semibold'
-          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200 border-transparent'
+          ? 'bg-[#f0fdf4] text-[#15803d] border-[#16a34a] font-semibold'
+          : 'text-[#374151] dark:text-slate-400 hover:bg-[#f0f0eb] dark:hover:bg-slate-800/50 hover:text-[#0f172a] dark:hover:text-slate-200 border-transparent'
         }
       `}
     >
@@ -31,8 +31,8 @@ const NavItem = ({ icon: Icon, label, path, onClose }) => {
         size={16}
         className={`shrink-0 transition-all duration-150 ${
           active
-            ? 'text-emerald-600 dark:text-emerald-400'
-            : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+            ? 'text-[#15803d]'
+            : 'text-slate-400 group-hover:text-[#374151] dark:group-hover:text-slate-300'
         }`}
       />
       <span className="truncate leading-none">{label}</span>
@@ -92,24 +92,24 @@ const SidebarContent = ({ onClose }) => {
       {/* ── Navigation ── */}
       <div className="flex-1 overflow-y-auto no-scrollbar px-2.5 pb-3">
         <Section title="Discover">
-          <NavItem icon={Compass} label="Inspiration" path="/"           onClose={onClose} />
-          <NavItem icon={Map}     label="Explore"     path="/map"         onClose={onClose} />
+          <NavItem icon={Compass} label="Inspiration" path="/" onClose={onClose} />
+          <NavItem icon={Map} label="Explore" path="/map" onClose={onClose} />
         </Section>
 
         <Section title="Plan">
-          <NavItem icon={Sparkles} label="AI Planner"  path="/planner"    onClose={onClose} />
-          <NavItem icon={Globe}    label="Translator"  path="/translator"  onClose={onClose} />
+          <NavItem icon={Sparkles} label="AI Planner" path="/planner" onClose={onClose} />
+          <NavItem icon={Globe} label="Translator" path="/translator" onClose={onClose} />
         </Section>
 
         <Section title="My Trips">
           <NavItem icon={Calendar} label="Itineraries" path="/itineraries" onClose={onClose} />
-          <NavItem icon={Heart}    label="Saved"        path="/saved"       onClose={onClose} />
-          <NavItem icon={Bell}     label="Alerts"       path="/alerts"      onClose={onClose} />
+          <NavItem icon={Heart} label="Saved" path="/saved" onClose={onClose} />
+          <NavItem icon={Bell} label="Alerts" path="/alerts" onClose={onClose} />
         </Section>
 
         <Section title="Account">
-          <NavItem icon={User}     label="Profile"   path="/profile"   onClose={onClose} />
-          <NavItem icon={Settings} label="Settings"  path="/settings"  onClose={onClose} />
+          <NavItem icon={User} label="Profile" path="/profile" onClose={onClose} />
+          <NavItem icon={Settings} label="Settings" path="/settings" onClose={onClose} />
         </Section>
       </div>
 

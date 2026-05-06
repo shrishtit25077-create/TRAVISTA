@@ -19,7 +19,7 @@ import { Bell } from 'lucide-react';
 export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reasonChip, onPlanTrip }) => {
   const navigate = useNavigate();
   const { savedPlaces, toggleSave } = useAuth();
-  
+
   const isSaved = savedPlaces.some((p) => p.id === item.id);
 
   const { photoUrl, loading: photoLoading } = useDestinationPhoto(item.name);
@@ -162,7 +162,7 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
           <div className="flex justify-between items-center mt-3">
             <p className="text-sm font-bold text-white drop-shadow-md">{item.price} <span className="text-white/60 text-xs font-normal">per person</span></p>
             {temp && (
-               <p className="text-sm font-bold text-teal-300 drop-shadow-md">{temp}</p>
+              <p className="text-sm font-bold text-teal-300 drop-shadow-md">{temp}</p>
             )}
           </div>
         </div>
@@ -172,12 +172,12 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
       <AnimatePresence>
         {showAlertModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={() => setShowAlertModal(false)}
             />
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
               className="bg-white dark:bg-[#1a1a1a] rounded-[2rem] p-8 max-w-sm w-full relative z-10 shadow-2xl border border-slate-100 dark:border-[#2a2a2a]"
             >
@@ -189,12 +189,12 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
               </div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Price Drop Alert</h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 font-medium mb-6">We'll let you know when flight prices to {item.name} match your budget.</p>
-              
+
               <div className="space-y-4 mb-8">
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Target Price (₹)</label>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     value={alertPrice}
                     onChange={(e) => setAlertPrice(e.target.value)}
                     placeholder="e.g. 25000"
@@ -203,7 +203,7 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
                 </div>
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Travel Month</label>
-                  <select 
+                  <select
                     value={alertMonth}
                     onChange={(e) => setAlertMonth(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-[#0f0f0f] border border-slate-200 dark:border-[#2a2a2a] rounded-xl px-4 py-3 outline-none text-slate-900 dark:text-white font-medium"
@@ -215,7 +215,7 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={handleSetAlert}
                 disabled={!alertPrice}
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-xl py-4 font-bold disabled:opacity-50 transition-colors"
@@ -239,7 +239,7 @@ export const DestinationSkeleton = ({ layout = 'grid' }) => {
     <div className={`relative rounded-[1.5rem] overflow-hidden ${containerClass} bg-slate-200 dark:bg-slate-800 animate-pulse flex flex-col justify-end p-5`}>
       <div className="w-16 h-6 bg-slate-300 dark:bg-slate-700 rounded-full absolute top-4 left-4" />
       <div className="w-8 h-8 bg-slate-300 dark:bg-slate-700 rounded-full absolute top-4 right-4" />
-      
+
       <div className="space-y-3 relative z-10 w-full mt-auto">
         <div className="w-12 h-6 bg-slate-300 dark:bg-slate-700 rounded-lg" />
         <div className="w-3/4 h-6 bg-slate-300 dark:bg-slate-700 rounded-lg" />
@@ -298,7 +298,7 @@ const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
 
 const PersonalisedSection = ({ onPlanTrip }) => {
   const { recommendations, loading, isPersonalised } = useRecommendations(
-    ['Paris', 'London', 'New York'], 
+    ['Paris', 'London', 'New York'],
     6
   );
 
@@ -307,7 +307,7 @@ const PersonalisedSection = ({ onPlanTrip }) => {
       <div className="max-w-[1400px] mx-auto px-6 space-y-6">
         <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-full w-1/4 animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({length: 6}).map((_,i) => <DestinationSkeleton key={i} layout="personalized" />)}
+          {Array.from({ length: 6 }).map((_, i) => <DestinationSkeleton key={i} layout="personalized" />)}
         </div>
       </div>
     );
@@ -321,11 +321,11 @@ const PersonalisedSection = ({ onPlanTrip }) => {
   if (data.length === 0) return null;
 
   return (
-    <SectionRow 
-      title="Because You Like Discovery" 
-      subtitle={isPersonalised ? "✦ Personalised for you" : "Trending"} 
-      data={data} 
-      layout="personalized" 
+    <SectionRow
+      title="Because You Like Discovery"
+      subtitle={isPersonalised ? "✦ Personalised for you" : "Trending"}
+      data={data}
+      layout="personalized"
       onPlanTrip={onPlanTrip}
     />
   );
@@ -364,8 +364,8 @@ const Home = () => {
 
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
-      data = data.filter(d => 
-        d.name.toLowerCase().includes(q) || 
+      data = data.filter(d =>
+        d.name.toLowerCase().includes(q) ||
         d.category.toLowerCase().includes(q) ||
         d.tags?.some(t => t.toLowerCase().includes(q)) ||
         (q === 'budget' && d.numericPrice < 50000) ||
@@ -391,7 +391,7 @@ const Home = () => {
     const trending = [...filteredData].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 6);
     const luxury = filteredData.filter(d => d.numericPrice > 140000).slice(0, 4);
     const gems = filteredData.filter(d => (d.popularity || 0) < 85 && d.rating >= 4.7).slice(0, 8);
-    
+
     const result = [];
     if (trending.length > 0) result.push({ id: 'trending', title: 'Trending Now', data: trending, layout: 'trending' });
     // Personalized section is now handled by PersonalisedSection component
@@ -414,10 +414,10 @@ const Home = () => {
         />
       </div>
 
-      <div className="space-y-16 md:space-y-24 pb-24 md:pb-40">
+      <div className="space-y-20 md:space-y-28 pb-24 md:pb-44">
         <AnimatePresence mode="wait">
           {isSearching ? (
-            <motion.div 
+            <motion.div
               key="skeleton"
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
@@ -432,7 +432,7 @@ const Home = () => {
               </div>
             </motion.div>
           ) : sections.length === 0 ? (
-            <motion.div 
+            <motion.div
               key="empty"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -447,17 +447,17 @@ const Home = () => {
           ) : (
             sections.map((section, idx) => (
               <React.Fragment key={section.id}>
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6 }}
                 >
-                  <SectionRow 
-                    title={section.title} 
-                    subtitle={section.subtitle} 
-                    data={section.data} 
-                    layout={section.layout} 
+                  <SectionRow
+                    title={section.title}
+                    subtitle={section.subtitle}
+                    data={section.data}
+                    layout={section.layout}
                     onPlanTrip={(dest) => setSelectedDest(dest)}
                   />
                 </motion.div>
@@ -479,9 +479,9 @@ const Home = () => {
 
       <AnimatePresence>
         {selectedDest && (
-          <BudgetModal 
-            destination={selectedDest} 
-            onClose={() => setSelectedDest(null)} 
+          <BudgetModal
+            destination={selectedDest}
+            onClose={() => setSelectedDest(null)}
           />
         )}
       </AnimatePresence>
