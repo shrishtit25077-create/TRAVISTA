@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import SmoothScroll from './components/Effects/SmoothScroll';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import ProtectedRoute from './components/ProtectedRoute';
+import PageErrorBoundary from './components/ErrorBoundary';
 
 // ─── Page imports ─────────────────────────────────────────────────────────────
 import Login from './pages/Login';
@@ -119,7 +120,7 @@ function AnimatedRoutes() {
           <Route path="profile"                 element={<AnimatedPage><Profile /></AnimatedPage>} />
           <Route path="settings"               element={<AnimatedPage><Settings /></AnimatedPage>} />
           <Route path="destination/:id"         element={<AnimatedPage><DestinationDetail /></AnimatedPage>} />
-          <Route path="trip-plan/:destination"  element={<AnimatedPage><TripPlan /></AnimatedPage>} />
+          <Route path="trip-plan/:destination"  element={<AnimatedPage><PageErrorBoundary><TripPlan /></PageErrorBoundary></AnimatedPage>} />
         </Route>
 
         {/* 404 catch-all */}
