@@ -9,7 +9,7 @@ const WEATHER_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 export function checkApiKeys() {
   const keys = {
-    Gemini: import.meta.env.VITE_GEMINI_API_KEY,
+    OpenRouter: import.meta.env.VITE_OPENROUTER_KEY,
     Unsplash: import.meta.env.VITE_UNSPLASH_ACCESS_KEY,
     OpenWeather: import.meta.env.VITE_OPENWEATHER_API_KEY,
   };

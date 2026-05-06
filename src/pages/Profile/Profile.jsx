@@ -1,11 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Check, LogOut } from 'lucide-react';
+import { User, MapPin, Check, LogOut, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { clearSignals } from '../../services/trackingService';
 import { RefreshCw } from 'lucide-react';
+
+const API_KEY = import.meta.env.VITE_OPENROUTER_KEY;
+async function callAI(prompt) {
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'mistralai/mistral-7b-instruct', messages: [{ role: 'user', content: prompt }] }),
+  });
+  const data = await res.json();
+  return data.choices?.[0]?.message?.content || '';
+}
 
 // ─── Field Input ─────────────────────────────────────────────────────────────
 const Field = ({ label, name, type = 'text', value, onChange, placeholder }) => (
@@ -26,6 +37,17 @@ const Profile = () => {
   const { user, logout, updateUser } = useAuth();
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
+
+  // AI Personality (Feature 4)
+  const [personality, setPersonality] = useState('');
+  const [loadingPersonality, setLoadingPersonality] = useState(false);
+
+  const generatePersonality = async () => {
+    setLoadingPersonality(true);
+    const res = await callAI(`Based on someone who travels a lot, loves beaches, and seeks cultural experiences, write exactly one creative travel personality description in under 20 words. No quotes.`);
+    setPersonality(res.trim());
+    setLoadingPersonality(false);
+  };
 
   // ── Profile State ────────────────────────────────────────────────────────
   const [profile, setProfile] = useState({
@@ -140,6 +162,29 @@ const Profile = () => {
               <div className="text-[10px] font-black uppercase tracking-widest text-purple-600 mb-1">Travel Streak</div>
               <div className="text-2xl font-black text-purple-900">14 Days</div>
             </div>
+          </div>
+
+          {/* AI Personality (Feature 4) */}
+          <div className="bg-gradient-to-r from-emerald-50 to-sky-50 rounded-2xl p-5 border border-emerald-100 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <div className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-1">✨ AI Travel Personality</div>
+              <div className="text-sm font-bold text-slate-700 italic min-h-[1.5rem]">
+                {loadingPersonality ? (
+                  <span className="text-slate-400 animate-pulse">Generating your persona...</span>
+                ) : personality ? (
+                  `"${personality}"`
+                ) : (
+                  <span className="text-slate-400">Click to discover your travel personality</span>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={generatePersonality}
+              disabled={loadingPersonality}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-700 transition-all disabled:opacity-50 shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> {loadingPersonality ? 'Writing...' : 'Generate'}
+            </button>
           </div>
 
           {/* Form Grid */}

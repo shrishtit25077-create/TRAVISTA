@@ -1,21 +1,26 @@
 {
-  "name": "Travista AI Travel",
+  "name": "Travista - AI Travel Planner",
   "short_name": "Travista",
-  "description": "AI-powered travel planner and companion",
+  "description": "Plan your dream trip with AI-powered itineraries",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1D9E75",
+  "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/vite.svg",
+      "src": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=192&h=192",
       "sizes": "192x192",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/vite.svg",
+      "src": "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=512&h=512",
       "sizes": "512x512",
-      "type": "image/svg+xml"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["travel", "lifestyle", "productivity"],
+  "screenshots": []
 }

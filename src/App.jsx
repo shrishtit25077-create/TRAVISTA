@@ -23,6 +23,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import SmoothScroll from './components/Effects/SmoothScroll';
 import { LocationProvider } from './context/LocationContext';
+import PWAInstallBanner from './components/PWAInstallBanner';
 
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
@@ -94,6 +95,7 @@ function App() {
       <AuthProvider>
         <LocationProvider>
           <SmoothScroll />
+          <PWAInstallBanner />
           <Toaster position="bottom-right" toastOptions={{ duration: 3000, style: { background: '#111827', color: '#fff', fontSize: '12px' } }} />
           <Router>
             <AnimatedRoutes />

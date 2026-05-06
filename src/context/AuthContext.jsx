@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import { login as fbLogin, signup as fbSignup, logout as fbLogout } from '../services/auth';
+import { login as fbLogin, signup as fbSignup, logout as fbLogout, loginWithGoogle as fbGoogleLogin } from '../services/auth';
 
 const AuthContext = createContext();
 
@@ -27,11 +27,16 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    // throws with human-readable message from auth.js
     await fbLogin(email, password);
   };
 
   const signup = async (email, password) => {
     await fbSignup(email, password);
+  };
+
+  const loginWithGoogle = async () => {
+    await fbGoogleLogin();
   };
 
   const logout = async () => {
@@ -74,27 +79,38 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const [itineraries, setItineraries] = useState(() => {
-    try {
-      const stored = localStorage.getItem("itineraries");
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [itineraries, setItineraries] = useState([]);
 
   useEffect(() => {
-    localStorage.setItem("itineraries", JSON.stringify(itineraries));
-  }, [itineraries]);
+    if (user) {
+      import('../services/db').then(({ getTrips }) => {
+        getTrips().then(setItineraries);
+      });
+    } else {
+      setItineraries([]);
+    }
+  }, [user]);
 
-  const addItinerary = (trip) => {
-    setItineraries(prev => [...prev, trip]);
-    import('react-hot-toast').then(toast => toast.default.success("Trip saved to itineraries!"));
+  const addItinerary = async (trip) => {
+    const { saveTrip } = await import('../services/db');
+    try {
+      const saved = await saveTrip(trip);
+      setItineraries(prev => [saved, ...prev]);
+      import('react-hot-toast').then(toast => toast.default.success("Trip saved to itineraries!"));
+    } catch (err) {
+      import('react-hot-toast').then(toast => toast.default.error("Failed to save trip"));
+    }
   };
 
-  const deleteItinerary = (id) => {
-    setItineraries(prev => prev.filter(t => t.id !== id));
-    import('react-hot-toast').then(toast => toast.default.success("Trip deleted"));
+  const deleteItinerary = async (id) => {
+    const { deleteTrip } = await import('../services/db');
+    try {
+      await deleteTrip(id);
+      setItineraries(prev => prev.filter(t => t.id !== id));
+      import('react-hot-toast').then(toast => toast.default.success("Trip deleted"));
+    } catch (err) {
+      import('react-hot-toast').then(toast => toast.default.error("Failed to delete trip"));
+    }
   };
 
   const [searchHistory, setSearchHistory] = useState(() => {
@@ -122,6 +138,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         signup,
+        loginWithGoogle,
         logout,
         updateUser,
         savedPlaces,

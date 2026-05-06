@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, Users, User, Heart, Users2, Sparkles, AlertCircle } from 'lucide-react';
 import { useDestinationPhoto } from '../hooks/useDestinationPhoto';
 import { useNavigate } from 'react-router-dom';
+import { generateAITrip } from '../services/ai';
+import { generateTrip } from '../services/tripEngine';
+import { saveTrip } from '../services/db';
 
 const BudgetModal = ({ destination, onClose }) => {
   const navigate = useNavigate();
@@ -19,12 +22,45 @@ const BudgetModal = ({ destination, onClose }) => {
     { label: 'Premium', value: 150000 },
   ];
 
-  const handleSubmit = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleGenerate = async () => {
     if (!budget || budget <= 0) return;
     
-    const params = { budget, duration, travellerType, destination: destination.name };
-    localStorage.setItem('travista_trip_params', JSON.stringify(params));
-    navigate(`/trip-plan/${encodeURIComponent(destination.name)}?budget=${budget}&duration=${duration}&type=${travellerType}`);
+    setLoading(true);
+
+    let trip = await generateAITrip({
+      destination: destination.name,
+      budget,
+      days: duration,
+      type: travellerType,
+    });
+
+    // 💥 fallback if AI fails
+    if (!trip) {
+      trip = generateTrip({
+        destination: destination.name,
+        budget,
+        days: duration,
+        type: travellerType,
+      });
+    }
+
+    // Save trip to Firestore
+    try {
+      await saveTrip({
+        destination: destination.name,
+        budget,
+        days: duration,
+        type: travellerType,
+        plan: trip
+      });
+    } catch (err) {
+      console.error("Failed to save trip to Firestore:", err);
+    }
+
+    setLoading(false);
+    navigate(`/trip-plan/${encodeURIComponent(destination.name)}?budget=${budget}&duration=${duration}&type=${travellerType}`, { state: { aiPlan: trip } });
     onClose();
   };
 
@@ -134,13 +170,19 @@ const BudgetModal = ({ destination, onClose }) => {
           </div>
 
           <div className="space-y-4 pt-4">
-            <button
-              onClick={handleSubmit}
-              disabled={!budget}
-              className="w-full bg-[#1D9E75] hover:bg-[#15825f] disabled:opacity-50 disabled:hover:bg-[#1D9E75] text-white py-5 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-xl shadow-[#1D9E75]/20"
-            >
-              Design My Trip <Sparkles size={16} />
-            </button>
+            {loading ? (
+              <button className="w-full bg-slate-400 text-white py-5 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-xl">
+                Designing your trip...
+              </button>
+            ) : (
+              <button
+                onClick={handleGenerate}
+                disabled={!budget}
+                className="w-full bg-[#1D9E75] hover:bg-[#15825f] disabled:opacity-50 disabled:hover:bg-[#1D9E75] text-white py-5 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-xl shadow-[#1D9E75]/20"
+              >
+                Design My Trip ✨
+              </button>
+            )}
             <p className="text-[10px] text-slate-400 font-medium text-center italic">We'll find the best possible experience within your budget</p>
           </div>
         </div>

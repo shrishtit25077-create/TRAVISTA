@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
 :root {
   --sidebar-bg: #ffffff;
   --sidebar-border: #f1f5f9;

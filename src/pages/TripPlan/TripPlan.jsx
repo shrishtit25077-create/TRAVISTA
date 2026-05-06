@@ -11,7 +11,6 @@ import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
 import { useWeather, useForecast } from '../../hooks/useTravista';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 import BudgetModal from '../../components/BudgetModal';
-import { generateTripPlan } from '../../services/tripPlanner';
 import { fetchHotels } from '../../services/hotelService';
 import { searchLocation } from '../../services/freeLocation';
 import MapView from '../../components/MapView';
@@ -46,8 +45,6 @@ const TripPlan = () => {
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
 
   const errorMessages = {
-    missing_key: { icon: '🔑', title: 'API key missing', msg: 'Add VITE_GEMINI_API_KEY to .env and restart server' },
-    invalid_key: { icon: '🔐', title: 'Invalid API key', msg: 'Invalid Gemini API key — check aistudio.google.com/apikey' },
     quota: { icon: '⏳', title: 'Rate limit hit', msg: 'Rate limit hit — wait 60 seconds and try again' },
     api_error: { icon: '🌐', title: 'API Error', msg: 'Gemini API error — check console for details' },
     parse_error: { icon: '🔧', title: 'Parse error', msg: 'Could not read AI response — try again' },
@@ -71,42 +68,31 @@ const TripPlan = () => {
   }, [loading, loadingMessages.length]);
 
   const generatePlan = useCallback(async () => {
+    if (location.state?.aiPlan) {
+      setLoading(false);
+      const locData = await searchLocation(destination).catch(() => null);
+      setDataState({ location: locData, aiPlan: location.state.aiPlan });
+      return;
+    }
+
     setLoading(true);
     setError(null);
-    const key = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!key || key.includes('your_')) { setError('missing_key'); setLoading(false); return; }
-
-    const prompt = `Create a ${duration}-day trip to ${destination} for ${travellerType} with total budget ₹${budget}.
-Return ONLY raw JSON (no markdown, no backticks). Start with { end with }:
-{"tier":"Budget/Mid/Premium","summary":"one sentence","accommodation":{"type":"","pricePerNight":0,"area":""},"transport":{"to":"","local":""},"food":{"style":"","avgMeal":0,"mustTry":["","",""]},"days":[{"day":1,"title":"","morning":"","afternoon":"","evening":"","cost":0}],"tips":["","",""],"breakdown":{"transport":0,"stay":0,"food":0,"activities":0}}
-Make all ${duration} days. All costs in INR. Total must be under ₹${budget}.`;
 
     try {
-      const locData = await searchLocation(destination);
+      const locData = await searchLocation(destination).catch(() => null);
+      
+      const { generateAITrip } = await import('../../services/ai');
+      let fetchedPlan = await generateAITrip({
+        destination,
+        budget,
+        days: duration,
+        type: travellerType
+      });
 
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.5, maxOutputTokens: 2048 },
-          }),
-        }
-      );
-      const data = await res.json();
-      if (!res.ok) {
-        if (res.status === 429) setError('quota');
-        else if (res.status === 403) setError('invalid_key');
-        else setError('api_error');
-        setLoading(false);
-        return;
+      if (!fetchedPlan) {
+        const { generateTrip } = await import('../../services/tripEngine');
+        fetchedPlan = generateTrip({ destination, budget, days: duration, type: travellerType });
       }
-      const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      const start = raw.indexOf('{');
-      const end = raw.lastIndexOf('}');
-      const fetchedPlan = JSON.parse(raw.slice(start, end + 1));
       
       setDataState({ location: locData, aiPlan: fetchedPlan });
     } catch (e) {
@@ -115,7 +101,7 @@ Make all ${duration} days. All costs in INR. Total must be under ₹${budget}.`;
     } finally {
       setLoading(false);
     }
-  }, [destination, budget, duration, travellerType]);
+  }, [destination, budget, duration, travellerType, location.state]);
 
   useEffect(() => {
     generatePlan();

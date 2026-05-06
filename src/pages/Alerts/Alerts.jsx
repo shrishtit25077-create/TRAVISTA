@@ -13,20 +13,23 @@ const AlertCard = ({ alert, onDelete }) => {
   useEffect(() => {
     const fetchInsight = async () => {
       try {
-        const key = import.meta.env.VITE_GEMINI_API_KEY;
+        const key = import.meta.env.VITE_OPENROUTER_KEY;
         const prompt = `Current average flight price from India to ${alert.destination} in ${alert.month}? Return ONLY JSON: {"avgPrice": number, "isGoodTime": boolean, "tip": "string"}`;
         
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            Authorization: `Bearer ${key}`,
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.1 }
+            model: "mistralai/mistral-7b-instruct",
+            messages: [{ role: "user", content: prompt }]
           }),
         });
 
         const data = await res.json();
-        const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const textResponse = data.choices?.[0]?.message?.content;
         
         if (textResponse) {
           const cleaned = textResponse.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();

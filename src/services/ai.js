@@ -1,31 +1,82 @@
-export async function generateTrip(prompt) {
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!geminiKey) throw new Error("Gemini API key missing");
+const API_KEY = import.meta.env.VITE_OPENROUTER_KEY;
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+export async function generateAITrip({ destination, budget, days, type }) {
+  const prompt = `
+Create a detailed travel plan.
+
+Destination: ${destination}
+Budget: ₹${budget}
+Days: ${days}
+Traveler Type: ${type}
+
+Return STRICT JSON in this format:
+{
+  "summary": "",
+  "hotels": [{ "name": "", "price": 0 }],
+  "itinerary": [
+    { "day": 1, "plan": ["", "", ""] }
+  ],
+  "tips": []
+}
+`;
+
+  try {
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "mistralai/mistral-7b-instruct",
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
+
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content || "{}";
+    
+    // Parse the JSON block safely in case mistral adds markdown ticks
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start === -1 || end === -1) return null;
+    
+    return JSON.parse(text.slice(start, end + 1));
+  } catch (err) {
+    console.error("OpenRouter AI failed:", err);
+    return null; // fallback trigger
+  }
+}
+
+export async function generateTrip(prompt) {
+  if (!API_KEY) throw new Error("OpenRouter API key missing");
+
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: `You are Travista's AI Co-Pilot. 
+      model: "mistralai/mistral-7b-instruct",
+      messages: [{ role: "user", content: `You are Travista's AI Co-Pilot. 
 If the user asks for a specific trip, generate a detailed itinerary with duration, budget, and activities.
 If the user asks for destination recommendations (e.g., based on weather, budget, or group size), return the top 5 matching destinations with weather data, prices, and reasons why they match. 
-Use clear markdown formatting, emojis, and a highly engaging tone.\n\nUser: ${prompt}` }] }],
-      generationConfig: { temperature: 0.5 },
+Use clear markdown formatting, emojis, and a highly engaging tone.\n\nUser: ${prompt}` }],
     }),
   });
 
   if (!res.ok) throw new Error("AI failed");
 
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = data.choices?.[0]?.message?.content;
   if (!text) throw new Error("AI returned no text");
 
   return text;
 }
 
 export async function smartSearch(query) {
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!geminiKey) throw new Error("Gemini API key missing");
+  if (!API_KEY) throw new Error("OpenRouter API key missing");
 
   const prompt = `You are an AI travel search engine. The user searched for: "${query}".
 Return a JSON array of up to 5 matching destinations. 
@@ -36,19 +87,22 @@ Format exactly like this:
   { "name": "Maldives", "flag": "🇲🇻", "hierarchy": "South Asia" }
 ]`;
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3 },
+      model: "mistralai/mistral-7b-instruct",
+      messages: [{ role: "user", content: prompt }],
     }),
   });
 
   if (!res.ok) return [];
 
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = data.choices?.[0]?.message?.content;
   if (!text) return [];
 
   try {
@@ -61,26 +115,28 @@ Format exactly like this:
 }
 
 export async function generateCaptions(destination) {
-  const geminiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!geminiKey) throw new Error("Gemini API key missing");
+  if (!API_KEY) throw new Error("OpenRouter API key missing");
 
   const prompt = `You are a social media expert. Write 3 distinct Instagram captions for a beautiful photo taken in ${destination}.
 Return ONLY a valid JSON array of strings, no markdown blocks. 
 Example: ["Witty caption...", "Poetic caption...", "Informative caption..."]`;
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      Authorization: `Bearer ${API_KEY}`,
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7 },
+      model: "mistralai/mistral-7b-instruct",
+      messages: [{ role: "user", content: prompt }],
     }),
   });
 
   if (!res.ok) throw new Error("AI failed");
 
   const data = await res.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const text = data.choices?.[0]?.message?.content;
   if (!text) throw new Error("AI returned no text");
 
   try {

@@ -7,6 +7,7 @@ import { fetchDestinations } from '../../services/api';
 import useInfiniteScroll from '../../hooks/useInfiniteScroll';
 import { DestinationCard, DestinationSkeleton } from '../Home/Home';
 import BudgetModal from '../../components/BudgetModal';
+import ClimateMatcher from '../../components/ClimateMatcher';
 
 const FilterChip = ({ label, active, onClick }) => (
   <button 
@@ -103,6 +104,9 @@ const Explore = () => {
           ))}
         </div>
       </div>
+
+      {/* Climate Matcher (Feature 7) */}
+      <ClimateMatcher />
 
       {/* Results Grid - Restored to Image Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -20,18 +20,21 @@ const Translator = () => {
     if (!text) return;
     setLoading(true);
     try {
-      const key = import.meta.env.VITE_GEMINI_API_KEY;
+      const key = import.meta.env.VITE_OPENROUTER_KEY;
       const prompt = `Translate '${text}' to ${language}. Return ONLY JSON: {"translated": "...", "pronunciation": "...", "literal": "..."}`;
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.2 }
+          model: "mistralai/mistral-7b-instruct",
+          messages: [{ role: "user", content: prompt }]
         }),
       });
       const data = await res.json();
-      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const textResponse = data.choices?.[0]?.message?.content;
       if (textResponse) {
         const cleaned = textResponse.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
         setTranslated(JSON.parse(cleaned));
@@ -55,18 +58,21 @@ const Translator = () => {
     setPhraseDest(dest);
     setLoadingPhrases(true);
     try {
-      const key = import.meta.env.VITE_GEMINI_API_KEY;
+      const key = import.meta.env.VITE_OPENROUTER_KEY;
       const prompt = `Give these 12 phrases in the primary language of ${dest} for a tourist: Hello, Thank you, How much?, Where is...?, Help!, I'm lost, Do you speak English?, The bill please, Delicious!, Excuse me, Yes/No, Cheers!. Return ONLY a JSON array: [{"english": "Hello", "local": "Bonjour", "pronunciation": "bohn-zhoor"}]`;
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.3 }
+          model: "mistralai/mistral-7b-instruct",
+          messages: [{ role: "user", content: prompt }]
         }),
       });
       const data = await res.json();
-      const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const textResponse = data.choices?.[0]?.message?.content;
       if (textResponse) {
         const cleaned = textResponse.replace(/```json\n?/gi, '').replace(/```\n?/gi, '').trim();
         setPhrases(JSON.parse(cleaned));
