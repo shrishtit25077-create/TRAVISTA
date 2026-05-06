@@ -118,11 +118,11 @@ function Itineraries() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-[#fcfdfe] min-h-screen px-8 py-16 pb-32">
+    <div className="min-h-screen px-8 py-16 pb-32 transition-colors duration-300" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto space-y-12">
         
         <div className="space-y-4">
-          <h1 className="text-5xl font-black text-slate-900 tracking-tight leading-none">
+        <h1 className="text-5xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
             My <span className="text-emerald-600">Itineraries.</span>
           </h1>
           <p className="text-xl text-slate-400 font-medium">
@@ -169,7 +169,7 @@ function Itineraries() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.08 }}
                   onClick={() => navigate(`/itinerary/${trip.id}`)}
-                  className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-xl transition-all group cursor-pointer"
+                  className="rounded-3xl p-8 border shadow-sm hover:shadow-xl transition-all group cursor-pointer" style={{ background: 'var(--card-bg)', borderColor: 'var(--border)' }}
                 >
                   <div className="flex justify-between items-start mb-5">
                     <div className="space-y-2">

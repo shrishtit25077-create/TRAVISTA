@@ -106,7 +106,7 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfdfe] px-8 py-16 pb-32">
+    <div className="min-h-screen px-8 py-16 pb-32 transition-colors duration-300" style={{ background: 'var(--bg-primary)' }}>
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
@@ -117,7 +117,7 @@ const Profile = () => {
           <p className="text-slate-400 font-medium text-lg">Manage your personal identity and contact info.</p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] p-10 border border-slate-100 shadow-sm space-y-10">
+        <div className="rounded-[2.5rem] p-10 border shadow-sm space-y-10" style={{ background: 'var(--card-bg)', borderColor: 'var(--border)' }}>
           
           {/* Avatar Section */}
           <div className="flex items-center gap-8 pb-10 border-b border-slate-50">

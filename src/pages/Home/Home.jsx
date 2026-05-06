@@ -98,70 +98,71 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
             }}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-90 z-[1]" />
+        {/* Gradient overlay — strong bottom shadow for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent z-[1] pointer-events-none" />
 
         {/* Top Left: Category Badge */}
-        <div className="absolute top-4 left-4 z-10 flex gap-2">
-          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md ${badgeClass} relative z-[2]`}>
+        <div className="absolute top-4 left-4 z-[5] flex gap-2">
+          <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-md ${badgeClass}`}>
             {item.category}
           </span>
         </div>
 
         {/* Top Right: Actions */}
-        <div className="absolute top-4 right-4 z-[10] flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300 relative z-[2]">
-          <button 
+        <div className="absolute top-4 right-4 z-[5] flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300">
+          <button
             onClick={(e) => { e.stopPropagation(); toggleSave(item); track.saved(item.name); }}
-            className={`w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all ${isSaved ? 'bg-red-500/90 text-white' : 'bg-black/40 text-white hover:bg-[#1D9E75]'}`}
+            className={`w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all shadow-md ${isSaved ? 'bg-red-500/90 text-white' : 'bg-black/50 text-white hover:bg-[#1D9E75]'}`}
           >
             <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
           </button>
           <button
-            className="w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#1D9E75] transition-all"
+            className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-[#1D9E75] transition-all shadow-md"
             onClick={(e) => { e.stopPropagation(); navigate(`/map?focus=${item.id}`); }}
           >
             <MapPin className="w-4 h-4" />
           </button>
           <button
-            className="w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-amber-500 transition-all"
+            className="w-8 h-8 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-amber-500 transition-all shadow-md"
             onClick={(e) => { e.stopPropagation(); setShowAlertModal(true); }}
           >
             <Bell className="w-4 h-4" />
           </button>
         </div>
 
-        <WeatherTimeChip 
-          userWeather={userWeather} 
-          destWeather={destWeather} 
-          destTime={destTime} 
-          isDay={destWeather?.isDay} 
-          loading={weatherLoading} 
+        <WeatherTimeChip
+          userWeather={userWeather}
+          destWeather={destWeather}
+          destTime={destTime}
+          isDay={destWeather?.isDay}
+          loading={weatherLoading}
         />
 
         {/* Bottom Content */}
-        <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end z-[10] relative z-[2]">
+        <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end z-[5]">
           {/* Rating */}
           {rating && (
-            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-md px-2 py-1 rounded-lg w-fit mb-2">
+            <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg w-fit mb-2 shadow-md">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
               <span className="text-[11px] font-bold text-white">{rating}</span>
             </div>
           )}
 
-          <h3 className="text-xl font-bold text-white tracking-wide group-hover:text-[#1D9E75] transition-colors">
+          <h3 className="text-xl font-bold text-white tracking-wide drop-shadow-lg group-hover:text-[#1D9E75] transition-colors">
             {item.name}
           </h3>
           {reasonChip && (
-            <div className="reason-chip w-fit" style={{ fontSize: '10px', background: 'rgba(29,158,117,0.15)', color: '#1D9E75', padding: '3px 8px', borderRadius: '10px', marginTop: '4px' }}>
+            <div className="reason-chip w-fit" style={{ fontSize: '10px', background: 'rgba(29,158,117,0.2)', color: '#4ade80', padding: '3px 8px', borderRadius: '10px', marginTop: '4px' }}>
               ✦ {reasonChip}
             </div>
           )}
-          <p className="text-sm font-medium text-white/70 line-clamp-1 mt-1">
+          <p className="text-sm font-medium text-white/75 line-clamp-1 mt-1 drop-shadow-md">
             {item.description || item.location}
           </p>
           <div className="flex justify-between items-center mt-3">
-            <p className="text-sm font-bold text-white">{item.price} <span className="text-white/50 text-xs font-normal">per person</span></p>
+            <p className="text-sm font-bold text-white drop-shadow-md">{item.price} <span className="text-white/60 text-xs font-normal">per person</span></p>
             {temp && (
-               <p className="text-sm font-bold text-teal-300">{temp}</p>
+               <p className="text-sm font-bold text-teal-300 drop-shadow-md">{temp}</p>
             )}
           </div>
         </div>
@@ -261,7 +262,7 @@ const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
     <div className="space-y-6 max-w-[1400px] mx-auto px-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight dark:text-white">{title}</h2>
+          <h2 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>{title}</h2>
           {subtitle && (
             <span className="text-[10px] font-bold bg-[#1D9E75]/20 text-[#1D9E75] px-2.5 py-1 rounded-full uppercase tracking-wider border border-[#1D9E75]/30">
               {subtitle}
@@ -394,7 +395,7 @@ const Home = () => {
   }, [filteredData]);
 
   return (
-    <div className="bg-[#F8FAFC] min-h-screen">
+    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <div className="pt-8">
         <div className="max-w-7xl mx-auto px-8">
           <HomeHero 
