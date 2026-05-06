@@ -164,17 +164,17 @@ const ItineraryDetail = () => {
 
   // ── Activity CRUD ──────────────────────────────────────────────────────────
   const addActivity = (dayIndex) => {
-    const days = trip.days.map((d, i) => i === dayIndex
-      ? { ...d, activities: [...d.activities, { id: `a-${Date.now()}`, time: 'Morning', title: 'New Activity' }] }
+    const days = (Array.isArray(trip.days) ? trip.days : []).map((d, i) => i === dayIndex
+      ? { ...d, activities: [...(Array.isArray(d.activities) ? d.activities : []), { id: `a-${Date.now()}`, time: 'Morning', title: 'New Activity' }] }
       : d
     );
     saveAndUpdate({ ...trip, days });
   };
 
   const editActivity = (dayIndex, actIndex, updated) => {
-    const days = trip.days.map((d, i) => {
+    const days = (Array.isArray(trip.days) ? trip.days : []).map((d, i) => {
       if (i !== dayIndex) return d;
-      const activities = d.activities.map((a, ai) => ai === actIndex ? updated : a);
+      const activities = (Array.isArray(d.activities) ? d.activities : []).map((a, ai) => ai === actIndex ? updated : a);
       return { ...d, activities };
     });
     saveAndUpdate({ ...trip, days });
@@ -182,27 +182,28 @@ const ItineraryDetail = () => {
   };
 
   const deleteActivity = (dayIndex, actIndex) => {
-    const days = trip.days.map((d, i) => {
+    const days = (Array.isArray(trip.days) ? trip.days : []).map((d, i) => {
       if (i !== dayIndex) return d;
-      return { ...d, activities: d.activities.filter((_, ai) => ai !== actIndex) };
+      return { ...d, activities: (Array.isArray(d.activities) ? d.activities : []).filter((_, ai) => ai !== actIndex) };
     });
     saveAndUpdate({ ...trip, days });
     toast.success('Activity removed');
   };
 
   const reorderActivities = (dayIndex, newOrder) => {
-    const days = trip.days.map((d, i) => i === dayIndex ? { ...d, activities: newOrder } : d);
+    const days = (Array.isArray(trip.days) ? trip.days : []).map((d, i) => i === dayIndex ? { ...d, activities: newOrder } : d);
     saveAndUpdate({ ...trip, days });
   };
 
   // ── Add Day ───────────────────────────────────────────────────────────────
   const addDay = () => {
+    const safeDays = Array.isArray(trip.days) ? trip.days : [];
     const newDay = {
-      day: trip.days.length + 1,
+      day: safeDays.length + 1,
       activities: [{ id: `a-${Date.now()}`, time: 'Morning', title: 'Plan an activity' }]
     };
-    saveAndUpdate({ ...trip, days: [...trip.days, newDay] });
-    setActiveDay(trip.days.length);
+    saveAndUpdate({ ...trip, days: [...safeDays, newDay] });
+    setActiveDay(safeDays.length);
     toast.success('Day added!');
   };
 
@@ -293,11 +294,11 @@ const ItineraryDetail = () => {
 
               <div className="flex flex-wrap gap-3 text-sm">
                 <span className="flex items-center gap-1.5 text-slate-500 font-medium">
-                  <Calendar className="w-4 h-4" /> {trip.days.length} Days
+                  <Calendar className="w-4 h-4" /> {(Array.isArray(trip.days) ? trip.days : []).length} Days
                 </span>
                 <span className="flex items-center gap-1.5 text-slate-500 font-medium">
                   <Clock className="w-4 h-4" />
-                  {trip.days.reduce((acc, d) => acc + d.activities.length, 0)} Activities
+                  {(Array.isArray(trip.days) ? trip.days : []).reduce((acc, d) => acc + (Array.isArray(d.activities) ? d.activities.length : 0), 0)} Activities
                 </span>
                 {trip.budget && (
                   <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
@@ -352,7 +353,7 @@ const ItineraryDetail = () => {
           {/* Day Switcher */}
           <div className="space-y-2 print:hidden">
             <p className="text-xs font-black uppercase tracking-widest text-slate-400 px-2 mb-3">Days</p>
-            {trip.days.map((d, i) => (
+            {(Array.isArray(trip.days) ? trip.days : []).map((d, i) => (
               <button key={i} onClick={() => setActiveDay(i)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all ${
                   activeDay === i
@@ -444,7 +445,7 @@ const ItineraryDetail = () => {
         {/* ── Print-only full view ─────────────────────────────────────────── */}
         <div className="hidden print:block space-y-6">
           <h1 className="text-4xl font-black">{trip.destination} — Travel Itinerary</h1>
-          {trip.days.map((d) => (
+          {(Array.isArray(trip.days) ? trip.days : []).map((d) => (
             <div key={d.day}>
               <h2 className="text-xl font-bold border-b pb-2 mb-3">Day {d.day}</h2>
               {d.activities.map((act, i) => (
