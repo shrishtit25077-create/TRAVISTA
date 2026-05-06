@@ -265,8 +265,8 @@ const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
   }
 
   return (
-    // Full width — no outer max-width, padding provides breathing room
-    <div className="space-y-5 w-full px-4 sm:px-6 lg:px-8">
+    // Padding mirrors hero-wrapper: 16px mobile → 24px tablet → 28px desktop
+    <div className="space-y-5 w-full px-4 sm:px-6 lg:px-7">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</h2>

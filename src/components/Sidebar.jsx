@@ -17,16 +17,22 @@ const NavItem = ({ icon: Icon, label, path, onClose }) => {
   return (
     <button
       onClick={() => { navigate(path); onClose?.(); }}
-      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-semibold transition-all duration-150 group border-l-2 ${
-        active
-          ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-600 dark:border-emerald-500'
+      className={`
+        w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
+        text-[15px] font-medium tracking-[-0.01em]
+        transition-all duration-150 group border-l-2
+        ${active
+          ? 'bg-emerald-50 dark:bg-emerald-900/25 text-emerald-700 dark:text-emerald-400 border-emerald-600 dark:border-emerald-500 font-semibold'
           : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200 border-transparent'
-      }`}
+        }
+      `}
     >
       <Icon
-        size={15}
+        size={16}
         className={`shrink-0 transition-all duration-150 ${
-          active ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+          active
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'
         }`}
       />
       <span className="truncate leading-none">{label}</span>
@@ -36,16 +42,16 @@ const NavItem = ({ icon: Icon, label, path, onClose }) => {
 
 // ─── Section Label ───────────────────────────────────────────────────────────
 const Section = ({ title, children }) => (
-  <div className="mt-4 first:mt-2">
-    <div className="px-3 mb-1.5 text-[10px] font-black uppercase tracking-widest"
-      style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+  <div className="mt-5 first:mt-2">
+    <div className="px-3 mb-2 text-[12px] font-semibold uppercase tracking-[0.12em]"
+      style={{ color: 'var(--text-secondary)', opacity: 0.55 }}>
       {title}
     </div>
     <div className="space-y-0.5">{children}</div>
   </div>
 );
 
-// ─── Sidebar Content (shared between desktop + drawer) ───────────────────────
+// ─── Sidebar Content (shared desktop + drawer) ───────────────────────────────
 const SidebarContent = ({ onClose }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
@@ -60,15 +66,15 @@ const SidebarContent = ({ onClose }) => {
       style={{ background: 'var(--card-bg)', borderRight: '1px solid var(--border)' }}>
 
       {/* ── Logo ── */}
-      <div className="flex items-center justify-between px-4 pt-5 pb-3">
+      <div className="flex items-center justify-between px-4 pt-5 pb-4">
         <div
           className="flex items-center gap-2.5 cursor-pointer group"
           onClick={() => { navigate('/'); onClose?.(); }}
         >
-          <div className="w-7 h-7 bg-emerald-600 rounded-lg flex items-center justify-center shadow shadow-emerald-600/30 group-hover:scale-105 transition-transform shrink-0">
-            <Compass size={14} className="text-white" />
+          <div className="w-8 h-8 bg-emerald-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-600/25 group-hover:scale-105 transition-transform shrink-0">
+            <Compass size={16} className="text-white" />
           </div>
-          <span className="font-black text-[17px] tracking-tight" style={{ color: 'var(--text-primary)' }}>
+          <span className="font-black text-[19px] tracking-tight" style={{ color: 'var(--text-primary)' }}>
             Travista
           </span>
         </div>
@@ -76,7 +82,7 @@ const SidebarContent = ({ onClose }) => {
         {/* Close — mobile only */}
         <button
           onClick={onClose}
-          className="lg:hidden p-1 rounded-md transition-colors"
+          className="lg:hidden p-1.5 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
           style={{ color: 'var(--text-secondary)' }}
         >
           <X size={16} />
@@ -84,18 +90,18 @@ const SidebarContent = ({ onClose }) => {
       </div>
 
       {/* ── Navigation ── */}
-      <div className="flex-1 overflow-y-auto no-scrollbar px-2 pb-3">
+      <div className="flex-1 overflow-y-auto no-scrollbar px-2.5 pb-3">
         <Section title="Discover">
-          <NavItem icon={Compass} label="Inspiration" path="/"          onClose={onClose} />
-          <NavItem icon={Map}     label="Explore"     path="/map"        onClose={onClose} />
+          <NavItem icon={Compass} label="Inspiration" path="/"           onClose={onClose} />
+          <NavItem icon={Map}     label="Explore"     path="/map"         onClose={onClose} />
         </Section>
 
         <Section title="Plan">
           <NavItem icon={Sparkles} label="AI Planner"  path="/planner"    onClose={onClose} />
-          <NavItem icon={Globe}    label="Translator"   path="/translator"  onClose={onClose} />
+          <NavItem icon={Globe}    label="Translator"  path="/translator"  onClose={onClose} />
         </Section>
 
-        <Section title="Trips">
+        <Section title="My Trips">
           <NavItem icon={Calendar} label="Itineraries" path="/itineraries" onClose={onClose} />
           <NavItem icon={Heart}    label="Saved"        path="/saved"       onClose={onClose} />
           <NavItem icon={Bell}     label="Alerts"       path="/alerts"      onClose={onClose} />
@@ -108,13 +114,12 @@ const SidebarContent = ({ onClose }) => {
       </div>
 
       {/* ── User Footer ── */}
-      <div className="px-2 pb-3 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+      <div className="px-2.5 pb-3 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
         <div
-          className="flex items-center gap-2.5 px-2 py-2 rounded-lg cursor-pointer transition-colors group"
-          style={{ ':hover': { background: 'var(--bg-secondary)' } }}
+          className="flex items-center gap-3 px-2.5 py-2.5 rounded-xl cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
           onClick={() => { navigate('/profile'); onClose?.(); }}
         >
-          <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 ring-1 ring-slate-200 dark:ring-slate-700">
+          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ring-slate-100 dark:ring-slate-700">
             <img
               src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=80"
               alt="User"
@@ -122,19 +127,19 @@ const SidebarContent = ({ onClose }) => {
             />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[12px] font-bold truncate leading-tight" style={{ color: 'var(--text-primary)' }}>
+            <div className="text-[14px] font-semibold truncate leading-tight" style={{ color: 'var(--text-primary)' }}>
               {user?.name || 'Traveller'}
             </div>
-            <div className="text-[10px] truncate leading-tight" style={{ color: 'var(--text-secondary)' }}>
+            <div className="text-[12px] truncate leading-tight mt-0.5" style={{ color: 'var(--text-secondary)' }}>
               {user?.email || 'View profile'}
             </div>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); handleLogout(); }}
-            className="p-1 rounded-md text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shrink-0"
+            className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shrink-0"
             title="Sign out"
           >
-            <LogOut size={13} />
+            <LogOut size={14} />
           </button>
         </div>
       </div>
@@ -142,15 +147,15 @@ const SidebarContent = ({ onClose }) => {
   );
 };
 
-// ─── Sidebar (exported) ──────────────────────────────────────────────────────
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
 const Sidebar = ({ isOpen, onClose }) => (
   <>
-    {/* Desktop — fixed, always visible */}
+    {/* Desktop — fixed */}
     <div className="hidden lg:block fixed top-0 left-0 h-screen w-[220px] z-50">
       <SidebarContent />
     </div>
 
-    {/* Mobile / Tablet — animated drawer */}
+    {/* Mobile / Tablet — spring drawer */}
     <AnimatePresence>
       {isOpen && (
         <motion.div

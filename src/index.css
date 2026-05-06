@@ -164,7 +164,7 @@ html, body {
 .hero-wrapper {
   width: 100%;
   box-sizing: border-box;
-  /* Tight on mobile, breathable on desktop */
+  /* Mobile: flush edges, Desktop: comfortable inset */
   padding: 0 8px 16px;
 }
 
@@ -173,7 +173,8 @@ html, body {
 }
 
 @media (min-width: 1024px) {
-  .hero-wrapper { padding: 0 24px 24px; }
+  /* Comfortable inset — not edge-to-edge, not boxed */
+  .hero-wrapper { padding: 0 28px 28px; }
 }
 
 /* The image+content box */
@@ -198,9 +199,14 @@ html, body {
 
 @media (min-width: 1024px) {
   .hero-image-box {
-    border-radius: 28px;
-    min-height: 520px;
-    height: clamp(480px, 44vw, 640px);
+    border-radius: 24px;
+    min-height: unset;
+    height: unset;
+    /* 16:7 cinematic ratio — more elegant than 16:9, less extreme than 21:9 */
+    aspect-ratio: 16 / 7;
+    /* Safety floor so it never collapses on very narrow desktop windows */
+    min-height: 480px;
+    max-height: 620px;
   }
 }
 
