@@ -73,10 +73,8 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: 'easeOut' }}
         >
-          <div className="hero-eyebrow">TRAVISTA · EDITORIAL COLLECTION</div>
-
           <div className="hero-heading-white">Curate your</div>
-          <div className="hero-heading-teal">perfect journey.</div>
+          <div className="hero-heading-accent">perfect journey.</div>
 
           <p className="hero-sub">
             Discover destinations, plan itineraries, and explore<br />
@@ -109,7 +107,6 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
                 key={c}
                 onClick={() => setActiveCategory(c)}
                 className={`chip ${activeCategory === c ? 'active' : ''}`}
-                style={activeCategory === c ? { background: 'linear-gradient(135deg, #00c6ff, #00f2a1)', color: 'white', border: 'none' } : {}}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 + i * 0.05 }}
@@ -124,7 +121,6 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
                 key={c}
                 onClick={() => setActiveCategory(c)}
                 className={`chip ${activeCategory === c ? 'active' : ''}`}
-                style={activeCategory === c ? { background: 'linear-gradient(135deg, #00c6ff, #00f2a1)', color: 'white', border: 'none' } : {}}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + i * 0.05 }}

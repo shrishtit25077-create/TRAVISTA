@@ -1,316 +1,350 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, User, Bot, Plane, Building, Compass, MapPin, Wallet, ArrowRight } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { generateTrip } from '../../services/ai';
-import TypingText from '../../components/UI/TypingText';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import { Download, Save, Map as MapIcon, Calendar, DollarSign, Lightbulb, Navigation, Users, Activity } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { jsPDF } from 'jspdf';
+import L from 'leaflet';
 
-const ChatBubble = ({ type, content, isLatest }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 10, scale: 0.98 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    className={`flex gap-4 ${type === 'user' ? 'flex-row-reverse' : 'flex-row'} mb-8`}
-  >
-    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
-      type === 'user' ? 'bg-slate-900 text-white' : 'bg-emerald-50 text-emerald-600 border border-emerald-100 shadow-sm'
-    }`}>
-      {type === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-    </div>
-    
-    <div className={`max-w-[75%] p-5 rounded-[1.5rem] text-[14px] font-medium leading-relaxed shadow-sm ${
-      type === 'user' 
-        ? 'bg-slate-900 text-white rounded-tr-none' 
-        : 'bg-white border border-slate-100 text-slate-800 rounded-tl-none'
-    }`}>
-      {type === 'bot' && isLatest ? (
-        <TypingText text={content} className="text-[14px]" delay={15} />
-      ) : (
-        <p>{content}</p>
-      )}
-    </div>
-  </motion.div>
-);
+// Fix leaflet icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
-const TripCard = ({ plan, destination, tripId, onNavigate }) => {
-  if (!plan) return null;
+export default function AIPlanner() {
+  const { addItinerary } = useAuth();
+  const [activeTab, setActiveTab] = useState('map');
+  const [loading, setLoading] = useState(false);
   
-  const image = plan.images?.[0] || "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&q=80&w=800";
-  const flight = plan.flights?.[0];
-  const stay = plan.stays?.[0];
-  
-  return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.95, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ delay: 0.5, duration: 0.6, type: 'spring', stiffness: 200, damping: 20 }}
-      className="ml-13 mb-12 bg-white rounded-[2rem] overflow-hidden shadow-2xl shadow-slate-200/50 border border-slate-100 flex flex-col md:flex-row w-full"
-    >
-      <div className="w-full md:w-2/5 h-56 md:h-auto relative overflow-hidden group">
-        <motion.img 
-          whileHover={{ scale: 1.05 }}
-          transition={{ duration: 0.6 }}
-          src={image} 
-          alt={destination} 
-          className="w-full h-full object-cover" 
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-        <div className="absolute bottom-6 left-6 right-6 text-white">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-1 bg-emerald-500 rounded-full text-[10px] font-black uppercase tracking-widest">
-              Top Pick
-            </span>
-            <span className="px-2 py-1 bg-white/20 backdrop-blur-md rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1">
-              <Sparkles className="w-3 h-3" /> Score: {plan.score}
-            </span>
-          </div>
-          <h3 className="text-2xl font-black leading-tight">{destination}</h3>
-        </div>
-      </div>
-      
-      <div className="p-8 flex-1 flex flex-col justify-between">
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-sky-50 flex items-center justify-center shrink-0 border border-sky-100">
-              <Plane className="w-5 h-5 text-sky-500" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Roundtrip Flight</p>
-              <p className="text-sm font-black text-slate-800">{flight?.carrier || 'Select Airlines'}</p>
-            </div>
-            <div className="ml-auto text-right">
-              <span className="text-lg font-black text-slate-900">₹{flight?.price || 500}</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0 border border-amber-100">
-              <Building className="w-5 h-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Recommended Stay</p>
-              <p className="text-sm font-black text-slate-800 line-clamp-1">{stay?.name || 'Boutique Hotel'}</p>
-            </div>
-            <div className="ml-auto text-right">
-              <span className="text-lg font-black text-slate-900">₹{stay?.price || 200}</span>
-            </div>
-          </div>
-        </div>
+  // Step 1: User Input Form State
+  const [formData, setFormData] = useState({
+    startLocation: '',
+    destinations: [''],
+    startDate: '',
+    endDate: '',
+    travelers: 2,
+    style: 'Relaxing',
+    transport: 'driving-car',
+  });
 
-        <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Est. Budget</p>
-            <p className="text-3xl font-black text-emerald-600">₹{plan.totalBudget}</p>
-          </div>
-          <button 
-            onClick={() => onNavigate(tripId)}
-            className="flex items-center gap-2 px-6 py-4 bg-slate-900 text-white rounded-[1.2rem] font-black text-xs tracking-widest uppercase hover:bg-emerald-600 transition-all shadow-xl shadow-slate-200"
-          >
-            Open Itinerary <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
+  // Generated Plan State
+  const [plan, setPlan] = useState(null);
+  const [routeData, setRouteData] = useState(null);
 
-const SuggestionChip = ({ label, onClick }) => (
-  <button 
-    onClick={() => onClick(label)}
-    className="px-5 py-2.5 bg-white border border-slate-200 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm"
-  >
-    {label}
-  </button>
-);
-
-const AIPlanner = () => {
-  const { user, addItinerary } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const destination = location.state?.destination;
-
-  const [messages, setMessages] = useState([
-    { id: 1, type: 'bot', content: `Hello ${user?.name || 'Explorer'}! I'm your AI Travel Architect. Where shall we explore next?` }
-  ]);
-  const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const chatEndRef = useRef(null);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const handleAddDestination = () => {
+    setFormData({ ...formData, destinations: [...formData.destinations, ''] });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+  const handleDestChange = (index, value) => {
+    const newDests = [...formData.destinations];
+    newDests[index] = value;
+    setFormData({ ...formData, destinations: newDests });
+  };
 
-  useEffect(() => {
-    if (destination) {
-      handleSend(destination);
+  // Step 2 & 3: API Calls
+  const handleGenerate = async () => {
+    if (!formData.startLocation || !formData.destinations[0] || !formData.startDate) {
+      toast.error('Please fill in the starting location, at least one destination, and dates.');
+      return;
     }
-  }, [destination]);
-
-  const handleSend = async (customInput = null) => {
-    const text = customInput || input;
-    if (!text.trim() || isTyping) return;
-
-    setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: text }]);
-    setInput('');
-    setIsTyping(true);
-
+    
+    setLoading(true);
+    
     try {
-      const prompt = `Plan a trip to ${text}`;
-      const planObject = await generateTrip(prompt);
+      // TODO: OpenRouteService API Integration
+      // fetch('https://api.openrouteservice.org/v2/directions/' + formData.transport, ...)
       
-      if (!planObject.bestOption) throw new Error("Invalid format from AI");
-
-      const best = planObject.bestOption;
+      // MOCK ROUTE DATA
+      const mockRoute = {
+        distance: 450,
+        time: '5 hours 30 mins',
+        geometry: [
+          [28.6139, 77.2090], // Delhi
+          [27.1767, 78.0081], // Agra
+          [26.9124, 75.7873]  // Jaipur
+        ],
+        markers: [
+          { name: formData.startLocation || 'Start', coords: [28.6139, 77.2090] },
+          { name: formData.destinations[0] || 'Destination', coords: [26.9124, 75.7873] }
+        ]
+      };
       
-      const groupedActivities = {};
-      if (best.activities && best.activities.length > 0) {
-        best.activities.forEach((a, i) => {
-          const d = a.day || 1;
-          if (!groupedActivities[d]) groupedActivities[d] = [];
-          groupedActivities[d].push({
-            id: `a-${Date.now()}-${i}`,
-            time: ['Morning', 'Afternoon', 'Evening', 'Night'][groupedActivities[d].length % 4],
-            title: `${a.name}${a.description ? ` - ${a.description}` : ''}`
-          });
-        });
-      } else {
-        groupedActivities[1] = [];
-      }
-
-      const daysArr = Object.keys(groupedActivities).map(Number).sort((a,b) => a - b).map(day => ({
-        day,
-        activities: groupedActivities[day]
-      }));
-
-      const tripObj = {
-        id: Date.now(),
-        destination: text,
-        createdAt: new Date().toISOString(),
-        images: best.images || [],
-        days: daysArr,
-        budget: {
-          total: best.totalBudget || 1000,
-          stay: best.stays?.[0]?.price || 300,
-          activities: best.activities?.reduce((s,a) => s+(a.cost||0), 0) || 200,
-          travel: best.flights?.[0]?.price || 500
-        }
+      // MOCK AI ITINERARY
+      const mockPlan = {
+        title: `Trip to ${formData.destinations.join(', ')}`,
+        days: [
+          {
+            day: 1,
+            activities: [
+              { time: 'Morning', title: 'Arrival & Check-in', desc: 'Arrive at your destination and settle into your hotel.' },
+              { time: 'Afternoon', title: 'Local Exploration', desc: 'Walk around the main square and enjoy local street food.' },
+              { time: 'Evening', title: 'Welcome Dinner', desc: 'Dine at a highly-rated local restaurant.' }
+            ]
+          }
+        ],
+        budget: { transport: 120, food: 200, stay: 350, activities: 150, total: 820 },
+        tips: { packing: ['Comfortable walking shoes', 'Light jacket', 'Sunscreen'], local: ['Always carry some cash', 'Respect local customs when visiting temples'] }
       };
 
-      addItinerary(tripObj);
-
-      setMessages(prev => [...prev, { 
-        id: Date.now() + 1, 
-        type: 'bot', 
-        content: `I've perfectly architected your journey to ${text}. Here is your tailored blueprint:`,
-        plan: best,
-        tripId: tripObj.id,
-        dest: text
-      }]);
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
       
+      setRouteData(mockRoute);
+      setPlan(mockPlan);
+      setActiveTab('itinerary');
+      toast.success('Your trip has been generated!');
     } catch (error) {
-      let errMessage = "AI service temporarily unavailable. Please try again later.";
-      if (error.response?.data?.message?.includes("GEMINI_API_KEY")) {
-         errMessage = "Server Error: The GEMINI_API_KEY is missing from the backend server/.env file. Please add it to generate trips!";
-      }
-      
-      toast.error("Generation failed");
-      setMessages(prev => [...prev, { 
-        id: Date.now() + 1, 
-        type: 'bot', 
-        content: errMessage
-      }]);
+      toast.error('Failed to generate trip. Please try again.');
     } finally {
-      setIsTyping(false);
+      setLoading(false);
     }
   };
 
+  // Step 5: Save & Export
+  const handleSave = () => {
+    if (!plan) return;
+    addItinerary({
+      id: Date.now(),
+      destination: formData.destinations.join(', '),
+      days: plan.days,
+      budget: plan.budget
+    });
+    toast.success('Trip saved to My Itineraries!');
+  };
+
+  const handleDownloadPDF = () => {
+    if (!plan) return;
+    const doc = new jsPDF();
+    doc.setFontSize(22);
+    doc.text(plan.title, 20, 20);
+    doc.setFontSize(12);
+    doc.text('Powered by Travista AI', 20, 30);
+    doc.save('travista-itinerary.pdf');
+    toast.success('PDF downloaded!');
+  };
+
   return (
-    <div className="flex-1 min-w-0 w-full flex flex-col h-[calc(100vh-120px)] overflow-hidden relative px-4 md:px-8 pt-8">
+    <div className="flex-1 min-w-0 w-full flex flex-col md:flex-row h-[calc(100vh-80px)] overflow-hidden bg-[#f8fafc]">
       
-      {/* Header */}
-      <div className="mb-10 text-center space-y-3">
-        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-          AI <span className="text-emerald-500 italic">Architect</span>
-        </h1>
-        <p className="text-slate-400 font-medium text-sm md:text-base max-w-lg mx-auto leading-relaxed">
-          Powered by Gemini. Just tell me where you want to go, and I'll forge the perfect itinerary.
-        </p>
-      </div>
+      {/* ─── Left Sidebar: Input Form ─── */}
+      <div className="w-full md:w-[400px] h-full overflow-y-auto bg-white border-r border-slate-200 p-6 shadow-sm z-10 flex flex-col">
+        <h2 className="text-2xl font-black text-slate-800 mb-6 flex items-center gap-2">
+          <Navigation className="text-emerald-600" /> Plan Your Trip
+        </h2>
 
-      {/* Chat Console */}
-      <div className="flex-1 overflow-y-auto min-h-0 no-scrollbar pb-12 space-y-4">
-        {messages.map((msg, idx) => (
-          <div key={msg.id}>
-            <ChatBubble {...msg} isLatest={idx === messages.length - 1 && !msg.plan} />
-            
-            {msg.plan && (
-              <TripCard 
-                plan={msg.plan} 
-                destination={msg.dest} 
-                tripId={msg.tripId} 
-                onNavigate={(id) => navigate(`/itinerary/${id}`)} 
-              />
-            )}
+        <div className="space-y-5 flex-1">
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Starting Location</label>
+            <input type="text" value={formData.startLocation} onChange={e => setFormData({...formData, startLocation: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none transition-all" placeholder="E.g. New York, USA" />
           </div>
-        ))}
-        
-        {isTyping && (
-          <div className="flex gap-4 mb-8">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center shadow-sm">
-              <Bot className="w-4 h-4 text-emerald-600 animate-pulse" />
-            </div>
-            <div className="bg-white border border-slate-100 p-5 rounded-[1.5rem] rounded-tl-none flex gap-1.5 items-center shadow-sm">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" />
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-            </div>
-          </div>
-        )}
-        <div ref={chatEndRef} />
-      </div>
 
-      {/* Input Center */}
-      <div className="pb-8 space-y-6 shrink-0 bg-[#F7F9FC]">
-        {messages.length === 1 && !isTyping && (
-          <div className="flex flex-wrap gap-3 justify-center">
-            {["A romantic week in Paris", "Luxury Dubai getaway", "Backpacking through Vietnam"].map(s => (
-              <SuggestionChip key={s} label={s} onClick={(l) => handleSend(l)} />
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Destinations</label>
+            {formData.destinations.map((dest, i) => (
+              <input key={i} type="text" value={dest} onChange={e => handleDestChange(i, e.target.value)} className="w-full p-3 mb-2 bg-slate-50 border border-slate-200 rounded-xl focus:border-emerald-500 outline-none transition-all" placeholder="E.g. Paris, France" />
             ))}
+            <button onClick={handleAddDestination} className="text-emerald-600 text-sm font-bold mt-1 hover:text-emerald-700">+ Add another stop</button>
           </div>
-        )}
 
-        <div className="relative bg-white border-2 border-slate-100 p-2 rounded-[2rem] shadow-xl shadow-slate-200/50 flex items-center gap-3 focus-within:border-emerald-300 transition-colors">
-          <input 
-            type="text" 
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Type your dream destination..." 
-            className="flex-1 bg-transparent px-6 py-4 text-[15px] font-bold text-slate-900 placeholder-slate-300 outline-none"
-          />
-          <button 
-            onClick={() => handleSend()}
-            disabled={!input.trim() || isTyping}
-            className="px-8 h-14 bg-slate-900 text-white rounded-[1.5rem] flex items-center justify-center hover:bg-emerald-600 transition-all disabled:opacity-50 font-black text-[11px] uppercase tracking-widest gap-2 whitespace-nowrap shadow-md"
-          >
-            {isTyping ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4" />
-                Architect
-              </>
-            )}
-          </button>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Start Date</label>
+              <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">End Date</label>
+              <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Travelers</label>
+              <select value={formData.travelers} onChange={e => setFormData({...formData, travelers: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                {[1,2,3,4,5,6].map(n => <option key={n} value={n}>{n} Person{n>1?'s':''}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Transport</label>
+              <select value={formData.transport} onChange={e => setFormData({...formData, transport: e.target.value})} className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                <option value="driving-car">Driving</option>
+                <option value="foot-walking">Walking</option>
+                <option value="cycling-regular">Cycling</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Travel Style</label>
+            <div className="flex flex-wrap gap-2">
+              {['Adventure', 'Relaxing', 'Cultural', 'Food', 'Budget'].map(style => (
+                <button key={style} onClick={() => setFormData({...formData, style})} className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${formData.style === style ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>
+                  {style}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
+
+        <button onClick={handleGenerate} disabled={loading} className="w-full py-4 mt-8 bg-slate-900 text-white font-black text-lg rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+          {loading ? 'Generating...' : 'Build My Itinerary'} 
+        </button>
+      </div>
+
+      {/* ─── Right Area: Results & Tabs ─── */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
+        {!plan ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm mb-6">
+              <MapIcon size={40} className="text-slate-300" />
+            </div>
+            <h3 className="text-2xl font-bold text-slate-700 mb-2">No active trip plan</h3>
+            <p className="max-w-md">Fill out the form on the left to generate an AI-powered itinerary complete with routes, budgets, and daily activities.</p>
+          </div>
+        ) : (
+          <>
+            {/* Header & Tabs */}
+            <div className="bg-white px-8 pt-8 pb-4 border-b border-slate-200 shrink-0">
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h1 className="text-3xl font-black text-slate-900 mb-2">{plan.title}</h1>
+                  <p className="text-slate-500 font-medium flex gap-4">
+                    <span className="flex items-center gap-1"><Calendar size={16}/> {formData.startDate}</span>
+                    <span className="flex items-center gap-1"><Users size={16}/> {formData.travelers} Travelers</span>
+                    <span className="flex items-center gap-1"><Activity size={16}/> {formData.style}</span>
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <button onClick={handleSave} className="px-4 py-2 bg-emerald-50 text-emerald-700 font-bold rounded-lg hover:bg-emerald-100 flex items-center gap-2 transition-colors">
+                    <Save size={18} /> Save Trip
+                  </button>
+                  <button onClick={handleDownloadPDF} className="px-4 py-2 bg-slate-900 text-white font-bold rounded-lg hover:bg-slate-800 flex items-center gap-2 transition-colors">
+                    <Download size={18} /> Export PDF
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-6">
+                {[
+                  { id: 'map', label: 'Route Map', icon: MapIcon },
+                  { id: 'itinerary', label: 'Itinerary', icon: Calendar },
+                  { id: 'budget', label: 'Budget', icon: DollarSign },
+                  { id: 'tips', label: 'Local Tips', icon: Lightbulb }
+                ].map(tab => (
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center gap-2 pb-3 font-bold border-b-2 transition-colors ${activeTab === tab.id ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-400 hover:text-slate-600'}`}>
+                    <tab.icon size={18} /> {tab.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tab Content Area */}
+            <div className="flex-1 overflow-y-auto p-8">
+              
+              {/* TAB 1: MAP */}
+              {activeTab === 'map' && routeData && (
+                <div className="h-full w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm relative">
+                  <MapContainer center={routeData.geometry[0]} zoom={5} style={{ height: '100%', width: '100%' }}>
+                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+                    {routeData.markers.map((m, i) => (
+                      <Marker key={i} position={m.coords}>
+                        <Popup>{m.name}</Popup>
+                      </Marker>
+                    ))}
+                    <Polyline positions={routeData.geometry} color="#059669" weight={4} opacity={0.8} />
+                  </MapContainer>
+                  <div className="absolute top-4 right-4 bg-white p-4 rounded-xl shadow-lg z-[1000] border border-slate-100">
+                    <h4 className="font-bold text-slate-800 mb-1">Trip Summary</h4>
+                    <p className="text-sm text-slate-500">Distance: <span className="font-bold text-slate-700">{routeData.distance} km</span></p>
+                    <p className="text-sm text-slate-500">Est. Time: <span className="font-bold text-slate-700">{routeData.time}</span></p>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: ITINERARY */}
+              {activeTab === 'itinerary' && (
+                <div className="max-w-3xl space-y-8 pb-12">
+                  {plan.days.map((day, idx) => (
+                    <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: idx*0.1}} key={day.day} className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                      <h3 className="text-xl font-black text-slate-800 mb-4 border-b border-slate-100 pb-3">Day {day.day}</h3>
+                      <div className="space-y-4">
+                        {day.activities.map((act, i) => (
+                          <div key={i} className="flex gap-4">
+                            <div className="w-24 shrink-0 text-sm font-bold text-emerald-600 pt-1">{act.time}</div>
+                            <div>
+                              <h4 className="font-bold text-slate-800">{act.title}</h4>
+                              <p className="text-slate-500 text-sm mt-1 leading-relaxed">{act.desc}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
+              {/* TAB 3: BUDGET */}
+              {activeTab === 'budget' && (
+                <div className="max-w-xl mx-auto bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
+                    <h3 className="text-xl font-bold">Estimated Cost</h3>
+                    <p className="text-3xl font-black">${plan.budget.total}</p>
+                  </div>
+                  <div className="p-6 space-y-4">
+                    <div className="flex justify-between border-b border-slate-100 pb-3">
+                      <span className="font-medium text-slate-600">Transport</span>
+                      <span className="font-bold text-slate-800">${plan.budget.transport}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-3">
+                      <span className="font-medium text-slate-600">Accommodation</span>
+                      <span className="font-bold text-slate-800">${plan.budget.stay}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-3">
+                      <span className="font-medium text-slate-600">Food & Dining</span>
+                      <span className="font-bold text-slate-800">${plan.budget.food}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-slate-100 pb-3">
+                      <span className="font-medium text-slate-600">Activities</span>
+                      <span className="font-bold text-slate-800">${plan.budget.activities}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: TIPS */}
+              {activeTab === 'tips' && (
+                <div className="max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-6 rounded-2xl border border-emerald-100 shadow-sm shadow-emerald-100/50">
+                    <h3 className="text-lg font-black text-emerald-800 mb-4">Packing Checklist</h3>
+                    <ul className="space-y-3">
+                      {plan.tips.packing.map((tip, i) => (
+                        <li key={i} className="flex items-start gap-3 text-emerald-700 font-medium">
+                          <span className="mt-1 shrink-0 w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center text-[10px]">✓</span> {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-white p-6 rounded-2xl border border-amber-100 shadow-sm shadow-amber-100/50">
+                    <h3 className="text-lg font-black text-amber-800 mb-4">Local Customs & Tips</h3>
+                    <ul className="space-y-3">
+                      {plan.tips.local.map((tip, i) => (
+                        <li key={i} className="flex items-start gap-3 text-amber-700 font-medium">
+                          <span className="mt-1 shrink-0 w-4 h-4 rounded-full bg-amber-100 flex items-center justify-center text-[10px]">!</span> {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
-};
-
-export default AIPlanner;
+}

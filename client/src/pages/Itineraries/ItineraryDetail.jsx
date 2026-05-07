@@ -385,7 +385,7 @@ const ItineraryDetail = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <h2 className="text-2xl font-black text-slate-900">Day {currentDay.day}</h2>
-                    <p className="text-slate-400 text-sm font-medium mt-0.5">{currentDay.activities.length} activities planned</p>
+                    <p className="text-slate-400 text-sm font-medium mt-0.5">{(Array.isArray(currentDay.activities) ? currentDay.activities : []).length} activities planned</p>
                   </div>
                   <button onClick={() => addActivity(activeDay)}
                     className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 print:hidden">
@@ -396,11 +396,11 @@ const ItineraryDetail = () => {
                 {/* Drag-to-reorder activity list */}
                 <Reorder.Group
                   axis="y"
-                  values={currentDay.activities}
+                  values={Array.isArray(currentDay.activities) ? currentDay.activities : []}
                   onReorder={(newOrder) => reorderActivities(activeDay, newOrder)}
                   className="space-y-3"
                 >
-                  {currentDay.activities.map((act, actIndex) => (
+                  {(Array.isArray(currentDay.activities) ? currentDay.activities : []).map((act, actIndex) => (
                     <ActivityCard
                       key={act.id}
                       act={act}
@@ -412,7 +412,7 @@ const ItineraryDetail = () => {
                   ))}
                 </Reorder.Group>
 
-                {currentDay.activities.length === 0 && (
+                {(Array.isArray(currentDay.activities) ? currentDay.activities : []).length === 0 && (
                   <div className="py-16 text-center bg-white rounded-2xl border border-dashed border-slate-200">
                     <p className="text-slate-400 font-medium">No activities yet.</p>
                     <button onClick={() => addActivity(activeDay)}
@@ -448,7 +448,7 @@ const ItineraryDetail = () => {
           {(Array.isArray(trip.days) ? trip.days : []).map((d) => (
             <div key={d.day}>
               <h2 className="text-xl font-bold border-b pb-2 mb-3">Day {d.day}</h2>
-              {d.activities.map((act, i) => (
+              {(Array.isArray(d.activities) ? d.activities : []).map((act, i) => (
                 <p key={i} className="text-sm mb-1"><strong>{act.time}:</strong> {act.title}</p>
               ))}
             </div>

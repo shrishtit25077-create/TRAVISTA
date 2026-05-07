@@ -27,7 +27,7 @@ const NavItem = ({ icon: Icon, label, path }) => {
 
 const Section = ({ title, children }) => (
   <div className="mt-6">
-    <div className="px-4 mb-3 text-xs uppercase tracking-wider text-slate-400 font-bold">
+    <div className="px-4 mb-3 text-[10px] uppercase tracking-[0.2em] text-slate-400 font-bold opacity-45">
       {title}
     </div>
     <div className="px-2">

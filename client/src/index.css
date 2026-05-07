@@ -159,9 +159,9 @@ body {
   position: absolute;
   inset: 0;
   background: linear-gradient(to right,
-      rgba(0, 0, 0, 0.60) 0%,
-      rgba(0, 0, 0, 0.30) 55%,
-      rgba(0, 0, 0, 0.05) 100%);
+      rgba(0, 0, 0, 0.75) 0%,
+      rgba(0, 0, 0, 0.55) 55%,
+      rgba(0, 0, 0, 0.25) 100%);
 }
 
 /* ─── Hero Content (floats directly on image) ── */
@@ -193,17 +193,13 @@ body {
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-.hero-heading-teal {
-  font-size: 58px;
+.hero-heading-accent {
+  font-size: 62px;
   font-weight: 900;
-  font-style: italic;
+  color: #e2e2e2;
   line-height: 1.05;
   letter-spacing: -1.5px;
-  background: linear-gradient(90deg, #00C9A7, #00e5ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: none;
+  text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 .hero-sub {
@@ -220,12 +216,14 @@ body {
 .hero-search-bar {
   display: flex;
   align-items: center;
-  background: white;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
   border-radius: 999px;
   padding: 5px 5px 5px 20px;
   max-width: 520px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
   margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .hero-search-bar input {
@@ -234,12 +232,13 @@ body {
   outline: none;
   font-size: 14px;
   font-weight: 500;
-  color: #1e293b;
+  color: #ffffff;
   background: transparent;
 }
 
 .hero-search-bar input::placeholder {
-  color: #94a3b8;
+  color: #ffffff;
+  opacity: 0.9;
 }
 
 .hero-search-globe {
@@ -286,28 +285,29 @@ body {
   border-radius: 999px;
   font-size: 13px;
   font-weight: 700;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  border: 1.5px solid #cccccc;
+  background: #ffffff;
+  color: #333333;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   display: flex;
   align-items: center;
   gap: 6px;
-  backdrop-filter: blur(4px);
 }
 
 .chip:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: #ffffff;
+  border-color: var(--green-active);
+  color: var(--green-active);
   transform: translateY(-2px);
 }
 
 .chip.active {
-  background: var(--teal);
-  border-color: var(--teal);
+  background: var(--green-active);
+  border-color: var(--green-active);
   color: white;
-  box-shadow: 0 4px 15px rgba(0, 201, 167, 0.4);
+  box-shadow: 0 4px 15px rgba(26, 92, 58, 0.4);
 }
 
 /* ─── Bottom Row (scroll text) ────────── */
