@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, Users, User, Heart, Users2, Sparkles, AlertCircle } from 'lucide-react';
+import { X, Minus, Plus, Sparkles } from 'lucide-react';
 import { useDestinationPhoto } from '../hooks/useDestinationPhoto';
 import { useNavigate } from 'react-router-dom';
-import { generateAITrip } from '../services/ai';
-import { generateTrip } from '../services/tripEngine';
-import { saveTrip } from '../services/db';
 
 const BudgetModal = ({ destination, onClose }) => {
   const navigate = useNavigate();
@@ -25,17 +22,25 @@ const BudgetModal = ({ destination, onClose }) => {
   const [loading, setLoading] = useState(false);
 
   const handleGenerate = () => {
-    import('react-hot-toast').then(toast => {
-      toast.default.success("New AI Planner coming soon!", {
-        icon: '🚀',
-        style: {
-          borderRadius: '16px',
-          background: '#111827',
-          color: '#fff',
-        },
-      });
-    });
+    if (!budget) return;
+
+    const budgetNum = Number(budget);
+    const budgetLabel =
+      budgetNum <= 20000 ? 'ultra budget' :
+      budgetNum <= 50000 ? 'budget-friendly' :
+      budgetNum <= 100000 ? 'mid-range' :
+      'premium luxury';
+
+    const prompt = [
+      `Plan a ${duration}-day ${travellerType.toLowerCase()} trip to ${destination.name}, ${destination.country}`,
+      `with a total budget of ₹${Number(budget).toLocaleString('en-IN')} (${budgetLabel}).`,
+      `Include day-wise itinerary, top attractions, local food recommendations, hotel suggestions,`,
+      `hidden gems, insider travel tips, and budget breakdown.`,
+      `Tailor the experience for a ${travellerType.toLowerCase()} traveller.`,
+    ].join(' ');
+
     onClose();
+    navigate(`/planner?prompt=${encodeURIComponent(prompt)}`);
   };
 
   return (
