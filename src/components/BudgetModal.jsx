@@ -13,10 +13,10 @@ const BudgetModal = ({ destination, onClose }) => {
   const [travellerType, setTravellerType] = useState('Solo');
 
   const budgetChips = [
-    { label: 'Ultra Budget', value: 15000 },
-    { label: 'Budget', value: 40000 },
-    { label: 'Mid Range', value: 80000 },
-    { label: 'Premium', value: 150000 },
+    { label: 'Budget', value: 15000 },
+    { label: 'Standard', value: 40000 },
+    { label: 'Mid-Range', value: 80000 },
+    { label: 'Luxury', value: 150000 },
   ];
 
   const buildPrompt = () => {
@@ -40,8 +40,8 @@ const BudgetModal = ({ destination, onClose }) => {
     if (!budget) return;
     const prompt = buildPrompt();
     onClose();
-    // Directly navigate to premium experience
-    navigate(`/premium-trip?prompt=${encodeURIComponent(prompt)}&dest=${encodeURIComponent(destination.name)}`);
+    // Directly navigate to AI Planner
+    navigate(`/planner?prompt=${encodeURIComponent(prompt)}`);
   };
 
   return (
@@ -77,8 +77,8 @@ const BudgetModal = ({ destination, onClose }) => {
 
         <div className="p-8 space-y-8">
           {/* Budget Section */}
-          <div className="space-y-4 text-center">
-            <h3 className="text-lg font-black text-slate-900">What's your trip budget?</h3>
+          <div className="space-y-4">
+            <h3 className="text-center text-lg font-black text-slate-900">What's your trip budget?</h3>
             <div className="relative">
               <span className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-slate-300">₹</span>
               <input
@@ -90,14 +90,15 @@ const BudgetModal = ({ destination, onClose }) => {
               />
             </div>
             
-            <div className="flex flex-wrap gap-2 justify-center">
+            {/* Single-row Budget Presets */}
+            <div className="flex flex-nowrap items-center gap-2 overflow-x-auto no-scrollbar py-2 -mx-2 px-2">
               {budgetChips.map(chip => (
                 <button
                   key={chip.label}
                   onClick={() => setBudget(chip.value)}
-                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                  className={`shrink-0 flex-1 min-w-[85px] py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border whitespace-nowrap px-2 ${
                     Number(budget) === chip.value 
-                      ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                      ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20' 
                       : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
                   }`}
                 >

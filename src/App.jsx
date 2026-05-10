@@ -28,7 +28,6 @@ import DestinationDetail from './pages/Destination/DestinationDetail';
 import TripPlan from './pages/TripPlan/TripPlan';
 import Translator from './pages/Translator/Translator';
 import Alerts from './pages/Alerts/Alerts';
-import PremiumTrip from './pages/PremiumTrip/PremiumTrip';
 
 // ─── Page transition config ────────────────────────────────────────────────
 const pageVariants = {
@@ -122,7 +121,6 @@ function AnimatedRoutes() {
           <Route path="settings"               element={<AnimatedPage><Settings /></AnimatedPage>} />
           <Route path="destination/:id"         element={<AnimatedPage><DestinationDetail /></AnimatedPage>} />
           <Route path="trip-plan/:destination"  element={<AnimatedPage><PageErrorBoundary><TripPlan /></PageErrorBoundary></AnimatedPage>} />
-          <Route path="premium-trip"            element={<AnimatedPage><PremiumTrip /></AnimatedPage>} />
         </Route>
 
         {/* 404 catch-all */}

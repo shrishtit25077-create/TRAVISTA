@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Compass, Map, Sparkles, Calendar, Heart,
-  User, Settings, LogOut, Globe, Bell, X, Plane, Star
+  User, Settings, LogOut, Globe, Bell, X, Plane
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -30,11 +30,10 @@ const NavItem = ({ icon: Icon, label, path, onClose }) => {
     >
       <Icon
         size={16}
-        className={`shrink-0 transition-all duration-150 ${
-          active
+        className={`shrink-0 transition-all duration-150 ${active
             ? 'text-[#15803d]'
             : 'text-slate-400 group-hover:text-[#374151] dark:group-hover:text-slate-300'
-        }`}
+          }`}
       />
       <span className="truncate leading-none">{label}</span>
     </button>
@@ -95,13 +94,11 @@ const SidebarContent = ({ onClose }) => {
       <div className="flex-1 overflow-y-auto no-scrollbar px-2.5 pb-3">
         <Section title="Discover">
           <NavItem icon={Compass} label="Inspiration" path="/" onClose={onClose} />
-          <NavItem icon={Map} label="Explore" path="/map" onClose={onClose} />
+          <NavItem icon={Map} label="Explore" path="/explore" onClose={onClose} />
         </Section>
 
-        <Section title="Plan">
+        <Section title="AI Travel">
           <NavItem icon={Sparkles} label="AI Planner" path="/planner" onClose={onClose} />
-          <NavItem icon={Star} label="Premium Trip" path="/premium-trip" onClose={onClose} />
-          <NavItem icon={Globe} label="Translator" path="/translator" onClose={onClose} />
           {/* Book Flights — triggers overlay, not a route */}
           <button
             onClick={() => { onClose?.(); setFlightPanelOpen(true); }}
@@ -122,7 +119,6 @@ const SidebarContent = ({ onClose }) => {
         <Section title="My Trips">
           <NavItem icon={Calendar} label="Itineraries" path="/itineraries" onClose={onClose} />
           <NavItem icon={Heart} label="Saved" path="/saved" onClose={onClose} />
-          <NavItem icon={Bell} label="Alerts" path="/alerts" onClose={onClose} />
         </Section>
 
         <Section title="Account">
