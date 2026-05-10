@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, Sparkles } from 'lucide-react';
+import { X, Minus, Plus, Sparkles, Zap, Star } from 'lucide-react';
 import { useDestinationPhoto } from '../hooks/useDestinationPhoto';
 import { useNavigate } from 'react-router-dom';
 
 const BudgetModal = ({ destination, onClose }) => {
   const navigate = useNavigate();
   const { photoUrl } = useDestinationPhoto(destination.name);
-  
+
   const [budget, setBudget] = useState('');
   const [duration, setDuration] = useState(5);
   const [travellerType, setTravellerType] = useState('Solo');
-  
+
   const budgetChips = [
     { label: 'Ultra Budget', value: 15000 },
     { label: 'Budget', value: 40000 },
@@ -19,11 +19,7 @@ const BudgetModal = ({ destination, onClose }) => {
     { label: 'Premium', value: 150000 },
   ];
 
-  const [loading, setLoading] = useState(false);
-
-  const handleGenerate = () => {
-    if (!budget) return;
-
+  const buildPrompt = () => {
     const budgetNum = Number(budget);
     const budgetLabel =
       budgetNum <= 20000 ? 'ultra budget' :
@@ -31,19 +27,29 @@ const BudgetModal = ({ destination, onClose }) => {
       budgetNum <= 100000 ? 'mid-range' :
       'premium luxury';
 
-    const prompt = [
+    return [
       `Plan a ${duration}-day ${travellerType.toLowerCase()} trip to ${destination.name}, ${destination.country}`,
-      `with a total budget of ₹${Number(budget).toLocaleString('en-IN')} (${budgetLabel}).`,
+      `with a total budget of ₹${budgetNum.toLocaleString('en-IN')} (${budgetLabel}).`,
       `Include day-wise itinerary, top attractions, local food recommendations, hotel suggestions,`,
       `hidden gems, insider travel tips, and budget breakdown.`,
       `Tailor the experience for a ${travellerType.toLowerCase()} traveller.`,
     ].join(' ');
+  };
 
+  const handleQuickPlanner = () => {
+    if (!budget) return;
     onClose();
-    navigate(`/planner?prompt=${encodeURIComponent(prompt)}`);
+    navigate(`/planner?prompt=${encodeURIComponent(buildPrompt())}`);
+  };
+
+  const handlePremiumExperience = () => {
+    if (!budget) return;
+    onClose();
+    navigate(`/premium-trip?prompt=${encodeURIComponent(buildPrompt())}&dest=${encodeURIComponent(destination.name)}`);
   };
 
   return (
+
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -148,22 +154,34 @@ const BudgetModal = ({ destination, onClose }) => {
             </div>
           </div>
 
-          <div className="space-y-4 pt-4">
-            {loading ? (
-              <button className="w-full bg-slate-400 text-white py-5 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-xl">
-                Designing your trip...
-              </button>
-            ) : (
-              <button
-                onClick={handleGenerate}
-                disabled={!budget}
-                className="w-full bg-[#1D9E75] hover:bg-[#15825f] disabled:opacity-50 disabled:hover:bg-[#1D9E75] text-white py-5 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all shadow-xl shadow-[#1D9E75]/20"
-              >
-                Design My Trip ✨
-              </button>
-            )}
-            <p className="text-[10px] text-slate-400 font-medium text-center italic">We'll find the best possible experience within your budget</p>
+          <div className="space-y-3 pt-4">
+            {/* Primary — Quick AI Planner */}
+            <button
+              onClick={handleQuickPlanner}
+              disabled={!budget}
+              className="w-full bg-[#1D9E75] hover:bg-[#15825f] disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-[1.25rem] font-black text-sm flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-[#1D9E75]/20 active:scale-[0.98]"
+            >
+              <Zap size={16} />
+              Quick AI Planner
+            </button>
+
+            {/* Secondary — Premium Experience */}
+            <button
+              onClick={handlePremiumExperience}
+              disabled={!budget}
+              className="w-full bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-[1.25rem] font-black text-sm flex items-center justify-center gap-2.5 transition-all border border-gray-700 active:scale-[0.98]"
+            >
+              <Star size={16} className="text-yellow-400" />
+              Premium Experience
+            </button>
+
+            {/* Hint labels */}
+            <div className="grid grid-cols-2 gap-2">
+              <p className="text-[9px] text-slate-400 text-center leading-relaxed">Chat-style · Editable · Fast</p>
+              <p className="text-[9px] text-slate-400 text-center leading-relaxed">Cinematic · Immersive · Shareable</p>
+            </div>
           </div>
+
         </div>
       </motion.div>
     </motion.div>

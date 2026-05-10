@@ -127,17 +127,17 @@ const FILTERS = [
 ];
 
 const FlightPanel = ({ plan, onClose }) => {
-  // Extract destination from plan title
+  // Extract destination from plan title — works even if plan is null (sidebar entry point)
   const destGuess = plan?.title?.match(/(?:to|in|for)\s+([A-Za-z\s]+?)(?:,|\s*$)/i)?.[1]?.trim()
     || plan?.title?.split(' ').slice(-2).join(' ')
-    || 'Tokyo';
+    || null;
 
   const defaultDepart = formatDate(addDays(new Date(), 14));
   const defaultReturn = formatDate(addDays(new Date(), 14 + (plan?.days?.length || 5)));
 
   const [from, setFrom] = useState('DEL');
-  const [to, setTo] = useState(extractIATA(destGuess));
-  const [destLabel, setDestLabel] = useState(destGuess);
+  const [to, setTo] = useState(destGuess ? extractIATA(destGuess) : '');
+  const [destLabel, setDestLabel] = useState(destGuess || 'your destination');
   const [depart, setDepart] = useState(defaultDepart);
   const [returnDate, setReturnDate] = useState(defaultReturn);
   const [adults, setAdults] = useState(1);
@@ -165,8 +165,9 @@ const FlightPanel = ({ plan, onClose }) => {
     }
   }, [from, to, depart, returnDate, adults, cabin]);
 
-  // Auto-search on open
-  useEffect(() => { handleSearch(); }, []);
+  // Auto-search on open only when destination is known (from itinerary context)
+  useEffect(() => { if (from && to) handleSearch(); }, []);
+
 
   const filtered = filter === 'all'
     ? flights

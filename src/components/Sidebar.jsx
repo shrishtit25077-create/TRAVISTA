@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Compass, Map, Sparkles, Calendar, Heart,
-  User, Settings, LogOut, Globe, Bell, X
+  User, Settings, LogOut, Globe, Bell, X, Plane, Star
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import FlightPanel from '../pages/AIPlanner/FlightPanel';
 
 // ─── Nav Item ───────────────────────────────────────────────────────────────
 const NavItem = ({ icon: Icon, label, path, onClose }) => {
@@ -55,6 +56,7 @@ const Section = ({ title, children }) => (
 const SidebarContent = ({ onClose }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [flightPanelOpen, setFlightPanelOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -98,8 +100,24 @@ const SidebarContent = ({ onClose }) => {
 
         <Section title="Plan">
           <NavItem icon={Sparkles} label="AI Planner" path="/planner" onClose={onClose} />
+          <NavItem icon={Star} label="Premium Trip" path="/premium-trip" onClose={onClose} />
           <NavItem icon={Globe} label="Translator" path="/translator" onClose={onClose} />
+          {/* Book Flights — triggers overlay, not a route */}
+          <button
+            onClick={() => { onClose?.(); setFlightPanelOpen(true); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium tracking-[-0.01em] transition-all duration-150 group border-l-2 text-[#374151] dark:text-slate-400 hover:bg-[#eff6ff] hover:text-blue-700 border-transparent"
+          >
+            <Plane size={16} className="shrink-0 text-slate-400 group-hover:text-blue-500 transition-all duration-150" />
+            <span className="truncate leading-none">Book Flights</span>
+          </button>
         </Section>
+
+        {/* Flight Panel overlay */}
+        <AnimatePresence>
+          {flightPanelOpen && (
+            <FlightPanel plan={null} onClose={() => setFlightPanelOpen(false)} />
+          )}
+        </AnimatePresence>
 
         <Section title="My Trips">
           <NavItem icon={Calendar} label="Itineraries" path="/itineraries" onClose={onClose} />
