@@ -48,57 +48,46 @@ export default function AIPlanner() {
 
   // Step 2 & 3: API Calls
   const handleGenerate = async () => {
-    if (!formData.startLocation || !formData.destinations[0] || !formData.startDate) {
-      toast.error('Please fill in the starting location, at least one destination, and dates.');
+    if (!formData.startLocation || !formData.destinations.filter(d => d).length || !formData.startDate || !formData.endDate) {
+      toast.error('Please fill in all fields (start, at least one destination, and both dates).');
       return;
     }
     
     setLoading(true);
+    const { geocodePlace, getRoute, generateItinerary } = await import('../../services/aiService');
     
     try {
-      // TODO: OpenRouteService API Integration
-      // fetch('https://api.openrouteservice.org/v2/directions/' + formData.transport, ...)
-      
-      // MOCK ROUTE DATA
-      const mockRoute = {
-        distance: 450,
-        time: '5 hours 30 mins',
-        geometry: [
-          [28.6139, 77.2090], // Delhi
-          [27.1767, 78.0081], // Agra
-          [26.9124, 75.7873]  // Jaipur
-        ],
-        markers: [
-          { name: formData.startLocation || 'Start', coords: [28.6139, 77.2090] },
-          { name: formData.destinations[0] || 'Destination', coords: [26.9124, 75.7873] }
-        ]
-      };
-      
-      // MOCK AI ITINERARY
-      const mockPlan = {
-        title: `Trip to ${formData.destinations.join(', ')}`,
-        days: [
-          {
-            day: 1,
-            activities: [
-              { time: 'Morning', title: 'Arrival & Check-in', desc: 'Arrive at your destination and settle into your hotel.' },
-              { time: 'Afternoon', title: 'Local Exploration', desc: 'Walk around the main square and enjoy local street food.' },
-              { time: 'Evening', title: 'Welcome Dinner', desc: 'Dine at a highly-rated local restaurant.' }
-            ]
-          }
-        ],
-        budget: { transport: 120, food: 200, stay: 350, activities: 150, total: 820 },
-        tips: { packing: ['Comfortable walking shoes', 'Light jacket', 'Sunscreen'], local: ['Always carry some cash', 'Respect local customs when visiting temples'] }
-      };
+      // 1. Geocode all locations
+      toast.loading('📍 Locating your destinations...', { id: 'planner-loading' });
+      const allPlaces = [formData.startLocation, ...formData.destinations.filter(d => d)];
+      const coords = await Promise.all(allPlaces.map(place => geocodePlace(place)));
 
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate delay
-      
-      setRouteData(mockRoute);
-      setPlan(mockPlan);
+      // 2. Calculate route
+      toast.loading('🗺️ Calculating your route...', { id: 'planner-loading' });
+      const route = await getRoute(coords, formData.transport);
+      setRouteData(route);
+
+      // 3. Generate AI Itinerary
+      toast.loading('🤖 AI is crafting your perfect itinerary...', { id: 'planner-loading' });
+      const modeLabel = formData.transport.includes('car') ? 'Driving' : formData.transport.includes('walking') ? 'Walking' : 'Cycling';
+      const itinerary = await generateItinerary({
+        origin: formData.startLocation,
+        destinations: formData.destinations.filter(d => d),
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        travelers: formData.travelers,
+        style: formData.style,
+        modeLabel,
+        distance: route.distance,
+        time: route.time,
+      });
+
+      setPlan(itinerary);
       setActiveTab('itinerary');
-      toast.success('Your trip has been generated!');
+      toast.success('Your bespoke trip is ready!', { id: 'planner-loading' });
     } catch (error) {
-      toast.error('Failed to generate trip. Please try again.');
+      console.error("[AI Planner] Generation failed:", error);
+      toast.error(error.message || 'AI service temporarily unavailable. Please check your API keys.', { id: 'planner-loading' });
     } finally {
       setLoading(false);
     }

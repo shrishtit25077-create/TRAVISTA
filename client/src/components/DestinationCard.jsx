@@ -147,14 +147,8 @@ export function DestinationResultCard({ results }) {
       {heroPhoto && (
         <div className="destination-result-card__hero relative h-64 sm:h-80 w-full">
           <img src={heroPhoto.url} alt={heroPhoto.alt} className="w-full h-full object-cover" />
-          <div className="destination-result-card__overlay absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-6">
-            <h2 className="text-3xl font-bold text-white mb-2">{destination}</h2>
-            {weather && (
-              <span className="weather-chip inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full text-white font-medium w-fit">
-                <img src={weather.icon} alt={weather.condition} className="w-6 h-6 drop-shadow-md" />
-                {weather.temp}°C
-              </span>
-            )}
+          <div className="destination-result-card__overlay absolute inset-0 bg-gradient-to-t from-black/40 to-transparent flex flex-col justify-end p-6">
+            <h2 className="text-3xl font-bold text-white drop-shadow-md">{destination}</h2>
           </div>
         </div>
       )}

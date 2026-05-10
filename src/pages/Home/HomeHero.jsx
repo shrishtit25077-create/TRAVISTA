@@ -112,7 +112,7 @@ export default function HomeHero({ activeCategory, setActiveCategory, searchQuer
             />
             <Globe size={17} className="hero-search-globe" />
             <button className="hero-search-btn" onClick={handleSearch} disabled={loading}>
-              {loading ? "Searching..." : "Generate Trip"} <Sparkles size={14} />
+              {loading ? "Searching..." : "Search Destination"} <Sparkles size={14} />
             </button>
           </div>
 

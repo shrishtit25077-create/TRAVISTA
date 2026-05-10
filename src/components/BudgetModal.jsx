@@ -24,43 +24,17 @@ const BudgetModal = ({ destination, onClose }) => {
 
   const [loading, setLoading] = useState(false);
 
-  const handleGenerate = async () => {
-    if (!budget || budget <= 0) return;
-    
-    setLoading(true);
-
-    let trip = await generateAITrip({
-      destination: destination.name,
-      budget,
-      days: duration,
-      type: travellerType,
+  const handleGenerate = () => {
+    import('react-hot-toast').then(toast => {
+      toast.default.success("New AI Planner coming soon!", {
+        icon: '🚀',
+        style: {
+          borderRadius: '16px',
+          background: '#111827',
+          color: '#fff',
+        },
+      });
     });
-
-    // 💥 fallback if AI fails
-    if (!trip) {
-      trip = generateTrip({
-        destination: destination.name,
-        budget,
-        days: duration,
-        type: travellerType,
-      });
-    }
-
-    // Save trip to Firestore
-    try {
-      await saveTrip({
-        destination: destination.name,
-        budget,
-        days: duration,
-        type: travellerType,
-        plan: trip
-      });
-    } catch (err) {
-      console.error("Failed to save trip to Firestore:", err);
-    }
-
-    setLoading(false);
-    navigate(`/trip-plan/${encodeURIComponent(destination.name)}?budget=${budget}&duration=${duration}&type=${travellerType}`, { state: { aiPlan: trip } });
     onClose();
   };
 

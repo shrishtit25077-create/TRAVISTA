@@ -18,7 +18,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', require('./auth/auth.routes'));
 app.use('/api/trips', require('./trip/trip.routes'));
-app.use('/api/ai', require('./ai/gemini.route'));
+// app.use('/api/ai', require('./ai/gemini.route'));
 
 
 const PORT = process.env.PORT || 5001;

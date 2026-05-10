@@ -5,10 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { destinations as allDestinations } from '../../data/destinations';
 import HomeHero from './HomeHero';
-import { useDestinationPhotos, useWeather } from '../../hooks/useTravista';
-import { useDestinationTime } from '../../hooks/useDestinationTime';
-import { useLocationContext } from '../../context/LocationContext';
-import WeatherTimeChip from '../../components/WeatherTimeChip';
+import { useDestinationPhotos } from '../../hooks/useTravista';
 import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
 import { track } from '../../services/trackingService';
 import { useRecommendations } from '../../hooks/useRecommendations';
@@ -23,12 +20,7 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
   const isSaved = savedPlaces.some((p) => p.id === item.id);
 
   const { photoUrl, loading: photoLoading } = useDestinationPhoto(item.name);
-  const { weather: destWeather, loading: weatherLoading } = useWeather(item.name);
-  const { userWeather } = useLocationContext();
-  const destTime = useDestinationTime(destWeather?.timezone);
-
   const rating = item.rating;
-  const temp = destWeather?.temp ? `${destWeather.temp}°C` : '';
 
   const [showAlertModal, setShowAlertModal] = useState(false);
   const [alertPrice, setAlertPrice] = useState('');
@@ -130,14 +122,6 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
           </button>
         </div>
 
-        <WeatherTimeChip
-          userWeather={userWeather}
-          destWeather={destWeather}
-          destTime={destTime}
-          isDay={destWeather?.isDay}
-          loading={weatherLoading}
-        />
-
         {/* Bottom Content */}
         <div className="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end z-[5]">
           {/* Rating */}
@@ -161,9 +145,6 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
           </p>
           <div className="flex justify-between items-center mt-3">
             <p className="text-sm font-bold text-white drop-shadow-md">{item.price} <span className="text-white/60 text-xs font-normal">per person</span></p>
-            {temp && (
-              <p className="text-sm font-bold text-teal-300 drop-shadow-md">{temp}</p>
-            )}
           </div>
         </div>
       </motion.div>
