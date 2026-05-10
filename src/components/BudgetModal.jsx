@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Minus, Plus, Sparkles, Zap, Star } from 'lucide-react';
+import { X, Minus, Plus, Sparkles } from 'lucide-react';
 import { useDestinationPhoto } from '../hooks/useDestinationPhoto';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,20 +36,15 @@ const BudgetModal = ({ destination, onClose }) => {
     ].join(' ');
   };
 
-  const handleQuickPlanner = () => {
+  const handleGenerate = () => {
     if (!budget) return;
+    const prompt = buildPrompt();
     onClose();
-    navigate(`/planner?prompt=${encodeURIComponent(buildPrompt())}`);
-  };
-
-  const handlePremiumExperience = () => {
-    if (!budget) return;
-    onClose();
-    navigate(`/premium-trip?prompt=${encodeURIComponent(buildPrompt())}&dest=${encodeURIComponent(destination.name)}`);
+    // Directly navigate to premium experience
+    navigate(`/premium-trip?prompt=${encodeURIComponent(prompt)}&dest=${encodeURIComponent(destination.name)}`);
   };
 
   return (
-
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -61,7 +56,7 @@ const BudgetModal = ({ destination, onClose }) => {
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
-        className="bg-white w-full max-w-[480px] rounded-[2rem] overflow-hidden shadow-2xl"
+        className="bg-white w-full max-w-[420px] rounded-[2.5rem] overflow-hidden shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Hero Header */}
@@ -74,28 +69,24 @@ const BudgetModal = ({ destination, onClose }) => {
           >
             <X size={18} />
           </button>
-          <div className="absolute bottom-4 left-6">
+          <div className="absolute bottom-6 left-8">
             <h2 className="text-white text-2xl font-black tracking-tight">{destination.name} {destination.flag}</h2>
-            <p className="text-white/70 text-xs font-bold uppercase tracking-widest">{destination.country}</p>
+            <p className="text-white/70 text-[10px] font-black uppercase tracking-[0.2em]">{destination.country}</p>
           </div>
         </div>
 
         <div className="p-8 space-y-8">
-          <div className="space-y-2 text-center">
-            <h3 className="text-xl font-black text-slate-900">Plan your trip to {destination.name}</h3>
-            <p className="text-slate-400 text-sm font-medium italic">Enter your total budget and we'll design the perfect trip for you</p>
-          </div>
-
-          {/* Budget Input */}
-          <div className="space-y-4">
+          {/* Budget Section */}
+          <div className="space-y-4 text-center">
+            <h3 className="text-lg font-black text-slate-900">What's your trip budget?</h3>
             <div className="relative">
               <span className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-slate-300">₹</span>
               <input
                 type="number"
                 value={budget}
                 onChange={e => setBudget(e.target.value)}
-                placeholder="e.g. 25000"
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-6 pl-14 pr-6 text-3xl font-black text-slate-900 focus:border-[#1D9E75] focus:bg-white outline-none transition-all placeholder:text-slate-200"
+                placeholder="0"
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] py-6 pl-14 pr-6 text-3xl font-black text-slate-900 focus:border-emerald-500 focus:bg-white outline-none transition-all placeholder:text-slate-200 text-center"
               />
             </div>
             
@@ -104,7 +95,11 @@ const BudgetModal = ({ destination, onClose }) => {
                 <button
                   key={chip.label}
                   onClick={() => setBudget(chip.value)}
-                  className="px-4 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-bold uppercase tracking-wider text-slate-500 hover:border-[#1D9E75] hover:text-[#1D9E75] transition-all"
+                  className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border ${
+                    Number(budget) === chip.value 
+                      ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20' 
+                      : 'bg-white border-slate-100 text-slate-400 hover:border-emerald-500 hover:text-emerald-600'
+                  }`}
                 >
                   ₹{chip.value.toLocaleString()}
                 </button>
@@ -112,76 +107,40 @@ const BudgetModal = ({ destination, onClose }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* Duration Selector */}
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">How many days?</label>
-              <div className="flex items-center justify-between bg-slate-50 rounded-xl p-2 border border-slate-100">
-                <button 
-                  onClick={() => setDuration(d => Math.max(1, d - 1))}
-                  className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-600 hover:text-[#1D9E75] transition-all"
-                >
-                  <Minus size={16} />
-                </button>
-                <span className="text-lg font-black text-slate-900">{duration}</span>
-                <button 
-                  onClick={() => setDuration(d => Math.min(30, d + 1))}
-                  className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-600 hover:text-[#1D9E75] transition-all"
-                >
-                  <Plus size={16} />
-                </button>
+          {/* Config row */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1">Duration</label>
+              <div className="flex items-center justify-between bg-slate-50 rounded-2xl p-2 border border-slate-100">
+                <button onClick={() => setDuration(d => Math.max(1, d - 1))} className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 hover:text-emerald-500 transition-all"><Minus size={14} /></button>
+                <span className="text-xs font-black text-slate-900">{duration} Days</span>
+                <button onClick={() => setDuration(d => Math.min(30, d + 1))} className="w-8 h-8 rounded-xl bg-white shadow-sm flex items-center justify-center text-slate-400 hover:text-emerald-500 transition-all"><Plus size={14} /></button>
               </div>
             </div>
-
-            {/* Traveller Type */}
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block text-center">Who's going?</label>
-              <div className="grid grid-cols-2 gap-2">
-                {['Solo', 'Couple', 'Family', 'Group'].map(type => (
-                  <button
-                    key={type}
-                    onClick={() => setTravellerType(type)}
-                    className={`py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
-                      travellerType === type 
-                        ? 'bg-[#1D9E75] border-[#1D9E75] text-white shadow-lg shadow-[#1D9E75]/20' 
-                        : 'bg-white border-slate-100 text-slate-400 hover:border-slate-300'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block px-1">Traveler</label>
+              <select 
+                value={travellerType}
+                onChange={e => setTravellerType(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-2.5 text-xs font-black text-slate-900 outline-none focus:border-emerald-500 transition-all appearance-none text-center h-[52px]"
+              >
+                {['Solo', 'Couple', 'Family', 'Group'].map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
             </div>
           </div>
 
-          <div className="space-y-3 pt-4">
-            {/* Primary — Quick AI Planner */}
-            <button
-              onClick={handleQuickPlanner}
-              disabled={!budget}
-              className="w-full bg-[#1D9E75] hover:bg-[#15825f] disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-[1.25rem] font-black text-sm flex items-center justify-center gap-2.5 transition-all shadow-lg shadow-[#1D9E75]/20 active:scale-[0.98]"
-            >
-              <Zap size={16} />
-              Quick AI Planner
-            </button>
-
-            {/* Secondary — Premium Experience */}
-            <button
-              onClick={handlePremiumExperience}
-              disabled={!budget}
-              className="w-full bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-[1.25rem] font-black text-sm flex items-center justify-center gap-2.5 transition-all border border-gray-700 active:scale-[0.98]"
-            >
-              <Star size={16} className="text-yellow-400" />
-              Premium Experience
-            </button>
-
-            {/* Hint labels */}
-            <div className="grid grid-cols-2 gap-2">
-              <p className="text-[9px] text-slate-400 text-center leading-relaxed">Chat-style · Editable · Fast</p>
-              <p className="text-[9px] text-slate-400 text-center leading-relaxed">Cinematic · Immersive · Shareable</p>
+          {/* CTA */}
+          <button
+            onClick={handleGenerate}
+            disabled={!budget}
+            className="w-full group relative overflow-hidden bg-slate-900 hover:bg-emerald-600 disabled:bg-slate-100 disabled:text-slate-300 text-white py-6 rounded-[2rem] transition-all duration-500 shadow-xl shadow-slate-200 active:scale-[0.98]"
+          >
+            <div className="relative z-10 flex items-center justify-center gap-3">
+              <span className="font-black text-sm uppercase tracking-widest">Design My Trip</span>
+              <Sparkles size={18} className="group-hover:rotate-12 transition-transform" />
             </div>
-          </div>
-
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
         </div>
       </motion.div>
     </motion.div>

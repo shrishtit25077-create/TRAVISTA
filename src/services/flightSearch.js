@@ -6,48 +6,71 @@
 
 const TEQUILA_BASE = 'https://api.tequila.kiwi.com/v2';
 
-// Common city → IATA code mapping for fast auto-fill
-const CITY_IATA = {
-  // India
-  'delhi': 'DEL', 'new delhi': 'DEL', 'mumbai': 'BOM', 'bengaluru': 'BLR',
-  'bangalore': 'BLR', 'hyderabad': 'HYD', 'chennai': 'MAA', 'kolkata': 'CCU',
-  'goa': 'GOI', 'pune': 'PNQ', 'ahmedabad': 'AMD', 'kochi': 'COK',
-  'jaipur': 'JAI', 'lucknow': 'LKO', 'varanasi': 'VNS', 'amritsar': 'ATQ',
-  // Asia
-  'tokyo': 'TYO', 'osaka': 'KIX', 'kyoto': 'ITM', 'bangkok': 'BKK',
-  'singapore': 'SIN', 'bali': 'DPS', 'jakarta': 'CGK', 'hanoi': 'HAN',
-  'ho chi minh': 'SGN', 'beijing': 'PEK', 'shanghai': 'PVG', 'hong kong': 'HKG',
-  'seoul': 'ICN', 'taipei': 'TPE', 'kuala lumpur': 'KUL', 'colombo': 'CMB',
-  'kathmandu': 'KTM', 'dhaka': 'DAC', 'doha': 'DOH', 'dubai': 'DXB',
-  // Europe
-  'london': 'LHR', 'paris': 'CDG', 'amsterdam': 'AMS', 'berlin': 'BER',
-  'rome': 'FCO', 'barcelona': 'BCN', 'madrid': 'MAD', 'prague': 'PRG',
-  'vienna': 'VIE', 'zurich': 'ZRH', 'istanbul': 'IST', 'athens': 'ATH',
-  'lisbon': 'LIS', 'stockholm': 'ARN', 'copenhagen': 'CPH', 'oslo': 'OSL',
-  // Americas
-  'new york': 'JFK', 'los angeles': 'LAX', 'chicago': 'ORD', 'san francisco': 'SFO',
-  'miami': 'MIA', 'toronto': 'YYZ', 'vancouver': 'YVR', 'mexico city': 'MEX',
-  'cancun': 'CUN', 'bogota': 'BOG', 'lima': 'LIM', 'buenos aires': 'EZE',
-  'rio de janeiro': 'GIG', 'sao paulo': 'GRU',
-  // Others
-  'sydney': 'SYD', 'melbourne': 'MEL', 'auckland': 'AKL', 'cairo': 'CAI',
-  'nairobi': 'NBO', 'cape town': 'CPT', 'johannesburg': 'JNB',
-};
+// Comprehensive airport dataset for autocomplete suggestions
+export const AIRPORT_DATA = [
+  { city: 'New Delhi', name: 'Indira Gandhi Intl', code: 'DEL', country: 'India' },
+  { city: 'Mumbai', name: 'Chhatrapati Shivaji Maharaj', code: 'BOM', country: 'India' },
+  { city: 'Bengaluru', name: 'Kempegowda Intl', code: 'BLR', country: 'India' },
+  { city: 'Hyderabad', name: 'Rajiv Gandhi Intl', code: 'HYD', country: 'India' },
+  { city: 'Chennai', name: 'Chennai Intl', code: 'MAA', country: 'India' },
+  { city: 'Kolkata', name: 'Netaji Subhash Chandra Bose', code: 'CCU', country: 'India' },
+  { city: 'Ahmedabad', name: 'Sardar Vallabhbhai Patel', code: 'AMD', country: 'India' },
+  { city: 'Kochi', name: 'Cochin Intl', code: 'COK', country: 'India' },
+  { city: 'Goa', name: 'Dabolim Airport', code: 'GOI', country: 'India' },
+  { city: 'Goa', name: 'Manohar Intl Airport', code: 'GOX', country: 'India' },
+  { city: 'Jaipur', name: 'Jaipur Intl', code: 'JAI', country: 'India' },
+  { city: 'Tokyo', name: 'Haneda Airport', code: 'HND', country: 'Japan' },
+  { city: 'Tokyo', name: 'Narita Intl', code: 'NRT', country: 'Japan' },
+  { city: 'Osaka', name: 'Kansai Intl', code: 'KIX', country: 'Japan' },
+  { city: 'Bangkok', name: 'Suvarnabhumi', code: 'BKK', country: 'Thailand' },
+  { city: 'Bangkok', name: 'Don Mueang', code: 'DMK', country: 'Thailand' },
+  { city: 'Singapore', name: 'Changi Airport', code: 'SIN', country: 'Singapore' },
+  { city: 'Bali', name: 'Ngurah Rai Intl', code: 'DPS', country: 'Indonesia' },
+  { city: 'London', name: 'Heathrow', code: 'LHR', country: 'United Kingdom' },
+  { city: 'London', name: 'Gatwick', code: 'LGW', country: 'United Kingdom' },
+  { city: 'Paris', name: 'Charles de Gaulle', code: 'CDG', country: 'France' },
+  { city: 'Paris', name: 'Orly', code: 'ORY', country: 'France' },
+  { city: 'Amsterdam', name: 'Schiphol', code: 'AMS', country: 'Netherlands' },
+  { city: 'Berlin', name: 'Brandenburg', code: 'BER', country: 'Germany' },
+  { city: 'Dubai', name: 'Dubai Intl', code: 'DXB', country: 'UAE' },
+  { city: 'New York', name: 'John F. Kennedy', code: 'JFK', country: 'USA' },
+  { city: 'New York', name: 'Newark Liberty', code: 'EWR', country: 'USA' },
+  { city: 'Los Angeles', name: 'Los Angeles Intl', code: 'LAX', country: 'USA' },
+  { city: 'San Francisco', name: 'San Francisco Intl', code: 'SFO', country: 'USA' },
+  { city: 'Sydney', name: 'Kingsford Smith', code: 'SYD', country: 'Australia' },
+  { city: 'Melbourne', name: 'Melbourne Airport', code: 'MEL', country: 'Australia' },
+  { city: 'Rome', name: 'Fiumicino', code: 'FCO', country: 'Italy' },
+  { city: 'Madrid', name: 'Adolfo Suárez Barajas', code: 'MAD', country: 'Spain' },
+  { city: 'Barcelona', name: 'El Prat', code: 'BCN', country: 'Spain' },
+  { city: 'Istanbul', name: 'Istanbul Airport', code: 'IST', country: 'Turkey' },
+  { city: 'Doha', name: 'Hamad Intl', code: 'DOH', country: 'Qatar' },
+];
+
+/**
+ * Robust airport search matching by city, code, name or country.
+ */
+export function searchAirports(query = '') {
+  if (!query || query.length < 2) return [];
+  const q = query.toLowerCase().trim();
+  return AIRPORT_DATA.filter(a => 
+    a.city.toLowerCase().includes(q) ||
+    a.code.toLowerCase().includes(q) ||
+    a.name.toLowerCase().includes(q) ||
+    a.country.toLowerCase().includes(q)
+  ).slice(0, 6);
+}
 
 /**
  * Extract IATA code from a destination string.
- * Tries exact match, then partial, then returns a guessed 3-letter code.
  */
 export function extractIATA(destination = '') {
   const lower = destination.toLowerCase().trim();
-  // direct match
-  if (CITY_IATA[lower]) return CITY_IATA[lower];
-  // partial match
-  for (const [city, code] of Object.entries(CITY_IATA)) {
-    if (lower.includes(city) || city.includes(lower)) return code;
-  }
-  // best-effort: first 3 uppercase letters of first word
-  return destination.replace(/[^a-zA-Z ]/g, '').trim().slice(0, 3).toUpperCase() || 'XXX';
+  const match = AIRPORT_DATA.find(a => 
+    lower.includes(a.city.toLowerCase()) || 
+    lower.includes(a.name.toLowerCase()) ||
+    lower.includes(a.code.toLowerCase())
+  );
+  return match ? match.code : destination.slice(0, 3).toUpperCase();
 }
 
 /**

@@ -4,14 +4,14 @@
  * contextually pre-filled from the AI itinerary.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Plane, ArrowRight, Loader2, Clock, Zap,
   ArrowLeftRight, Filter, ExternalLink, AlertCircle,
   ChevronDown, Users, Calendar
 } from 'lucide-react';
-import { searchFlights, extractIATA, formatDate, addDays } from '../../services/flightSearch';
+import { searchFlights, extractIATA, formatDate, addDays, searchAirports } from '../../services/flightSearch';
 
 // ─── Airline Logo ─────────────────────────────────────────────────────────────
 
@@ -115,6 +115,91 @@ const AIInsight = ({ destination, depart }) => {
   );
 };
 
+// ─── Airport Autocomplete Input ──────────────────────────────────────────────
+
+const AirportInput = ({ label, value, onChange, placeholder, autoFocus }) => {
+  const [query, setQuery] = useState(value);
+  const [suggestions, setSuggestions] = useState([]);
+  const [show, setShow] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    // Only update query if it's a 3-letter IATA code or empty, 
+    // to avoid overriding user typing with "City (IATA)" too early
+    if (value.length === 3 || value === '') {
+      // Find matching airport to show city name if possible
+      const match = searchAirports(value).find(a => a.code === value);
+      if (match) setQuery(`${match.city} (${match.code})`);
+      else setQuery(value);
+    }
+  }, [value]);
+
+  const handleInput = (e) => {
+    const v = e.target.value;
+    setQuery(v);
+    const results = searchAirports(v);
+    setSuggestions(results);
+    setShow(results.length > 0);
+    if (!v) onChange('');
+  };
+
+  const select = (a) => {
+    setQuery(`${a.city} (${a.code})`);
+    onChange(a.code);
+    setShow(false);
+  };
+
+  useEffect(() => {
+    const click = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) setShow(false);
+    };
+    document.addEventListener('mousedown', click);
+    return () => document.removeEventListener('mousedown', click);
+  }, []);
+
+  return (
+    <div className="flex-1 relative" ref={containerRef}>
+      <label className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">{label}</label>
+      <input
+        value={query}
+        onChange={handleInput}
+        onFocus={() => query.length >= 2 && setSuggestions(searchAirports(query)) && setShow(true)}
+        placeholder={placeholder}
+        autoFocus={autoFocus}
+        className="w-full text-sm font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 outline-none focus:border-emerald-400 focus:bg-white transition-all placeholder-gray-300"
+      />
+      
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="absolute z-[210] top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden max-h-60 overflow-y-auto"
+          >
+            {suggestions.map((a, i) => (
+              <button
+                key={a.code + i}
+                onClick={() => select(a)}
+                className="w-full flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-emerald-50 transition-colors text-left border-b border-gray-50 last:border-0"
+              >
+                <div>
+                  <div className="text-xs font-bold text-gray-900 leading-none">{a.city}</div>
+                  <div className="text-[10px] text-gray-400 mt-1 truncate max-w-[140px]">{a.name}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[10px] font-black text-emerald-600">{a.code}</div>
+                  <div className="text-[9px] text-gray-400 font-medium">{a.country}</div>
+                </div>
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // ─── Main Flight Panel ────────────────────────────────────────────────────────
 
 const CABIN_CLASSES = ['Economy', 'Premium Economy', 'Business', 'First'];
@@ -127,7 +212,6 @@ const FILTERS = [
 ];
 
 const FlightPanel = ({ plan, onClose }) => {
-  // Extract destination from plan title — works even if plan is null (sidebar entry point)
   const destGuess = plan?.title?.match(/(?:to|in|for)\s+([A-Za-z\s]+?)(?:,|\s*$)/i)?.[1]?.trim()
     || plan?.title?.split(' ').slice(-2).join(' ')
     || null;
@@ -165,9 +249,7 @@ const FlightPanel = ({ plan, onClose }) => {
     }
   }, [from, to, depart, returnDate, adults, cabin]);
 
-  // Auto-search on open only when destination is known (from itinerary context)
   useEffect(() => { if (from && to) handleSearch(); }, []);
-
 
   const filtered = filter === 'all'
     ? flights
@@ -189,7 +271,6 @@ const FlightPanel = ({ plan, onClose }) => {
         onClick={e => e.stopPropagation()}
         className="bg-gray-50 w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[92vh] shadow-2xl"
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 bg-white border-b border-gray-100">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-center">
@@ -200,105 +281,49 @@ const FlightPanel = ({ plan, onClose }) => {
               <p className="text-[10px] text-gray-400">Find flights for your {destLabel} trip</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-          >
+          <button onClick={onClose} className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
             <X size={14} className="text-gray-500" />
           </button>
         </div>
 
-        {/* Search Form */}
         <div className="px-5 py-4 bg-white border-b border-gray-100 space-y-3">
-          {/* Route row */}
           <div className="flex items-center gap-2">
-            <div className="flex-1">
-              <label className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">From</label>
-              <input
-                value={from}
-                onChange={e => setFrom(e.target.value.toUpperCase().slice(0, 3))}
-                placeholder="DEL"
-                maxLength={3}
-                className="w-full text-sm font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 outline-none focus:border-emerald-400 focus:bg-white transition-all uppercase placeholder-gray-300"
-              />
-            </div>
+            <AirportInput label="From" value={from} onChange={setFrom} placeholder="Origin..." />
             <button
               onClick={() => { setFrom(to); setTo(from); }}
-              className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-emerald-50 hover:border-emerald-200 border border-gray-200 flex items-center justify-center transition-colors mt-5"
+              className="w-8 h-8 rounded-lg bg-gray-100 hover:bg-emerald-50 hover:border-emerald-200 border border-gray-200 flex items-center justify-center transition-colors mt-5 shrink-0"
             >
               <ArrowLeftRight size={13} className="text-gray-500" />
             </button>
-            <div className="flex-1">
-              <label className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">To</label>
-              <input
-                value={to}
-                onChange={e => setTo(e.target.value.toUpperCase().slice(0, 3))}
-                placeholder="TYO"
-                maxLength={3}
-                className="w-full text-sm font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 outline-none focus:border-emerald-400 focus:bg-white transition-all uppercase placeholder-gray-300"
-              />
-            </div>
+            <AirportInput label="To" value={to} onChange={setTo} placeholder="Destination..." />
           </div>
 
-          {/* Dates + Pax row */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             <div>
               <label className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Depart</label>
-              <input
-                type="date"
-                value={depart}
-                min={formatDate(new Date())}
-                onChange={e => setDepart(e.target.value)}
-                className="w-full text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2.5 outline-none focus:border-emerald-400 focus:bg-white transition-all"
-              />
+              <input type="date" value={depart} min={formatDate(new Date())} onChange={e => setDepart(e.target.value)} className="w-full text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2.5 outline-none focus:border-emerald-400" />
             </div>
             <div>
               <label className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Return</label>
-              <input
-                type="date"
-                value={returnDate}
-                min={depart}
-                onChange={e => setReturnDate(e.target.value)}
-                className="w-full text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2.5 outline-none focus:border-emerald-400 focus:bg-white transition-all"
-              />
+              <input type="date" value={returnDate} min={depart} onChange={e => setReturnDate(e.target.value)} className="w-full text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2.5 outline-none focus:border-emerald-400" />
             </div>
             <div>
               <label className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Travelers</label>
               <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2.5">
-                <Users size={11} className="text-gray-400 shrink-0" />
-                <input
-                  type="number"
-                  min={1}
-                  max={9}
-                  value={adults}
-                  onChange={e => setAdults(Math.max(1, Math.min(9, +e.target.value)))}
-                  className="w-full text-xs font-medium text-gray-700 bg-transparent outline-none"
-                />
+                <Users size={11} className="text-gray-400" />
+                <input type="number" min={1} max={9} value={adults} onChange={e => setAdults(Math.max(1, +e.target.value))} className="w-full text-xs font-medium bg-transparent outline-none" />
               </div>
             </div>
             <div className="relative">
               <label className="text-[9px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Cabin</label>
-              <button
-                onClick={() => setShowCabinMenu(m => !m)}
-                className="w-full flex items-center justify-between gap-1 text-xs font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2.5 hover:border-emerald-300 transition-colors"
-              >
-                <span className="truncate">{cabin}</span>
-                <ChevronDown size={11} className={`shrink-0 transition-transform ${showCabinMenu ? 'rotate-180' : ''}`} />
+              <button onClick={() => setShowCabinMenu(!showCabinMenu)} className="w-full flex items-center justify-between text-xs font-medium bg-gray-50 border border-gray-200 rounded-lg px-2.5 py-2.5">
+                {cabin} <ChevronDown size={11} className={showCabinMenu ? 'rotate-180' : ''} />
               </button>
               <AnimatePresence>
                 {showCabinMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-lg z-10 overflow-hidden"
-                  >
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} className="absolute top-full mt-1 left-0 right-0 bg-white border border-gray-100 rounded-xl shadow-lg z-10 overflow-hidden">
                     {CABIN_CLASSES.map(c => (
-                      <button
-                        key={c}
-                        onClick={() => { setCabin(c); setShowCabinMenu(false); }}
-                        className={`w-full text-left text-xs px-3 py-2 font-medium hover:bg-gray-50 transition-colors ${cabin === c ? 'text-emerald-600 bg-emerald-50' : 'text-gray-700'}`}
-                      >
+                      <button key={c} onClick={() => { setCabin(c); setShowCabinMenu(false); }} className={`w-full text-left text-xs px-3 py-2 hover:bg-gray-50 ${cabin === c ? 'text-emerald-600 bg-emerald-50' : ''}`}>
                         {c}
                       </button>
                     ))}
@@ -308,87 +333,26 @@ const FlightPanel = ({ plan, onClose }) => {
             </div>
           </div>
 
-          <button
-            onClick={handleSearch}
-            disabled={loading}
-            className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-white bg-gray-900 hover:bg-emerald-600 disabled:opacity-50 transition-all py-2.5 rounded-xl active:scale-[0.98]"
-          >
-            {loading
-              ? <><Loader2 size={13} className="animate-spin" /> Searching flights…</>
-              : <><Plane size={13} /> Search Flights</>
-            }
+          <button onClick={handleSearch} disabled={loading} className="w-full flex items-center justify-center gap-2 text-xs font-semibold text-white bg-gray-900 hover:bg-emerald-600 disabled:opacity-50 transition-all py-2.5 rounded-xl">
+            {loading ? <Loader2 size={13} className="animate-spin" /> : <Plane size={13} />} Search Flights
           </button>
         </div>
 
-        {/* Results */}
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-
-          {/* AI Insight */}
-          {searched && !loading && flights.length > 0 && (
-            <AIInsight destination={destLabel} depart={depart} />
-          )}
-
-          {/* Filters */}
+          {searched && !loading && flights.length > 0 && <AIInsight destination={destLabel} depart={depart} />}
           {searched && !loading && flights.length > 0 && (
             <div className="flex gap-1.5 flex-wrap">
               {FILTERS.map(f => (
-                <button
-                  key={f.key}
-                  onClick={() => setFilter(f.key)}
-                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${
-                    filter === f.key
-                      ? 'bg-emerald-500 border-emerald-500 text-white'
-                      : 'bg-white border-gray-200 text-gray-500 hover:border-emerald-300 hover:text-emerald-600'
-                  }`}
-                >
+                <button key={f.key} onClick={() => setFilter(f.key)} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${filter === f.key ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white text-gray-500'}`}>
                   {f.label}
                 </button>
               ))}
-              <span className="ml-auto text-[10px] text-gray-400 self-center">
-                {filtered.length} result{filtered.length !== 1 ? 's' : ''}
-              </span>
             </div>
           )}
-
-          {/* Loading skeletons */}
-          {loading && (
-            <div className="space-y-2">
-              {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
-            </div>
-          )}
-
-          {/* Error */}
-          {error && !loading && (
-            <div className="flex items-center gap-2.5 p-4 bg-red-50 border border-red-100 rounded-xl">
-              <AlertCircle size={14} className="text-red-400 shrink-0" />
-              <p className="text-xs text-red-600 font-medium">{error}</p>
-            </div>
-          )}
-
-          {/* No results */}
-          {searched && !loading && !error && filtered.length === 0 && (
-            <div className="text-center py-8">
-              <Plane size={28} className="text-gray-200 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-gray-400">No flights found</p>
-              <p className="text-xs text-gray-400 mt-1">Try adjusting your filters or dates</p>
-            </div>
-          )}
-
-          {/* Results list */}
-          {!loading && filtered.length > 0 && (
-            <div className="space-y-2">
-              {filtered.map(f => (
-                <FlightCard key={f.id} flight={f} adults={adults} />
-              ))}
-            </div>
-          )}
-
-          {/* Mock data disclaimer */}
-          {!loading && flights.some(f => f.isMock) && (
-            <p className="text-[10px] text-gray-400 text-center pb-2">
-              Prices are estimated. Click "Book" for real-time fares.
-            </p>
-          )}
+          {loading && <div className="space-y-2">{[1,2,3,4].map(i => <SkeletonCard key={i} />)}</div>}
+          {error && <div className="p-4 bg-red-50 text-red-600 text-xs rounded-xl">{error}</div>}
+          {searched && !loading && !error && filtered.length === 0 && <div className="text-center py-8 text-gray-400 text-sm">No flights found</div>}
+          {!loading && filtered.length > 0 && <div className="space-y-2">{filtered.map(f => <FlightCard key={f.id} flight={f} adults={adults} />)}</div>}
         </div>
       </motion.div>
     </motion.div>
