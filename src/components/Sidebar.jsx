@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Compass, Map, Sparkles, Calendar, Heart,
-  User, Settings, LogOut, Globe, Bell, X, Plane
+  User, Settings, LogOut, Globe, Bell, X, Plane, TrendingDown
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -107,6 +107,7 @@ const SidebarContent = ({ onClose }) => {
             <Plane size={16} className="shrink-0 text-slate-400 group-hover:text-blue-500 transition-all duration-150" />
             <span className="truncate leading-none">Book Flights</span>
           </button>
+          <NavItem icon={TrendingDown} label="Price Drops" path="/price-drops" onClose={onClose} />
         </Section>
 
         {/* Flight Panel overlay */}

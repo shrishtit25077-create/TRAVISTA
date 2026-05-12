@@ -79,15 +79,26 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const [itineraries, setItineraries] = useState([]);
+  const [itineraries, setItineraries] = useState(() => {
+    try {
+      const stored = localStorage.getItem("travista_itineraries");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
 
   useEffect(() => {
     if (user) {
       import('../services/db').then(({ getTrips }) => {
-        getTrips().then(setItineraries);
+        getTrips().then(data => {
+          setItineraries(data);
+          localStorage.setItem("travista_itineraries", JSON.stringify(data));
+        });
       });
     } else {
       setItineraries([]);
+      localStorage.removeItem("travista_itineraries");
     }
   }, [user]);
 
@@ -95,21 +106,29 @@ export const AuthProvider = ({ children }) => {
     const { saveTrip } = await import('../services/db');
     try {
       const saved = await saveTrip(trip);
-      setItineraries(prev => [saved, ...prev]);
-      import('react-hot-toast').then(toast => toast.default.success("Trip saved to itineraries!"));
+      setItineraries(prev => {
+        const updated = [saved, ...prev];
+        localStorage.setItem("travista_itineraries", JSON.stringify(updated));
+        return updated;
+      });
+      import('react-hot-toast').then(toast => toast.default.success("Trip saved to itineraries!", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#064e3b', border: '1px solid #10b981' }}));
     } catch (err) {
-      import('react-hot-toast').then(toast => toast.default.error("Failed to save trip"));
+      import('react-hot-toast').then(toast => toast.default.error("Failed to save trip", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#7f1d1d', border: '1px solid #ef4444' }}));
     }
   };
 
   const deleteItinerary = async (id) => {
     const { deleteTrip } = await import('../services/db');
     try {
-      await deleteTrip(id);
-      setItineraries(prev => prev.filter(t => t.id !== id));
-      import('react-hot-toast').then(toast => toast.default.success("Trip deleted"));
+      await deleteTrip(String(id));
+      setItineraries(prev => {
+        const updated = prev.filter(t => String(t.id) !== String(id));
+        localStorage.setItem("travista_itineraries", JSON.stringify(updated));
+        return updated;
+      });
+      import('react-hot-toast').then(toast => toast.default.success("Trip deleted successfully", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#064e3b', border: '1px solid #10b981' }}));
     } catch (err) {
-      import('react-hot-toast').then(toast => toast.default.error("Failed to delete trip"));
+      import('react-hot-toast').then(toast => toast.default.error("Failed to delete trip", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#7f1d1d', border: '1px solid #ef4444' }}));
     }
   };
 
@@ -151,7 +170,7 @@ export const AuthProvider = ({ children }) => {
         addToHistory
       }}
     >
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

@@ -4,7 +4,7 @@ import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import {
   ArrowLeft, Trash2, Edit2, Check, X, Calendar, MapPin, Sparkles,
   Plus, GripVertical, Clock, Share2, Download, Map as MapIcon,
-  ChevronRight, Wallet, RotateCcw, Copy
+  ChevronRight, Wallet, RotateCcw, Copy, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -130,7 +130,7 @@ const ItineraryDetail = () => {
 
   // Load from localStorage
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem('itineraries')) || [];
+    const data = JSON.parse(localStorage.getItem('travista_itineraries')) || [];
     const found = data.find(t => String(t.id) === String(id));
     if (found) {
       // Normalise old format (plan array) → new format (days array)
@@ -148,9 +148,9 @@ const ItineraryDetail = () => {
 
   // Persist changes
   const persist = useCallback((updatedTrip) => {
-    const data = JSON.parse(localStorage.getItem('itineraries')) || [];
+    const data = JSON.parse(localStorage.getItem('travista_itineraries')) || [];
     const updated = data.map(t => String(t.id) === String(id) ? updatedTrip : t);
-    localStorage.setItem('itineraries', JSON.stringify(updated));
+    localStorage.setItem('travista_itineraries', JSON.stringify(updated));
     setItineraries(updated);
   }, [id, setItineraries]);
 
@@ -221,26 +221,60 @@ const ItineraryDetail = () => {
     toast.success('Print dialog opened');
   };
 
-  // ── Save destination name ─────────────────────────────────────────────────
+  // Save destination name ─────────────────────────────────────────────────
   const saveDest = () => {
     saveAndUpdate({ ...trip, destination: destInput });
     setEditingDest(false);
     toast.success('Destination updated!');
   };
 
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Add artificial delay to show skeleton and ensure parsing is complete
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#fcfdfe] pt-12 px-6 max-w-5xl mx-auto space-y-8 animate-pulse">
+        <div className="h-4 bg-slate-200 rounded w-32"></div>
+        <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm h-48 space-y-4">
+          <div className="h-4 bg-slate-200 rounded w-24"></div>
+          <div className="h-10 bg-slate-200 rounded w-1/2"></div>
+          <div className="flex gap-4"><div className="h-6 bg-slate-200 rounded w-20"></div><div className="h-6 bg-slate-200 rounded w-20"></div></div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] gap-6">
+          <div className="space-y-4"><div className="h-12 bg-slate-200 rounded-xl"></div><div className="h-12 bg-slate-200 rounded-xl"></div></div>
+          <div className="space-y-6"><div className="h-8 bg-slate-200 rounded w-1/4"></div><div className="h-32 bg-slate-200 rounded-2xl"></div><div className="h-32 bg-slate-200 rounded-2xl"></div></div>
+        </div>
+      </div>
+    );
+  }
+
   if (!trip) {
     return (
-      <div className="min-h-screen bg-[#fcfdfe] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-            <MapPin className="w-8 h-8 text-slate-300" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[2rem] p-10 max-w-md w-full shadow-2xl shadow-slate-200/50 text-center border border-slate-100">
+          <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-red-100">
+            <AlertCircle className="w-10 h-10 text-red-500" />
           </div>
-          <h2 className="text-2xl font-black text-slate-800">Trip not found.</h2>
-          <button onClick={() => navigate('/itineraries')}
-            className="px-6 py-3 bg-emerald-600 text-white rounded-full font-bold hover:bg-emerald-700 transition-all">
-            Back to Itineraries
-          </button>
-        </div>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-3">Trip no longer exists</h2>
+          <p className="text-slate-500 font-medium leading-relaxed mb-8">
+            This itinerary could not be found. It may have been deleted, or the link might be broken.
+          </p>
+          <div className="space-y-3">
+            <button onClick={() => navigate('/itineraries')} className="w-full py-4 bg-slate-900 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-emerald-600 transition-all shadow-lg shadow-slate-900/10">
+              Back to Itineraries
+            </button>
+            <button onClick={() => navigate('/planner')} className="w-full py-4 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-emerald-100 transition-all">
+              Create New Trip
+            </button>
+          </div>
+        </motion.div>
       </div>
     );
   }

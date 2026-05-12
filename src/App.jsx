@@ -9,6 +9,7 @@ import SmoothScroll from './components/Effects/SmoothScroll';
 import PWAInstallBanner from './components/PWAInstallBanner';
 import ProtectedRoute from './components/ProtectedRoute';
 import PageErrorBoundary from './components/ErrorBoundary';
+import AIChatbot from './components/AIChatbot';
 
 // ─── Page imports ─────────────────────────────────────────────────────────────
 import Login from './pages/Login';
@@ -28,6 +29,7 @@ import DestinationDetail from './pages/Destination/DestinationDetail';
 import TripPlan from './pages/TripPlan/TripPlan';
 import Translator from './pages/Translator/Translator';
 import Alerts from './pages/Alerts/Alerts';
+import PriceAlerts from './pages/PriceDrops/PriceAlerts';
 
 // ─── Page transition config ────────────────────────────────────────────────
 const pageVariants = {
@@ -97,7 +99,7 @@ function AnimatedRoutes() {
 
   return (
     <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+      <Routes location={location}>
         {/* Public */}
         <Route path="/login" element={<AnimatedPage><Login /></AnimatedPage>} />
         <Route path="/signup" element={<AnimatedPage><Signup /></AnimatedPage>} />
@@ -111,6 +113,7 @@ function AnimatedRoutes() {
           <Route path="map" element={<AnimatedPage><MapPage /></AnimatedPage>} />
           <Route path="planner" element={<AnimatedPage><AIPlanner /></AnimatedPage>} />
           <Route path="ai-planner" element={<Navigate to="/planner" replace />} />
+          <Route path="price-drops" element={<AnimatedPage><PriceAlerts /></AnimatedPage>} />
           <Route path="saved" element={<AnimatedPage><SavedPlaces /></AnimatedPage>} />
           <Route path="itineraries" element={<AnimatedPage><Itineraries /></AnimatedPage>} />
           <Route path="itinerary/:id" element={<AnimatedPage><ItineraryDetail /></AnimatedPage>} />
@@ -148,6 +151,7 @@ function App() {
                 }}
               />
               <AnimatedRoutes />
+              <AIChatbot />
             </Router>
           </LocationProvider>
         </AuthProvider>

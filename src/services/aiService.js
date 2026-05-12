@@ -5,28 +5,56 @@ import axios from 'axios';
 import { auth } from './firebase';
 
 export async function geocodePlace(placeName) {
-  // Fallback map coordinates for demo purposes
-  const mockCoords = {
-    "Paris": [48.8566, 2.3522],
-    "London": [51.5074, -0.1278],
-    "New York": [40.7128, -74.0060],
-    "Tokyo": [35.6762, 139.6503],
-    "Bali": [-8.4095, 115.1889]
-  };
-  
-  if (mockCoords[placeName]) return mockCoords[placeName];
-  
-  // Random coordinates for unknown places to prevent crash
+  if (!placeName) return null;
+  try {
+    const res = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+      params: { q: placeName, format: 'json', limit: 1 },
+      headers: { 'Accept-Language': 'en' }
+    });
+    if (res.data && res.data.length > 0) {
+      return [parseFloat(res.data[0].lat), parseFloat(res.data[0].lon)];
+    }
+  } catch (error) {
+    console.error("Geocoding failed for", placeName, error);
+  }
+  // Fallback map coordinates if not found
   return [20 + Math.random() * 20, 70 + Math.random() * 20];
 }
 
+// Haversine formula to calc distance between two coords
+function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of the earth in km
+  const dLat = (lat2 - lat1) * (Math.PI/180);
+  const dLon = (lon2 - lon1) * (Math.PI/180); 
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * (Math.PI/180)) * Math.cos(lat2 * (Math.PI/180)) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  return Math.round(R * c);
+}
+
 export async function getRoute(coords, transport) {
-  // Mock route calculation
+  let totalDistance = 0;
+  for (let i = 0; i < coords.length - 1; i++) {
+    totalDistance += getDistanceFromLatLonInKm(coords[i][0], coords[i][1], coords[i+1][0], coords[i+1][1]);
+  }
+
+  // Est time based on transport
+  let speed = 80; // default car km/h
+  if (transport === 'flight') speed = 800;
+  if (transport === 'train') speed = 250;
+  if (transport === 'bus') speed = 60;
+  if (transport === 'walking') speed = 5;
+
+  const hours = totalDistance / speed;
+  const timeStr = hours < 1 ? `${Math.round(hours * 60)}m` : `${Math.floor(hours)}h ${Math.round((hours % 1) * 60)}m`;
+
   return {
     geometry: coords,
     markers: coords.map((c, i) => ({ coords: c, name: `Stop ${i+1}` })),
-    distance: "340",
-    time: "4h 20m"
+    distance: totalDistance,
+    time: timeStr
   };
 }
 
@@ -66,7 +94,7 @@ export async function generateItinerary(params) {
     // Fallback Mock data to keep the UI working
     return {
       title: `Epic Journey to ${params.destinations[0] || 'Unknown'}`,
-      budget: { total: 2450, transport: 400, stay: 1200, food: 550, activities: 300 },
+      budget: { total: 125000, transport: 25000, stay: 60000, food: 25000, activities: 15000 },
       days: [
         {
           day: 1,
@@ -79,7 +107,7 @@ export async function generateItinerary(params) {
       ],
       tips: {
         packing: ["Comfortable shoes", "Camera", "Light jacket", "Universal adapter"],
-        local: ["Tipping is 15-20%", "Public transport is reliable", "Tap water is safe"]
+        local: ["Tipping is usually 10%", "Public transport is reliable", "Tap water is safe"]
       }
     };
   }
