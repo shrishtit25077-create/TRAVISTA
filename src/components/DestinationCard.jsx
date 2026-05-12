@@ -126,7 +126,7 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="group relative h-[380px] w-full rounded-[2.5rem] overflow-hidden cursor-pointer bg-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-300 transition-all duration-500"
+        className="group relative h-[240px] md:h-[280px] lg:h-[320px] w-full rounded-3xl md:rounded-[2rem] overflow-hidden cursor-pointer bg-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-300 transition-all duration-500"
         onClick={handleCardClick}
       >
         {/* Background Image */}
@@ -162,25 +162,25 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
         </div>
 
         {/* Rating Pill */}
-        <div className="absolute bottom-28 left-5 z-10">
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-lg text-[10px] font-bold text-white border border-white/10">
+        <div className="absolute bottom-20 left-5 z-10">
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-black/40 backdrop-blur-md rounded-lg text-[10px] font-bold text-white border border-white/10">
             <Star size={10} className="text-amber-400 fill-amber-400" />
             {item.rating || "4.8"}
           </div>
         </div>
-
+ 
         {/* Bottom Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-          <div className="space-y-1">
-            <h3 className="text-2xl font-black text-white tracking-tighter drop-shadow-lg leading-tight">
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+          <div className="space-y-0.5">
+            <h3 className="text-xl md:text-2xl font-black text-white tracking-tighter drop-shadow-lg leading-tight line-clamp-1">
               {item.name}
             </h3>
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-white/80 font-black text-xs drop-shadow-md">
-                {formatPrice(item.price)} <span className="text-white/50 text-[10px] font-medium lowercase italic">per person</span>
+            <div className="flex items-center justify-between pt-0.5">
+              <p className="text-white/80 font-black text-[11px] drop-shadow-md">
+                {formatPrice(item.price)} <span className="text-white/50 text-[9px] font-medium lowercase italic">pp</span>
               </p>
-              <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                <ArrowRight size={14} />
+              <div className="w-7 h-7 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                <ArrowRight size={12} />
               </div>
             </div>
           </div>

@@ -98,7 +98,7 @@ export default function HeroSection({
     <section
       ref={sectionRef}
       onMouseMove={onMouseMove}
-      className="relative h-[660px] md:h-[740px] rounded-[2.5rem] mx-6 md:mx-12 overflow-hidden mt-6 shadow-[0_28px_72px_rgba(0,0,0,0.22)]"
+      className="relative h-[580px] md:h-[640px] rounded-[2.5rem] mx-6 md:mx-12 overflow-hidden mt-6 shadow-[0_28px_72px_rgba(0,0,0,0.22)]"
     >
       {/* ── Background with parallax ── */}
       <AnimatePresence mode="popLayout">
@@ -138,13 +138,13 @@ export default function HeroSection({
 
         {/* Glass depth card */}
         <div style={{
-          maxWidth:'36rem',
+          maxWidth:'34rem',
           background:'rgba(255,255,255,0.04)',
           backdropFilter:'blur(4px)',
           WebkitBackdropFilter:'blur(4px)',
           border:'1px solid rgba(255,255,255,0.07)',
           borderRadius:'20px',
-          padding:'2.4rem 2rem 2rem',
+          padding:'1.8rem 1.6rem 1.6rem',
         }}>
           {/* Eyebrow */}
           <motion.span initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.10, duration:0.5 }}

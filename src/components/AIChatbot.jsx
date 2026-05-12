@@ -72,7 +72,31 @@ export default function AIChatbot() {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isBannerVisible, setIsBannerVisible] = useState(false);
   const messagesEndRef = useRef(null);
+
+  // Smart stacking logic: detect if PWA banner is likely visible
+  useEffect(() => {
+    const dismissed = localStorage.getItem('travista_pwa_dismissed');
+    if (dismissed) {
+      setIsBannerVisible(false);
+      return;
+    }
+
+    const handler = (e) => {
+      // Small delay to match PWA banner's delay
+      setTimeout(() => setIsBannerVisible(true), 3500);
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', () => setIsBannerVisible(false));
+    
+    // Check if we already have a hint that it might be showing
+    // (This is an approximation since we can't easily see sibling state without context)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -125,18 +149,38 @@ export default function AIChatbot() {
         {!isOpen && (
           <motion.button
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1,
+              bottom: isBannerVisible ? 160 : 24,
+              right: 24
+            }}
             exit={{ scale: 0, opacity: 0 }}
+            whileHover="hover"
+            transition={{ 
+              bottom: { type: "spring", stiffness: 300, damping: 25 },
+              width: { type: "spring", stiffness: 400, damping: 30 }
+            }}
             onClick={toggleChat}
-            className="fixed bottom-[180px] right-6 md:bottom-[200px] md:right-8 w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full shadow-[0_8px_30px_rgba(16,185,129,0.3)] flex items-center justify-center text-white z-[9999] hover:scale-110 transition-transform group"
+            className="fixed z-[999] h-14 min-w-[56px] px-4 bg-white/10 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_40px_rgba(16,185,129,0.3)] flex items-center justify-center text-slate-800 transition-all group overflow-hidden"
           >
-            <div className="absolute inset-0 bg-white/20 rounded-full blur animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-            <Sparkles size={24} className="relative z-10" />
+            {/* Emerald Glow Base */}
+            <div className="absolute inset-0 bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors" />
             
-            {/* Tooltip */}
-            <div className="absolute right-full mr-4 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl">
-              Ask Travista AI
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45" />
+            {/* Subtle Glow Ring */}
+            <div className="absolute inset-0 border border-emerald-500/0 group-hover:border-emerald-500/20 rounded-full transition-all duration-500" />
+            
+            <div className="flex items-center gap-3 relative z-10">
+              <Sparkles size={22} className="shrink-0 text-emerald-600" />
+              <motion.span
+                variants={{
+                  initial: { opacity: 0, width: 0, display: 'none' },
+                  hover: { opacity: 1, width: 'auto', display: 'block', transition: { delay: 0.1 } }
+                }}
+                className="text-sm font-black whitespace-nowrap tracking-tight md:!opacity-100 md:!w-auto md:!block"
+              >
+                Ask Travista AI
+              </motion.span>
             </div>
           </motion.button>
         )}
@@ -154,7 +198,7 @@ export default function AIChatbot() {
             }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`fixed bottom-0 right-0 md:bottom-32 md:right-8 w-full md:w-[400px] bg-white/90 backdrop-blur-2xl rounded-t-3xl md:rounded-3xl shadow-2xl border border-white/40 z-[10000] overflow-hidden flex flex-col ${isMinimized ? 'h-[64px]' : 'h-[85vh] md:h-[600px] max-h-[800px]'}`}
+            className={`fixed bottom-0 right-0 md:bottom-6 md:right-6 w-full md:w-[400px] bg-white/95 backdrop-blur-2xl rounded-t-3xl md:rounded-[28px] shadow-2xl border border-white/40 z-[1000] overflow-hidden flex flex-col ${isMinimized ? 'h-[64px]' : 'h-[85vh] md:h-[600px] max-h-[800px]'}`}
           >
             {/* Header */}
             <div 

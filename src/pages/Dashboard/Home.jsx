@@ -20,27 +20,23 @@ const preloadImages = () => {
 
 const DestinationCard = ({ image, name, location, rating, price, description, onAddToTrip, onHover, id, isSaved, toggleSaved, index, visa, season, food, flights }) => (
   <div 
-    className={`group cursor-pointer hover:-translate-y-2 transition-all duration-500 break-inside-avoid mb-6`}
+    className="group cursor-pointer transition-all duration-500 mb-2"
     onMouseEnter={() => onHover && onHover(id)}
     onMouseLeave={() => onHover && onHover(null)}
-    draggable
-    onDragStart={(e) => {
-      e.dataTransfer.setData('destination', JSON.stringify({ id, name, image, price }));
-    }}
   >
-    <div className={`relative rounded-[2rem] overflow-hidden mb-4 shadow-soft group-hover:shadow-float transition-all duration-500 bg-surface-hover ${index % 3 === 0 ? 'aspect-[4/5]' : 'aspect-[4/3]'}`}>
+    <div className="relative h-[240px] md:h-[280px] lg:h-[320px] rounded-3xl overflow-hidden mb-3 shadow-soft group-hover:shadow-float transition-all duration-500 bg-surface-hover">
       <img 
         src={image} 
         alt={name} 
         className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
       />
       {/* Soft gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-text-main/90 via-text-main/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-t from-text-main/90 via-text-main/20 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
       
       {/* Visa Tag */}
       {visa && (
         <div className="absolute top-4 left-4 z-10 pointer-events-none">
-          <span className={`px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest rounded-full shadow-sm border border-white/20 text-white ${visa.toLowerCase().includes('free') || visa.toLowerCase() === 'no visa' ? 'bg-accent-lightSage' : visa.toLowerCase().includes('easy') ? 'bg-accent-sand' : 'bg-black/60'}`}>
+          <span className={`px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest rounded-lg shadow-sm border border-white/20 text-white ${visa.toLowerCase().includes('free') || visa.toLowerCase() === 'no visa' ? 'bg-accent-lightSage' : visa.toLowerCase().includes('easy') ? 'bg-accent-sand' : 'bg-black/60'}`}>
             {visa}
           </span>
         </div>
@@ -49,38 +45,32 @@ const DestinationCard = ({ image, name, location, rating, price, description, on
       {/* Heart icon */}
       <motion.button 
         onClick={(e) => { e.stopPropagation(); toggleSaved(id); }}
-        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/30 flex items-center justify-center text-white hover:bg-white hover:text-accent-sage transition-all duration-300 active:scale-95 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 z-10 border border-white/30"
-        whileTap={{ scale: [null, 0.8, 1.2, 1] }}
-        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute top-4 right-4 w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white hover:text-accent-sage transition-all duration-300 active:scale-95 z-10 border border-white/20"
+        whileTap={{ scale: 0.9 }}
       >
-        <Heart className={`w-5 h-5 transition-colors ${isSaved ? 'fill-accent-sage text-accent-sage' : ''}`} />
+        <Heart className={`w-4 h-4 transition-colors ${isSaved ? 'fill-accent-sage text-accent-sage' : ''}`} />
       </motion.button>
 
-      {/* Info on hover */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 flex flex-col gap-2 pointer-events-none z-10">
-        <div className="flex items-center justify-between text-white mb-1">
-          <span className="flex items-center gap-1.5 text-sm font-medium tracking-wide"><Star className="w-4 h-4 fill-accent-sand text-accent-sand" /> {rating}</span>
-          <span className="text-sm font-bold tracking-wide">{price}</span>
+      {/* Info on hover/bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-1.5 z-10">
+        <div className="flex items-center justify-between text-white mb-0.5">
+          <span className="flex items-center gap-1 text-[10px] font-bold tracking-wide"><Star className="w-3 h-3 fill-accent-sand text-accent-sand" /> {rating}</span>
+          <span className="text-xs font-black tracking-tight">{price}</span>
         </div>
-        {flights && <p className="text-xs font-medium text-white/90 flex items-center gap-1.5 drop-shadow-md">✈️ {flights}</p>}
-        <p className="text-white/90 text-sm font-light leading-relaxed line-clamp-2 drop-shadow-md">{description}</p>
+        <h3 className="text-xl font-black text-white tracking-tighter leading-tight line-clamp-1">{name}</h3>
         
-        <div className="flex flex-wrap gap-1.5 mt-1">
-          {season && <span className={`text-[10px] font-bold tracking-wide px-2 py-1 rounded border border-white/20 shadow-sm ${season.toLowerCase().includes('heat') || season.toLowerCase().includes('monsoon') || season.toLowerCase().includes('warning') ? 'bg-accent-sage text-white' : 'bg-black/40 text-white'}`}>{season}</span>}
-          {food && <span className="text-[10px] font-bold tracking-wide px-2 py-1 rounded bg-black/40 text-white border border-white/20 shadow-sm">{food}</span>}
+        <div className="flex flex-wrap gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {season && <span className="text-[8px] font-bold tracking-wide px-2 py-0.5 rounded bg-black/40 text-white border border-white/10">{season}</span>}
+          {food && <span className="text-[8px] font-bold tracking-wide px-2 py-0.5 rounded bg-black/40 text-white border border-white/10">{food}</span>}
         </div>
 
         <button 
           onClick={(e) => { e.stopPropagation(); onAddToTrip({ id, name, image, price }); }}
-          className="mt-3 w-full py-3 bg-accent-sage hover:bg-accent-sageHover text-white text-sm font-semibold rounded-full transition-colors shadow-md pointer-events-auto hover:-translate-y-0.5"
+          className="mt-2 w-full py-2.5 bg-white text-text-main text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-md opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
         >
           + Add to Trip
         </button>
       </div>
-    </div>
-    <div className="px-2">
-      <h3 className="text-lg font-bold text-text-main group-hover:text-accent-sage transition-colors tracking-tight">{name}</h3>
-      <p className="text-sm text-text-muted font-medium mt-0.5">{location}</p>
     </div>
   </div>
 );
@@ -526,7 +516,7 @@ const Home = () => {
               </div>
             </div>
             
-            <div className="columns-1 sm:columns-2 lg:columns-2 xl:columns-3 gap-6 space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               {destinationsData.map((dest, index) => (
                 <motion.div
                   key={dest.id}

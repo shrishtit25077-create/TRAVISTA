@@ -74,7 +74,14 @@ const Onboarding = () => {
 
       <div className="w-full max-w-2xl relative min-h-[500px]">
         <AnimatePresence mode="wait">
-          {currentStep === 1 && (
+          <motion.div
+            key={currentStep}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {currentStep === 1 && (
             <motion.div 
               key="step1"
               initial={{ x: 50, opacity: 0 }}
@@ -163,8 +170,8 @@ const Onboarding = () => {
                   </div>
                 </div>
               </div>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
         </AnimatePresence>
 
         {/* Navigation Buttons */}

@@ -87,7 +87,7 @@ const AlertCard = ({ drop }) => {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
-      className="relative h-[380px] bg-slate-900 border border-white/10 rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 group"
+      className="relative h-[240px] md:h-[280px] lg:h-[320px] bg-slate-900 border border-white/10 rounded-3xl md:rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 group"
     >
       {/* Background Image */}
       <div className="absolute inset-0">
@@ -109,24 +109,24 @@ const AlertCard = ({ drop }) => {
       </div>
 
       {/* Body Overlaid */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 z-10 space-y-3">
+      <div className="absolute bottom-0 left-0 right-0 p-5 z-10 space-y-2">
         <div>
-           <div className="flex items-center gap-2 text-emerald-400 text-[9px] font-black uppercase tracking-widest mb-1">
-              <Sparkles size={10} /> AI PRICE DROP
+           <div className="flex items-center gap-2 text-emerald-400 text-[8px] font-black uppercase tracking-widest mb-0.5">
+              <Sparkles size={8} /> AI PRICE DROP
            </div>
-           <h3 className="text-2xl font-black text-white tracking-tighter leading-none">{drop.name}</h3>
-           <p className="text-white/60 text-[10px] font-medium mt-1 uppercase tracking-wide">{drop.country}</p>
+           <h3 className="text-xl md:text-2xl font-black text-white tracking-tighter leading-none line-clamp-1">{drop.name}</h3>
+           <p className="text-white/60 text-[9px] font-medium mt-0.5 uppercase tracking-wide">{drop.country}</p>
         </div>
         {/* Price + sparkline */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+        <div className="flex items-center justify-between pt-2 border-t border-white/10">
           <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
-              <span className="text-white/40 line-through text-[10px]">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
-              <span className="text-lg font-black text-white">₹{(drop.newPrice/1000).toFixed(0)}k</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/40 line-through text-[9px]">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
+              <span className="text-base font-black text-white">₹{(drop.newPrice/1000).toFixed(0)}k</span>
             </div>
             <Sparkline data={drop.trend} color={color} />
           </div>
-          <button className="px-4 py-2 bg-white text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">
+          <button className="px-3 py-1.5 bg-white text-slate-900 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">
              Book
           </button>
         </div>
@@ -207,7 +207,7 @@ const PriceAlerts = () => {
           {/* Cards Grid */}
           <div className="flex-1 min-w-0">
             <AnimatePresence mode="popLayout">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
                 {filtered.map(drop => <AlertCard key={drop.id} drop={drop} />)}
               </div>
             </AnimatePresence>
