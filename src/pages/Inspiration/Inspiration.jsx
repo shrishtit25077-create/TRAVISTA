@@ -4,12 +4,12 @@ import { Heart, Navigation, Sparkles, ChevronRight, ChevronLeft, MapPin, Zap } f
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { fetchDestinations } from '../../services/api';
-import { getPersonalizedData } from '../../services/recommendationEngine';
+import { getRecommendations } from '../../services/recommendationEngine';
 import useInfiniteScroll from '../../hooks/useInfiniteScroll';
+import DestinationCard from '../../components/DestinationCard';
 
 const SectionRow = ({ title, data, subtitle }) => {
   const scrollRef = useRef(null);
-  const navigate = useNavigate();
 
   const scroll = (direction) => {
     const { current } = scrollRef;
@@ -24,7 +24,7 @@ const SectionRow = ({ title, data, subtitle }) => {
       <div className="flex items-center justify-between px-2">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <h2 className="text-2xl font-black text-gray-900 tracking-tight">{title}</h2>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
             {subtitle && (
               <span className="text-[10px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest">
                 {subtitle}
@@ -33,50 +33,23 @@ const SectionRow = ({ title, data, subtitle }) => {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => scroll('left')} className="p-2 rounded-full border border-gray-100 hover:bg-gray-50 transition-colors">
-            <ChevronLeft className="w-4 h-4" />
+          <button onClick={() => scroll('left')} className="p-2.5 rounded-full border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+            <ChevronLeft className="w-4 h-4 text-slate-600" />
           </button>
-          <button onClick={() => scroll('right')} className="p-2 rounded-full border border-gray-100 hover:bg-gray-50 transition-colors">
-            <ChevronRight className="w-4 h-4" />
+          <button onClick={() => scroll('right')} className="p-2.5 rounded-full border border-slate-200 hover:bg-slate-50 transition-all active:scale-95">
+            <ChevronRight className="w-4 h-4 text-slate-600" />
           </button>
         </div>
       </div>
 
       <div 
         ref={scrollRef}
-        className="flex gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-2"
+        className="flex items-start gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-2"
       >
-        {data.map((item) => (
-          <motion.div
-            key={item.id}
-            whileHover={{ y: -10 }}
-            className="min-w-[320px] md:min-w-[400px] h-[520px] bg-white rounded-[2.5rem] border border-gray-100 shadow-soft overflow-hidden group snap-start cursor-pointer relative"
-          >
-            <img src={item.image} className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={item.name} />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-            
-            {/* Overlay Actions */}
-            <div className="absolute top-6 right-6 flex flex-col gap-3 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 transition-transform duration-500">
-              <button className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white hover:text-red-500 transition-all">
-                <Heart className="w-5 h-5" />
-              </button>
-              <button className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white hover:text-emerald-500 transition-all" onClick={() => navigate('/map')}>
-                <MapPin className="w-5 h-5" />
-              </button>
-              <button className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white hover:text-cyan-500 transition-all" onClick={() => navigate('/ai-architect')}>
-                <Zap className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-[0.3em] mb-2">{item.category}</span>
-              <h3 className="text-3xl font-black tracking-tight leading-tight mb-2">{item.name}</h3>
-              <div className="flex items-center gap-4 text-white/60">
-                <span className="text-sm font-bold">{item.price}</span>
-                <span className="text-sm font-bold">★ {item.rating}</span>
-              </div>
-            </div>
-          </motion.div>
+        {data?.map((item) => (
+          <div key={item.id} className="w-[280px] shrink-0 snap-start">
+            <DestinationCard item={item} />
+          </div>
         ))}
       </div>
     </div>
@@ -84,7 +57,7 @@ const SectionRow = ({ title, data, subtitle }) => {
 };
 
 const Inspiration = () => {
-  const { user } = useAuth();
+  const { user } = useAuth() || {};
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -96,59 +69,93 @@ const Inspiration = () => {
     const currentPage = isInitial ? 1 : page;
 
     try {
-      // Simulate API fetch with categories
-      const categories = ['Trending Now', 'Because you like Beaches', 'Luxury Escapes', 'Budget Trips', 'Hidden Gems'];
-      const currentCategory = categories[(currentPage - 1) % categories.length];
+      // Use categories that match the new premium system
+      const categories = ['Trending Now', 'Beach Escape', 'Luxury', 'Adventure', 'Hidden Gem'];
+      const newRows = await Promise.all(
+        categories.map(async (cat) => {
+          try {
+            const destinations = await fetchDestinations(cat);
+            return {
+              title: cat,
+              subtitle: cat === 'Trending Now' ? 'Hot Right Now' : null,
+              data: Array.isArray(destinations) ? destinations.slice(0, 8) : []
+            };
+          } catch (e) {
+            return { title: cat, data: [] };
+          }
+        })
+      );
       
-      const rawData = await fetchDestinations(currentPage);
-      const personalizedData = getPersonalizedData(rawData, user);
-
-      const newRow = {
-        id: `row-${currentPage}`,
-        title: currentCategory,
-        subtitle: currentCategory.includes('you like') ? 'Based on your interest' : null,
-        data: personalizedData
-      };
-
-      setRows(prev => isInitial ? [newRow] : [...prev, newRow]);
-      setPage(prev => isInitial ? 2 : prev + 1);
-      
-      if (currentPage >= 10) setHasMore(false);
-    } catch (error) {
-      console.error("Inspiration Load Error:", error);
+      setRows(prev => isInitial ? newRows : [...prev, ...newRows]);
+      setPage(currentPage + 1);
+      setHasMore(false); // Only load one set for now to maintain performance
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [page, loading, hasMore, user]);
-
-  const loadMoreRef = useInfiniteScroll(loadMoreRows, hasMore);
+  }, [page, loading, hasMore]);
 
   useEffect(() => {
     loadMoreRows(true);
-  }, [user]);
+  }, [loadMoreRows]);
 
   return (
-    <div className="space-y-24 pb-40">
-      {/* Dynamic Rows */}
-      {rows.map((row, index) => {
-        const isLast = index === rows.length - 1;
-        return (
-          <div key={row.id} ref={isLast ? loadMoreRef : null}>
-            <SectionRow title={row.title} subtitle={row.subtitle} data={row.data} />
+    <div className="min-h-screen bg-[#fafaf9] pt-8 pb-32">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 space-y-16">
+        
+        {/* Personalized Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-2 text-emerald-600"
+            >
+              <Sparkles size={16} />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em]">AI Recommendations</span>
+            </motion.div>
+            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-none">
+              Inspiration for <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-400">
+                your next journey.
+              </span>
+            </h1>
           </div>
-        );
-      })}
-
-      {loading && (
-        <div className="space-y-12 px-2">
-          <div className="h-8 bg-gray-100 rounded-full w-48 animate-pulse mb-6" />
-          <div className="flex gap-6 overflow-hidden">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="min-w-[400px] h-[520px] bg-white border border-gray-100 rounded-[2.5rem] animate-pulse" />
-            ))}
+          
+          <div className="flex items-center gap-4 bg-white p-2 rounded-3xl border border-slate-100 shadow-sm">
+            <div className="flex -space-x-3">
+              {[1,2,3,4].map(i => (
+                <img key={i} src={`https://i.pravatar.cc/100?u=${i}`} className="w-10 h-10 rounded-2xl border-4 border-white shadow-sm" alt="User" />
+              ))}
+            </div>
+            <p className="text-xs font-bold text-slate-500 pr-4">
+              Joined by <span className="text-slate-900">12k+ travelers</span>
+            </p>
           </div>
         </div>
-      )}
+
+        {/* Content Rows */}
+        <div className="space-y-20">
+          {rows?.map((row, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <SectionRow {...row} />
+            </motion.div>
+          ))}
+        </div>
+
+        {loading && (
+          <div className="flex justify-center py-12">
+            <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

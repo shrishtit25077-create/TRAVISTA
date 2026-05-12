@@ -66,6 +66,15 @@ const PWAInstallBanner = () => {
         >
           {/* Glassmorphism Container */}
           <div className="relative overflow-hidden group">
+            {/* Top-right floating dismiss button */}
+            <button 
+              onClick={handleDismiss} 
+              className="absolute top-2 right-2 z-20 p-1.5 bg-black/40 hover:bg-black/60 text-white/70 hover:text-white rounded-full backdrop-blur-md transition-all border border-white/5"
+              aria-label="Dismiss"
+            >
+              <X size={14} />
+            </button>
+
             <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
             
             <div className="bg-slate-900/80 backdrop-blur-xl border-t md:border border-white/10 rounded-t-[32px] md:rounded-[24px] p-6 md:p-5 shadow-[0_-10px_50px_rgba(0,0,0,0.4),0_20px_50px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.05),0_0_20px_rgba(16,185,129,0.05)] flex items-center gap-5">
@@ -89,20 +98,12 @@ const PWAInstallBanner = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center gap-2 md:gap-3 shrink-0">
+              <div className="flex items-center gap-2 md:gap-3 shrink-0 pr-2">
                 <button
                   onClick={handleInstall}
-                  className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-xs font-bold transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
+                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
                 >
                   Install
-                </button>
-                
-                <button 
-                  onClick={handleDismiss} 
-                  className="p-2 text-slate-500 hover:text-white hover:bg-white/5 rounded-full transition-all"
-                  aria-label="Close"
-                >
-                  <X size={18} />
                 </button>
               </div>
             </div>

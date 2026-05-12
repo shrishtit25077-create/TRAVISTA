@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Search, Sparkles, MapPin, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Masonry from 'react-masonry-css';
+import DestinationCard from '../../components/DestinationCard';
 
 const SavedPlaces = () => {
   const { savedPlaces, toggleSave } = useAuth();
@@ -44,55 +44,16 @@ const SavedPlaces = () => {
         </div>
 
         {savedPlaces.length > 0 ? (
-          <Masonry
-            breakpointCols={masonryBreakpoints}
-            className="flex -ml-8 w-auto"
-            columnClassName="pl-8 bg-clip-padding"
-          >
-            {savedPlaces.map((place, i) => (
-              <motion.div
-                key={place.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -8 }}
-                className="relative h-[320px] rounded-[2.5rem] overflow-hidden shadow-soft hover:shadow-2xl transition-all duration-500 group cursor-pointer border border-slate-100 mb-8"
-              >
-                <img src={place.image} className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={place.name} />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-                
-                <div className="absolute top-4 right-4 z-20">
-                  <button 
-                    onClick={(e) => handleUnsave(e, place)}
-                    className="p-3 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-all transform active:scale-90"
-                  >
-                    <Heart className="w-4 h-4 fill-white" />
-                  </button>
-                </div>
-
-                <div className="absolute inset-0 p-8 flex flex-col justify-end text-white">
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-black uppercase text-[#8FDAC7] tracking-widest">{place.category}</span>
-                    <h3 className="text-2xl font-black tracking-tight">{place.name}</h3>
-                    <div className="flex justify-between items-center pt-2 opacity-0 group-hover:opacity-100 transition-all translate-y-4 group-hover:translate-y-0">
-                       <span className="text-lg font-bold">{place.price}</span>
-                       <div className="flex gap-2">
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); navigate(`/map?focus=${place.id}`); }}
-                            className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full border border-white/20 flex items-center justify-center hover:bg-[#1f6f63] transition-all"
-                          >
-                            <Navigation className="w-4 h-4" />
-                          </button>
-                          <button className="bg-white text-[#1f6f63] px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-[#8FDAC7] transition-all transform active:scale-95 shadow-lg">
-                            Plan Trip
-                          </button>
-                       </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </Masonry>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <AnimatePresence>
+              {savedPlaces.map((place, i) => (
+                <DestinationCard 
+                  key={place.id} 
+                  item={place} 
+                />
+              ))}
+            </AnimatePresence>
+          </div>
         ) : (
           <div className="py-40 text-center space-y-8 bg-white rounded-[4rem] border-2 border-dashed border-slate-100">
             <div className="w-32 h-32 bg-slate-50 rounded-full flex items-center justify-center mx-auto">

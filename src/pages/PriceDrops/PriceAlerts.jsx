@@ -87,74 +87,54 @@ const AlertCard = ({ drop }) => {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
-      className="bg-white border border-slate-100 rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-slate-300/40 hover:-translate-y-1.5 transition-all duration-400 group"
+      className="relative h-[340px] bg-white border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-300/40 transition-all duration-500 group"
     >
       {/* Image */}
-      <div className="relative h-44 overflow-hidden">
+      <div className="absolute inset-0">
         <img src={drop.image} alt={drop.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/5" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/20 to-transparent opacity-90" />
+      </div>
 
-        {/* Badges */}
-        <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/20 backdrop-blur-md border border-white/20 rounded-xl text-[9px] font-black text-white uppercase tracking-wider flex items-center gap-1">
+      {/* Badges */}
+      <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
+        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md border border-white/20 rounded-lg text-[9px] font-black text-white uppercase tracking-wider flex items-center gap-1">
           {drop.type === 'Flight' ? <Plane size={9} /> : <Hotel size={9} />} {drop.type}
         </span>
-        <span className={`absolute top-3 right-3 px-2.5 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg ${isRising ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'}`}>
+        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg ${isRising ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'}`}>
           {isRising ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
           {isRising ? '+' : '↓'}{Math.abs(drop.dropPct)}%
         </span>
-
-        {/* Name on image */}
-        <div className="absolute bottom-3 left-4">
-          <p className="text-white font-black text-xl leading-none">{drop.name}</p>
-          <p className="text-white/60 text-[10px] font-medium mt-0.5">{drop.country}</p>
-        </div>
       </div>
 
-      {/* Body */}
-      <div className="p-4 space-y-3">
+      {/* Body Overlaid */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 z-10 space-y-3">
+        <div>
+          <p className="text-white font-black text-2xl tracking-tighter leading-none">{drop.name}</p>
+          <p className="text-white/60 text-[10px] font-medium mt-0.5 tracking-wide uppercase">{drop.country}</p>
+        </div>
         {/* Price + sparkline */}
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between pt-3 border-t border-white/10">
           <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Price Change</p>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-400 line-through text-xs font-semibold">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
-              <ArrowRight size={10} className="text-slate-300" />
-              <span className={`text-xl font-black ${isRising ? 'text-amber-600' : 'text-emerald-600'}`}>₹{(drop.newPrice/1000).toFixed(0)}k</span>
+            <p className="text-[8px] font-black uppercase tracking-widest text-white/50 mb-0.5">Price Evolution</p>
+            <div className="flex items-center gap-1.5">
+              <span className="text-white/40 line-through text-[10px] font-semibold">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
+              <span className={`text-lg font-black text-white`}>₹{(drop.newPrice/1000).toFixed(0)}k</span>
             </div>
-            {!isRising && (
-              <p className="text-[9px] text-emerald-600 font-black mt-0.5">
-                Save ₹{((drop.oldPrice - drop.newPrice)/1000).toFixed(0)}k
-              </p>
-            )}
           </div>
           <Sparkline data={drop.trend} color={color} />
-        </div>
-
-        {/* Best window */}
-        {drop.bestWindow !== 'N/A' && (
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
-            <Calendar size={11} className="text-slate-400" />
-            Best window: <span className="text-slate-800 font-black">{drop.bestWindow}</span>
-          </div>
-        )}
-
-        {/* AI Insight */}
-        <div className="flex items-start gap-2 bg-slate-50 rounded-xl px-3 py-2">
-          <Sparkles size={10} className="text-emerald-500 shrink-0 mt-0.5" />
-          <p className="text-[10px] text-slate-500 font-medium leading-snug">{drop.ai}</p>
         </div>
 
         {/* Track button */}
         <button
           onClick={handleTrack}
-          className={`w-full py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${
+          className={`w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${
             tracked
-              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-              : 'bg-slate-900 text-white hover:bg-slate-700'
+              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
+              : 'bg-white text-slate-900 hover:bg-emerald-500 hover:text-white'
           }`}
         >
-          <Bell size={11} className={tracked ? 'fill-emerald-500 text-emerald-500' : ''} />
-          {tracked ? 'Tracking Active ✓' : 'Track Price'}
+          <Bell size={10} className={tracked ? 'fill-white' : ''} />
+          {tracked ? 'Tracking Active' : 'Track Deal'}
         </button>
       </div>
     </motion.div>
@@ -233,7 +213,7 @@ const PriceAlerts = () => {
           {/* Cards Grid */}
           <div className="flex-1 min-w-0">
             <AnimatePresence mode="popLayout">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {filtered.map(drop => <AlertCard key={drop.id} drop={drop} />)}
               </div>
             </AnimatePresence>
