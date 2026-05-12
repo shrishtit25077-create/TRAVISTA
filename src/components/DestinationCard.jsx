@@ -126,7 +126,7 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="group relative h-[180px] w-full rounded-[1.2rem] overflow-hidden cursor-pointer bg-slate-100 shadow-sm hover:shadow-xl hover:shadow-slate-300/50 transition-all duration-500"
+        className="group relative h-[380px] w-full rounded-[2.5rem] overflow-hidden cursor-pointer bg-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-300 transition-all duration-500"
         onClick={handleCardClick}
       >
         {/* Background Image */}
@@ -134,49 +134,54 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
           <img
             src={imageToUse}
             alt={item.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1.5s] ease-out opacity-90 group-hover:opacity-100"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out opacity-90 group-hover:opacity-100"
           />
         </div>
 
         {/* Dynamic Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/10 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-500" />
         
         {/* Top Badges */}
-        <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-          <div className="flex flex-col gap-1">
-            <motion.span 
-              whileHover={{ scale: 1.05 }}
-              className="px-2 py-0.5 bg-emerald-500 text-white rounded-md text-[8px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20"
-            >
-              {item.category?.split(' ')[0] || "Top"}
-            </motion.span>
-          </div>
+        <div className="absolute top-5 left-0 z-10">
+          <motion.span 
+            className="px-4 py-1.5 bg-amber-500/90 backdrop-blur-md text-white rounded-r-xl text-[10px] font-black uppercase tracking-widest shadow-lg"
+          >
+            {item.category?.split(' ')[0] || "Top Rated"}
+          </motion.span>
+        </div>
 
-          <div className="flex gap-1">
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleSave(item); }}
-              className={`w-7 h-7 rounded-lg backdrop-blur-xl flex items-center justify-center transition-all ${
-                isSaved ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-white/20 text-white hover:bg-white hover:text-rose-500'
-              }`}
-            >
-              <Heart size={12} fill={isSaved ? "currentColor" : "none"} />
-            </button>
+        <div className="absolute top-5 right-5 z-10 flex flex-col gap-2">
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleSave(item); }}
+            className={`w-10 h-10 rounded-2xl backdrop-blur-xl flex items-center justify-center transition-all ${
+              isSaved ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-white/20 text-white hover:bg-white hover:text-rose-500'
+            }`}
+          >
+            <Heart size={18} fill={isSaved ? "currentColor" : "none"} />
+          </button>
+        </div>
+
+        {/* Rating Pill */}
+        <div className="absolute bottom-28 left-5 z-10">
+          <div className="flex items-center gap-1.5 px-3 py-1 bg-black/40 backdrop-blur-md rounded-lg text-[10px] font-bold text-white border border-white/10">
+            <Star size={10} className="text-amber-400 fill-amber-400" />
+            {item.rating || "4.8"}
           </div>
         </div>
 
         {/* Bottom Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+        <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
           <div className="space-y-1">
-            <div className="flex items-center gap-1 text-emerald-400 text-[8px] font-black uppercase tracking-[0.1em] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0">
-              <MapPin size={8} /> {item.country || item.location}
-            </div>
-            <div className="flex items-end justify-between">
-              <h3 className="text-xl font-black text-white tracking-tighter drop-shadow-md leading-none">
-                {item.name}
-              </h3>
-              <p className="text-sm font-black text-white drop-shadow-md pb-0.5">
-                {formatPrice(item.price)}
+            <h3 className="text-2xl font-black text-white tracking-tighter drop-shadow-lg leading-tight">
+              {item.name}
+            </h3>
+            <div className="flex items-center justify-between pt-1">
+              <p className="text-white/80 font-black text-xs drop-shadow-md">
+                {formatPrice(item.price)} <span className="text-white/50 text-[10px] font-medium lowercase italic">per person</span>
               </p>
+              <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
+                <ArrowRight size={14} />
+              </div>
             </div>
           </div>
         </div>

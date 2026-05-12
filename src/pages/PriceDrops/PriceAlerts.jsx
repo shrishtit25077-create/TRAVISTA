@@ -87,55 +87,49 @@ const AlertCard = ({ drop }) => {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
-      className="relative h-[340px] bg-white border border-slate-100 rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-slate-300/40 transition-all duration-500 group"
+      className="relative h-[380px] bg-slate-900 border border-white/10 rounded-[2.5rem] overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 group"
     >
-      {/* Image */}
+      {/* Background Image */}
       <div className="absolute inset-0">
-        <img src={drop.image} alt={drop.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/20 to-transparent opacity-90" />
+        <img src={drop.image} alt={drop.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out opacity-60 group-hover:opacity-80" loading="lazy" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/40 to-transparent" />
       </div>
 
-      {/* Badges */}
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-start z-10">
-        <span className="px-2.5 py-1 bg-white/20 backdrop-blur-md border border-white/20 rounded-lg text-[9px] font-black text-white uppercase tracking-wider flex items-center gap-1">
-          {drop.type === 'Flight' ? <Plane size={9} /> : <Hotel size={9} />} {drop.type}
+      {/* Badges Overlaid */}
+      <div className="absolute top-5 left-0 z-10">
+        <span className="px-4 py-1.5 bg-emerald-500 text-white rounded-r-xl text-[10px] font-black uppercase tracking-widest shadow-lg">
+          {Math.abs(drop.dropPct)}% OFF
         </span>
-        <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-lg ${isRising ? 'bg-amber-500 text-white' : 'bg-emerald-500 text-white'}`}>
-          {isRising ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-          {isRising ? '+' : '↓'}{Math.abs(drop.dropPct)}%
-        </span>
+      </div>
+
+      <div className="absolute top-5 right-5 z-10">
+        <button onClick={handleTrack} className={`w-10 h-10 rounded-2xl backdrop-blur-xl flex items-center justify-center transition-all ${tracked ? 'bg-emerald-500 text-white' : 'bg-white/20 text-white'}`}>
+           <Bell size={18} fill={tracked ? "currentColor" : "none"} />
+        </button>
       </div>
 
       {/* Body Overlaid */}
       <div className="absolute bottom-0 left-0 right-0 p-6 z-10 space-y-3">
         <div>
-          <p className="text-white font-black text-2xl tracking-tighter leading-none">{drop.name}</p>
-          <p className="text-white/60 text-[10px] font-medium mt-0.5 tracking-wide uppercase">{drop.country}</p>
+           <div className="flex items-center gap-2 text-emerald-400 text-[9px] font-black uppercase tracking-widest mb-1">
+              <Sparkles size={10} /> AI PRICE DROP
+           </div>
+           <h3 className="text-2xl font-black text-white tracking-tighter leading-none">{drop.name}</h3>
+           <p className="text-white/60 text-[10px] font-medium mt-1 uppercase tracking-wide">{drop.country}</p>
         </div>
         {/* Price + sparkline */}
-        <div className="flex items-end justify-between pt-3 border-t border-white/10">
-          <div>
-            <p className="text-[8px] font-black uppercase tracking-widest text-white/50 mb-0.5">Price Evolution</p>
-            <div className="flex items-center gap-1.5">
-              <span className="text-white/40 line-through text-[10px] font-semibold">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
-              <span className={`text-lg font-black text-white`}>₹{(drop.newPrice/1000).toFixed(0)}k</span>
+        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-white/40 line-through text-[10px]">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
+              <span className="text-lg font-black text-white">₹{(drop.newPrice/1000).toFixed(0)}k</span>
             </div>
+            <Sparkline data={drop.trend} color={color} />
           </div>
-          <Sparkline data={drop.trend} color={color} />
+          <button className="px-4 py-2 bg-white text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">
+             Book
+          </button>
         </div>
-
-        {/* Track button */}
-        <button
-          onClick={handleTrack}
-          className={`w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 ${
-            tracked
-              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
-              : 'bg-white text-slate-900 hover:bg-emerald-500 hover:text-white'
-          }`}
-        >
-          <Bell size={10} className={tracked ? 'fill-white' : ''} />
-          {tracked ? 'Tracking Active' : 'Track Deal'}
-        </button>
       </div>
     </motion.div>
   );
@@ -213,7 +207,7 @@ const PriceAlerts = () => {
           {/* Cards Grid */}
           <div className="flex-1 min-w-0">
             <AnimatePresence mode="popLayout">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {filtered.map(drop => <AlertCard key={drop.id} drop={drop} />)}
               </div>
             </AnimatePresence>
@@ -228,7 +222,7 @@ const PriceAlerts = () => {
           </div>
 
           {/* AI Insights Sidebar */}
-          <aside className="xl:w-72 shrink-0 space-y-4">
+          <aside className="xl:w-80 shrink-0 space-y-4">
             {/* Insights panel */}
             <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">

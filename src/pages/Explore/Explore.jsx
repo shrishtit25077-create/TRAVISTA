@@ -143,7 +143,6 @@ export default function Explore() {
           </div>
         </div>
 
-        {/* Categories & Actions Bar */}
         <div className="flex items-center gap-4 sticky top-[70px] z-[40] bg-[#fafaf9]/90 backdrop-blur-xl py-4 -my-2 border-b border-slate-100/50">
           <div className="flex-1 flex gap-2 overflow-x-auto hide-scrollbar touch-pan-x min-w-0 pr-2">
             {CATEGORIES.map(cat => (
@@ -170,7 +169,7 @@ export default function Explore() {
         </div>
 
           {displayedItems.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4 w-full pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6 w-full pt-4">
               <AnimatePresence mode="popLayout">
                 {displayedItems.map((item, idx) => (
                   <DestinationCard 

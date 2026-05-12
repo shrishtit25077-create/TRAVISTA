@@ -128,7 +128,7 @@ export default function AIChatbot() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
             onClick={toggleChat}
-            className="fixed bottom-6 right-6 md:bottom-8 md:right-8 w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full shadow-[0_8px_30px_rgba(16,185,129,0.3)] flex items-center justify-center text-white z-[9999] hover:scale-110 transition-transform group"
+            className="fixed bottom-[180px] right-6 md:bottom-[200px] md:right-8 w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full shadow-[0_8px_30px_rgba(16,185,129,0.3)] flex items-center justify-center text-white z-[9999] hover:scale-110 transition-transform group"
           >
             <div className="absolute inset-0 bg-white/20 rounded-full blur animate-ping opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             <Sparkles size={24} className="relative z-10" />
@@ -154,7 +154,7 @@ export default function AIChatbot() {
             }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`fixed bottom-0 right-0 md:bottom-8 md:right-8 w-full md:w-[400px] bg-white/90 backdrop-blur-2xl rounded-t-3xl md:rounded-3xl shadow-2xl border border-white/40 z-[10000] overflow-hidden flex flex-col ${isMinimized ? 'h-[64px]' : 'h-[85vh] md:h-[600px] max-h-[800px]'}`}
+            className={`fixed bottom-0 right-0 md:bottom-32 md:right-8 w-full md:w-[400px] bg-white/90 backdrop-blur-2xl rounded-t-3xl md:rounded-3xl shadow-2xl border border-white/40 z-[10000] overflow-hidden flex flex-col ${isMinimized ? 'h-[64px]' : 'h-[85vh] md:h-[600px] max-h-[800px]'}`}
           >
             {/* Header */}
             <div 

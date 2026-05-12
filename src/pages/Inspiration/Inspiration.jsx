@@ -44,7 +44,7 @@ const SectionRow = ({ title, data, subtitle }) => {
 
       <div 
         ref={scrollRef}
-        className="flex items-start gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-2"
+        className="flex items-start gap-6 overflow-x-auto no-scrollbar snap-x snap-mandatory pb-4 px-2"
       >
         {data?.map((item) => (
           <div key={item.id} className="w-[280px] shrink-0 snap-start">
