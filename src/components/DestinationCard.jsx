@@ -99,6 +99,20 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
   const isSaved = savedPlaces?.some(p => p.id === item.id);
   const imageToUse = photoUrl || item.image;
 
+  const getOptimizedImage = (url) => {
+    if (!url) return '';
+    if (url.includes('unsplash.com')) {
+      // If it already has query params, modify them, else just append
+      if (url.includes('?')) {
+        return url.replace(/w=\d+/, 'w=600').replace(/q=\d+/, 'q=80');
+      }
+      return `${url}?auto=format&fit=crop&w=600&q=80`;
+    }
+    return url;
+  };
+
+  const optimizedImage = getOptimizedImage(imageToUse);
+
   const formatPrice = (price) => {
     if (typeof price === 'string' && (price.includes('k') || price.includes('L'))) return price;
     const num = Number(price);
@@ -123,65 +137,68 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 10 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        className="group relative h-[240px] md:h-[280px] lg:h-[320px] w-full rounded-3xl md:rounded-[2rem] overflow-hidden cursor-pointer bg-slate-100 shadow-sm hover:shadow-2xl hover:shadow-slate-300 transition-all duration-500"
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="group relative h-[320px] w-full rounded-3xl overflow-hidden cursor-pointer bg-slate-100 shadow-md hover:shadow-xl transition-shadow duration-300"
+        style={{ willChange: 'transform', transform: 'translateZ(0)' }}
         onClick={handleCardClick}
       >
         {/* Background Image */}
         <div className="absolute inset-0 bg-slate-200">
           <img
-            src={imageToUse}
+            src={optimizedImage}
+            loading="lazy"
             alt={item.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s] ease-out opacity-90 group-hover:opacity-100"
+            className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500 ease-out opacity-90 group-hover:opacity-100 aspect-[3/4] min-h-0"
           />
         </div>
 
         {/* Dynamic Overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-80 group-hover:opacity-95 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/40 to-transparent opacity-60 group-hover:opacity-80 transition-opacity duration-500 z-10" />
         
-        {/* Top Badges */}
-        <div className="absolute top-5 left-0 z-10">
-          <motion.span 
-            className="px-4 py-1.5 bg-amber-500/90 backdrop-blur-md text-white rounded-r-xl text-[10px] font-black uppercase tracking-widest shadow-lg"
-          >
-            {item.category?.split(' ')[0] || "Top Rated"}
-          </motion.span>
-        </div>
-
-        <div className="absolute top-5 right-5 z-10 flex flex-col gap-2">
+        {/* Save Button (Top Right) */}
+        <div className="absolute top-4 right-4 z-30">
           <button
             onClick={(e) => { e.stopPropagation(); toggleSave(item); }}
-            className={`w-10 h-10 rounded-2xl backdrop-blur-xl flex items-center justify-center transition-all ${
-              isSaved ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-white/20 text-white hover:bg-white hover:text-rose-500'
+            className={`w-8 h-8 rounded-full backdrop-blur-xl flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+              isSaved ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30' : 'bg-black/20 border border-white/20 text-white hover:bg-white hover:text-rose-500 hover:border-transparent'
             }`}
           >
-            <Heart size={18} fill={isSaved ? "currentColor" : "none"} />
+            <Heart size={14} fill={isSaved ? "currentColor" : "none"} />
           </button>
         </div>
-
-        {/* Rating Pill */}
-        <div className="absolute bottom-20 left-5 z-10">
-          <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-black/40 backdrop-blur-md rounded-lg text-[10px] font-bold text-white border border-white/10">
-            <Star size={10} className="text-amber-400 fill-amber-400" />
-            {item.rating || "4.8"}
-          </div>
-        </div>
- 
-        {/* Bottom Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
-          <div className="space-y-0.5">
-            <h3 className="text-xl md:text-2xl font-black text-white tracking-tighter drop-shadow-lg leading-tight line-clamp-1">
-              {item.name}
-            </h3>
-            <div className="flex items-center justify-between pt-0.5">
-              <p className="text-white/80 font-black text-[11px] drop-shadow-md">
-                {formatPrice(item.price)} <span className="text-white/50 text-[9px] font-medium lowercase italic">pp</span>
-              </p>
-              <div className="w-7 h-7 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                <ArrowRight size={12} />
+        
+        {/* Bottom Content Area */}
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-20 flex flex-col justify-end transition-transform duration-300 transform translate-y-2 group-hover:translate-y-0">
+          <div className="flex items-end justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              {/* Category */}
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md rounded-[4px] text-white text-[8px] font-black uppercase tracking-widest border border-white/10">
+                  {item.category?.split(' ')[0] || "Top Rated"}
+                </span>
+                <div className="flex items-center gap-1 text-[9px] font-bold text-amber-300">
+                  <Star size={9} className="fill-amber-300" />
+                  {item.rating || "4.8"}
+                </div>
               </div>
+              
+              {/* Name */}
+              <h3 className="text-xl md:text-2xl font-black text-white tracking-tighter drop-shadow-md leading-none truncate mb-1">
+                {item.name}
+              </h3>
+              
+              {/* Price */}
+              <p className="text-white/90 font-black text-xs drop-shadow-sm">
+                {formatPrice(item.price)} <span className="text-white/60 text-[9px] font-medium lowercase tracking-wide">/person</span>
+              </p>
+            </div>
+
+            {/* CTA Button */}
+            <div className="w-10 h-10 rounded-full bg-white text-slate-900 flex items-center justify-center shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-emerald-400 hover:text-white shadow-xl shadow-black/20">
+              <ArrowRight size={16} />
             </div>
           </div>
         </div>
@@ -199,10 +216,10 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
 // ─── Destination Skeleton ────────────────────────────────────────────────────
 export function DestinationSkeleton() {
   return (
-    <div className="h-[440px] w-full rounded-[2.5rem] bg-slate-100 animate-pulse flex flex-col justify-end p-8 space-y-4">
-      <div className="w-24 h-4 bg-slate-200 rounded-full" />
-      <div className="w-48 h-8 bg-slate-200 rounded-full" />
-      <div className="w-full h-12 bg-slate-200 rounded-2xl mt-4" />
+    <div className="h-[320px] w-full rounded-3xl bg-slate-100 animate-pulse flex flex-col justify-end p-6 space-y-3">
+      <div className="w-20 h-3 bg-slate-200 rounded-full" />
+      <div className="w-32 h-6 bg-slate-200 rounded-full" />
+      <div className="w-full h-10 bg-slate-200 rounded-xl mt-2" />
     </div>
   );
 }

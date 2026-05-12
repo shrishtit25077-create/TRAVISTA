@@ -105,7 +105,7 @@ export default function Explore() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafaf9] pt-4 pb-32">
+    <div className="min-h-screen bg-[#fafaf9] pt-4 pb-12">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 md:px-8 space-y-3">
         
         {/* Compact Hero */}
@@ -169,7 +169,7 @@ export default function Explore() {
         </div>
 
           {displayedItems.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6 w-full pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 w-full pt-1">
               <AnimatePresence mode="popLayout">
                 {displayedItems.map((item, idx) => (
                   <DestinationCard 

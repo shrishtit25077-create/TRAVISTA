@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Polyline, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Download, Save, Map as MapIcon, Calendar, DollarSign, Lightbulb, Navigation, Users, Activity, Loader2, Plane, Train, Car, Bus, Ship, Footprints, MapPin, Bed, Utensils, AlertCircle } from 'lucide-react';
+import { Download, Save, Map as MapIcon, Calendar, DollarSign, Lightbulb, Navigation, Users, Activity, Loader2, Plane, Train, Car, Bus, Ship, Footprints, MapPin, Bed, Utensils, AlertCircle, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
 import { jsPDF } from 'jspdf';
@@ -199,7 +199,7 @@ const TransportSelector = ({ selected, onChange, distance }) => {
         {distance > 0 && <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{distance.toLocaleString('en-IN')} km</span>}
       </div>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-2.5">
         {TRANSPORT_MODES.map((mode) => {
           const isWalkingDisabled = mode.id === 'walking' && distance > 50;
           const isRoadDisabled = (mode.id === 'car' || mode.id === 'bus') && distance > 3000;
@@ -214,23 +214,23 @@ const TransportSelector = ({ selected, onChange, distance }) => {
               key={mode.id}
               disabled={isDisabled}
               onClick={() => onChange(mode.id)}
-              className={`relative flex flex-col items-center justify-center p-3 h-24 rounded-2xl border-2 transition-all select-none ${
+              className={`relative flex items-center justify-center gap-1.5 px-2 py-2 h-10 rounded-xl transition-all select-none overflow-visible ${
                 active 
-                  ? 'bg-emerald-50 border-emerald-500 shadow-lg shadow-emerald-500/10' 
-                  : 'bg-white border-slate-100 hover:border-emerald-200 shadow-sm'
+                  ? 'bg-emerald-100 text-emerald-800' 
+                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
               } ${isDisabled ? 'opacity-30 cursor-not-allowed saturate-0' : ''}`}
             >
               {isRecommended && !isDisabled && (
-                <span className="absolute -top-2 bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap z-10 scale-90 md:scale-100">
+                <span className="absolute -top-2 -right-1 bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full shadow-sm whitespace-nowrap z-10 pointer-events-none">
                   Recommended
                 </span>
               )}
-              <mode.icon size={22} className={`mb-2 pointer-events-none ${active ? 'text-emerald-600' : 'text-slate-400'}`} />
-              <span className={`text-[10px] font-black uppercase tracking-wider text-center pointer-events-none ${active ? 'text-emerald-800' : 'text-slate-600'}`}>
+              <mode.icon size={14} className="pointer-events-none shrink-0" />
+              <span className="text-[9px] font-black uppercase tracking-wider text-center pointer-events-none whitespace-nowrap truncate">
                 {mode.label}
               </span>
               {isDisabled && (
-                <span className="absolute bottom-1 text-[8px] text-red-400 font-bold pointer-events-none">Too Far</span>
+                <span className="absolute -bottom-2 text-[7px] text-red-500 font-bold pointer-events-none bg-white px-1 rounded-sm shadow-sm">Too Far</span>
               )}
             </button>
           );
@@ -239,6 +239,29 @@ const TransportSelector = ({ selected, onChange, distance }) => {
     </div>
   );
 };
+
+const RouteMap = React.memo(({ routeData, transport }) => {
+  return (
+    <MapContainer zoom={4} style={{ height: '100%', width: '100%' }} zoomControl={false} className="z-0">
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+      <MapBoundsFitter geometry={routeData.geometry} />
+      
+      {routeData.markers.map((m, i) => (
+        <Marker key={i} position={m.coords}>
+          <Popup className="font-bold text-sm text-slate-800">{m.name}</Popup>
+        </Marker>
+      ))}
+
+      {transport === 'flight' && routeData.geometry.length > 1 ? (
+        routeData.geometry.slice(0, -1).map((start, i) => (
+          <Polyline key={i} positions={getCurvedPath(start, routeData.geometry[i+1])} color="#10b981" weight={3} opacity={0.8} dashArray="8, 8" />
+        ))
+      ) : (
+        <Polyline positions={routeData.geometry} color="#10b981" weight={4} opacity={0.8} />
+      )}
+    </MapContainer>
+  );
+});
 
 // ─── Main AI Planner Component ────────────────────────────────────────────────
 
@@ -412,20 +435,20 @@ export default function AIPlanner() {
   };
 
   return (
-    <div className="flex-1 min-w-0 w-full flex flex-col md:flex-row h-[calc(100vh-80px)] overflow-hidden bg-[#fafaf9]">
+    <div className="flex flex-col md:flex-row w-full h-[calc(100vh-56px)] bg-[#fafaf9] overflow-hidden">
       <style>{`
         .hide-scrollbar::-webkit-scrollbar { display: none; }
       `}</style>
       {/* ─── Left Sidebar: Input Form ─── */}
-      <div className="w-full md:w-[35%] lg:w-[400px] h-full overflow-y-auto overscroll-contain bg-white border-r border-slate-100 p-6 md:p-8 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-10 flex flex-col relative shrink-0">
-        <h2 className="text-2xl font-black text-slate-900 mb-8 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
-            <Navigation size={20} />
+      <aside className="w-full md:w-[400px] shrink-0 h-full overflow-y-auto bg-white border-r border-slate-100 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30 flex flex-col">
+        <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-3 shrink-0">
+          <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
+            <Navigation size={18} />
           </div>
           Trip Studio
         </h2>
 
-        <div className="space-y-6 flex-1">
+        <div className="space-y-4 flex-1">
           <DestinationAutocomplete 
             label="Starting Location"
             value={formData.startLocation} 
@@ -433,7 +456,7 @@ export default function AIPlanner() {
             placeholder="E.g. New Delhi, India" 
           />
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Destinations</label>
             {formData.destinations.map((dest, i) => (
               <DestinationAutocomplete 
@@ -443,25 +466,25 @@ export default function AIPlanner() {
                 placeholder={`Destination ${i + 1}`} 
               />
             ))}
-            <button onClick={handleAddDestination} className="text-emerald-600 text-xs font-black uppercase tracking-wider mt-2 hover:text-emerald-700 flex items-center gap-1 transition-colors">
+            <button onClick={handleAddDestination} className="text-emerald-600 text-[11px] font-black uppercase tracking-wider mt-1 hover:text-emerald-700 flex items-center gap-1 transition-colors">
               + Add Stop
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Start Date</label>
-              <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-500" />
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Start Date</label>
+              <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">End Date</label>
-              <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-500" />
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">End Date</label>
+              <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
             </div>
           </div>
 
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Travelers</label>
-            <select value={formData.travelers} onChange={e => setFormData({...formData, travelers: e.target.value})} className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 appearance-none">
+            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Travelers</label>
+            <select value={formData.travelers} onChange={e => setFormData({...formData, travelers: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 appearance-none">
               {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} Person{n>1?'s':''}</option>)}
             </select>
           </div>
@@ -474,12 +497,12 @@ export default function AIPlanner() {
 
           <div>
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Travel Style</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2.5">
               {['Adventure', 'Relaxing', 'Cultural', 'Food', 'Luxury', 'Budget'].map(style => (
                 <button 
                   key={style} 
                   onClick={() => setFormData({...formData, style})} 
-                  className={`px-4 py-2 rounded-full text-xs font-black uppercase tracking-wider transition-all ${formData.style === style ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
+                  className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${formData.style === style ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                 >
                   {style}
                 </button>
@@ -491,23 +514,23 @@ export default function AIPlanner() {
         <button 
           onClick={handleGenerate} 
           disabled={loading || hydrating} 
-          className="w-full h-14 mt-8 bg-emerald-500 text-white font-black text-sm uppercase tracking-widest rounded-2xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shrink-0"
+          className="w-full h-12 mt-4 bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shrink-0"
         >
-          {loading || hydrating ? <Loader2 size={18} className="animate-spin" /> : (location.state?.tripId ? 'Regenerate Itinerary' : 'Generate Itinerary')} 
+          {loading || hydrating ? <Loader2 size={16} className="animate-spin" /> : (location.state?.tripId ? 'Regenerate Itinerary' : 'Generate Itinerary')} 
         </button>
-      </div>
+      </aside>
 
       {/* ─── Right Area: Results & Tabs ─── */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 relative">
+      <main className="flex-1 min-w-0 h-full overflow-y-auto flex flex-col bg-slate-50 relative">
         {!plan ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center bg-white/50">
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 min-h-[600px] text-center bg-transparent w-full">
             {hydrating ? (
                <Loader2 size={48} className="text-emerald-500 animate-spin mb-4" />
             ) : (
               <motion.div 
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                className="w-32 h-32 bg-emerald-50 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/5 border border-emerald-100"
+                className="w-32 h-32 bg-emerald-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/5 border border-emerald-100"
               >
                 <MapIcon size={48} className="text-emerald-500" />
               </motion.div>
@@ -517,9 +540,18 @@ export default function AIPlanner() {
           </div>
         ) : (
           <>
-            <div className="bg-white/80 backdrop-blur-xl px-4 md:px-8 pt-8 pb-4 border-b border-slate-200 shrink-0 sticky top-0 z-20">
+            <div className="bg-white/90 backdrop-blur-xl px-4 md:px-6 pt-6 pb-4 border-b border-slate-200 shrink-0 sticky top-0 z-20">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
                 <div>
+                  {plan.labels && plan.labels.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {plan.labels.map((label, idx) => (
+                        <span key={idx} className="flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-md text-[10px] font-black text-emerald-700 uppercase tracking-wider shadow-sm">
+                          <Sparkles size={10} className="text-emerald-500" /> {label}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-3 tracking-tight">{plan.title}</h1>
                   <div className="flex flex-wrap gap-2 md:gap-4">
                     <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-black text-slate-600 uppercase tracking-widest"><Calendar size={14}/> {formData.startDate || 'Any Date'}</span>
@@ -551,29 +583,12 @@ export default function AIPlanner() {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 relative">
+            <div className="flex-1 bg-slate-50 relative">
               
               {/* TAB 1: MAP */}
               {activeTab === 'map' && routeData && (
-                <div className="h-full w-full relative bg-[#f8fafc] z-0 overflow-hidden">
-                  <MapContainer zoom={4} style={{ height: '100%', width: '100%' }} zoomControl={false} className="z-0">
-                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                    <MapBoundsFitter geometry={routeData.geometry} />
-                    
-                    {routeData.markers.map((m, i) => (
-                      <Marker key={i} position={m.coords}>
-                        <Popup className="font-bold text-sm text-slate-800">{m.name}</Popup>
-                      </Marker>
-                    ))}
-
-                    {formData.transport === 'flight' && routeData.geometry.length > 1 ? (
-                      routeData.geometry.slice(0, -1).map((start, i) => (
-                        <Polyline key={i} positions={getCurvedPath(start, routeData.geometry[i+1])} color="#10b981" weight={3} opacity={0.8} dashArray="8, 8" />
-                      ))
-                    ) : (
-                      <Polyline positions={routeData.geometry} color="#10b981" weight={4} opacity={0.8} />
-                    )}
-                  </MapContainer>
+                <div className="flex-1 w-full relative bg-[#f8fafc] z-0 overflow-hidden min-h-[500px]">
+                  <RouteMap routeData={routeData} transport={formData.transport} />
 
                   {/* FIXED: Positioning the overlay safely within the map wrapper with a high z-index and safe padding */}
                   <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[1000] max-w-[calc(100vw-2rem)] md:max-w-sm pointer-events-none">
@@ -610,10 +625,17 @@ export default function AIPlanner() {
 
               {/* TAB 2: ITINERARY */}
               {activeTab === 'itinerary' && (
-                <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8 pb-20 relative">
-                  <div className="absolute left-16 top-16 bottom-16 w-0.5 bg-slate-200/50 hidden md:block"></div>
+                <div className="w-full px-4 md:px-6 py-6 space-y-6 pb-20 relative">
+                  <div className="absolute left-10 top-12 bottom-12 w-0.5 bg-slate-200/50 hidden md:block"></div>
                   {plan.days.map((day, idx) => (
-                    <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} transition={{delay: idx*0.1}} key={day.day} className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 relative z-10 hover:shadow-2xl hover:shadow-slate-200/40 transition-shadow duration-300">
+                    <motion.div 
+                      key={day.day} 
+                      initial={{opacity:0, y:10}} 
+                      animate={{opacity:1, y:0}} 
+                      transition={{ duration: 0.25, ease: "easeOut", delay: Math.min(idx*0.05, 0.3) }} 
+                      className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-md relative z-10 hover:shadow-lg transition-shadow duration-300"
+                      style={{ willChange: 'transform', transform: 'translateZ(0)' }}
+                    >
                       <h3 className="text-xl md:text-2xl font-black text-slate-900 mb-8 flex items-center gap-4 border-b border-slate-100 pb-4">
                         <span className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 text-lg">D{day.day}</span>
                         {day.title || `Exploring Destination ${idx + 1}`}
@@ -638,8 +660,8 @@ export default function AIPlanner() {
 
               {/* TAB 3: BUDGET */}
               {activeTab === 'budget' && (
-                <div className="max-w-2xl mx-auto p-4 md:p-8 pb-20">
-                  <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden">
+                <div className="w-full px-4 md:px-6 py-6 pb-20">
+                  <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden w-full">
                     <div className="p-8 md:p-10 bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col md:flex-row md:justify-between md:items-center gap-4 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
                       <div className="z-10">
@@ -674,8 +696,8 @@ export default function AIPlanner() {
 
               {/* TAB 4: TIPS */}
               {activeTab === 'tips' && (
-                <div className="max-w-4xl mx-auto p-4 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pb-20">
-                  <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white p-6 md:p-8 rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-100/50 hover:-translate-y-1 transition-transform">
+                <div className="w-full px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 pb-20">
+                  <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white p-5 md:p-6 rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-100/50 hover:-translate-y-1 transition-transform">
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0"><Lightbulb size={20}/></div>
                       <h3 className="text-lg md:text-xl font-black text-emerald-900 uppercase tracking-widest text-[10px] md:text-sm">Packing Checklist</h3>
@@ -707,7 +729,7 @@ export default function AIPlanner() {
             </div>
           </>
         )}
-      </div>
+      </main>
     </div>
   );
 }

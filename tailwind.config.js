@@ -23,6 +23,16 @@ export default {
       fontFamily: {
         sans: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
       },
+      zIndex: {
+        '0': '0',
+        '10': '10',
+        '20': '20',
+        '30': '30',
+        '40': '40',
+        '50': '50',
+        '100': '100',
+        '1050': '1050',
+      },
       boxShadow: {
         'soft': '0 10px 40px rgba(0, 0, 0, 0.06)',
         'premium': '0 20px 60px -12px rgba(0, 0, 0, 0.1)',

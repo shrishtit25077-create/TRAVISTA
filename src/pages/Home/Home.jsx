@@ -65,17 +65,14 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
   };
   const badgeClass = catColors[item.category] || 'bg-gray-500/80 text-gray-100';
 
-  let containerClass = 'h-[260px] sm:h-[300px]'; // hidden gems
-  if (layout === 'luxury') containerClass = 'h-[380px] sm:h-[440px] md:h-[500px]';
-  else if (layout === 'trending' || layout === 'personalized') containerClass = 'h-[300px] sm:h-[360px] md:h-[400px]';
-
   return (
     <>
       <motion.div
         onClick={handleClick}
-        whileHover={{ scale: 1.02, filter: 'brightness(1.05)' }}
-        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className={`relative rounded-[1.5rem] overflow-hidden cursor-pointer group shadow-xl flex flex-col ${containerClass} bg-[#1e293b]`}
+        whileHover={{ scale: 1.02 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="relative h-[320px] w-full rounded-3xl overflow-hidden cursor-pointer group shadow-md hover:shadow-xl flex flex-col bg-[#1e293b]"
+        style={{ willChange: 'transform', transform: 'translateZ(0)' }}
       >
         {photoLoading ? (
           <div className="absolute inset-0 shimmer z-0" />
@@ -83,7 +80,7 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
           <img
             src={photoUrl}
             loading="lazy"
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 aspect-[3/4] min-h-0"
             alt={item.name}
             onError={(e) => {
               e.target.src = `https://picsum.photos/seed/${encodeURIComponent(item.name)}/800/600`;
@@ -212,12 +209,8 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
 };
 
 export const DestinationSkeleton = ({ layout = 'grid' }) => {
-  let containerClass = 'h-[320px]';
-  if (layout === 'luxury') containerClass = 'h-[500px]';
-  else if (layout === 'trending' || layout === 'personalized') containerClass = 'h-[400px]';
-
   return (
-    <div className={`relative rounded-[1.5rem] overflow-hidden ${containerClass} bg-slate-200 dark:bg-slate-800 animate-pulse flex flex-col justify-end p-5`}>
+    <div className="relative h-[320px] w-full rounded-3xl overflow-hidden bg-slate-200 dark:bg-slate-800 animate-pulse flex flex-col justify-end p-5">
       <div className="w-16 h-6 bg-slate-300 dark:bg-slate-700 rounded-full absolute top-4 left-4" />
       <div className="w-8 h-8 bg-slate-300 dark:bg-slate-700 rounded-full absolute top-4 right-4" />
 
@@ -235,19 +228,10 @@ export const DestinationSkeleton = ({ layout = 'grid' }) => {
 };
 
 const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
-  // Auto-fit grid: fills all available space, min 280px per card
-  let gridClass = 'grid gap-4 md:gap-6';
-  let gridStyle = { gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' };
-
-  if (layout === 'luxury') {
-    gridStyle = { gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))' };
-  } else if (layout === 'hidden') {
-    gridStyle = { gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))' };
-  }
 
   return (
     // Padding mirrors hero-wrapper: 16px mobile → 24px tablet → 28px desktop
-    <div className="space-y-5 w-full px-4 sm:px-6 lg:px-7">
+    <div className="space-y-3 w-full px-4 sm:px-6 lg:px-7">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight truncate" style={{ color: 'var(--text-primary)' }}>{title}</h2>
@@ -262,7 +246,7 @@ const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
         </button>
       </div>
 
-      <div className={gridClass} style={gridStyle}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         {data.map((item) => (
           <DestinationCard
             key={item.id}
@@ -280,15 +264,15 @@ const SectionRow = ({ title, data, subtitle, layout, onPlanTrip }) => {
 const PersonalisedSection = ({ onPlanTrip }) => {
   const { recommendations, loading, isPersonalised } = useRecommendations(
     ['Paris', 'London', 'New York'],
-    6
+    5
   );
 
   if (loading) {
     return (
-      <div className="max-w-[1400px] mx-auto px-6 space-y-6">
+      <div className="max-w-[1400px] mx-auto px-6 space-y-4">
         <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded-full w-1/4 animate-pulse" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.from({ length: 6 }).map((_, i) => <DestinationSkeleton key={i} layout="personalized" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => <DestinationSkeleton key={i} />)}
         </div>
       </div>
     );
@@ -369,13 +353,20 @@ const Home = () => {
   const sections = useMemo(() => {
     if (filteredData.length === 0) return [];
 
-    const trending = [...filteredData].sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 6);
-    const luxury = filteredData.filter(d => d.numericPrice > 140000).slice(0, 4);
-    const gems = filteredData.filter(d => (d.popularity || 0) < 85 && d.rating >= 4.7).slice(0, 8);
+    let available = [...filteredData];
+
+    const trending = available.sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 5);
+    const trendingIds = new Set(trending.map(t => t.id));
+    available = available.filter(d => !trendingIds.has(d.id));
+
+    const luxury = available.filter(d => d.numericPrice > 140000).slice(0, 5);
+    const luxuryIds = new Set(luxury.map(l => l.id));
+    available = available.filter(d => !luxuryIds.has(d.id));
+
+    const gems = available.filter(d => (d.popularity || 0) < 85 && d.rating >= 4.7).slice(0, 5);
 
     const result = [];
     if (trending.length > 0) result.push({ id: 'trending', title: 'Trending Now', data: trending, layout: 'trending' });
-    // Personalized section is now handled by PersonalisedSection component
     if (luxury.length > 0) result.push({ id: 'luxury', title: 'Luxury Escapes', data: luxury, layout: 'luxury' });
     if (gems.length > 0) result.push({ id: 'gems', title: 'Hidden Gems', data: gems, layout: 'hidden' });
 
@@ -395,7 +386,7 @@ const Home = () => {
         />
       </div>
 
-      <div className="space-y-20 md:space-y-28 pb-24 md:pb-44">
+      <div className="space-y-8 md:space-y-10 pb-8 md:pb-12">
         <AnimatePresence mode="wait">
           {isSearching ? (
             <motion.div
@@ -403,12 +394,12 @@ const Home = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
               exit={{ opacity: 0 }}
-              className="max-w-[1400px] mx-auto px-6 space-y-12 py-10"
+              className="max-w-[1400px] mx-auto px-6 space-y-8 py-8"
             >
-              <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-full w-1/4 animate-pulse mb-8" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3].map(i => (
-                  <DestinationSkeleton key={i} layout="trending" />
+              <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-full w-1/4 animate-pulse mb-6" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                {[1, 2, 3, 4, 5].map(i => (
+                  <DestinationSkeleton key={i} />
                 ))}
               </div>
             </motion.div>
@@ -426,34 +417,43 @@ const Home = () => {
               <p className="text-slate-400 font-medium max-w-sm mx-auto">Try adjusting your search or filters to explore more places.</p>
             </motion.div>
           ) : (
-            sections.map((section, idx) => (
-              <React.Fragment key={section.id}>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6 }}
-                >
-                  <SectionRow
-                    title={section.title}
-                    subtitle={section.subtitle}
-                    data={section.data}
-                    layout={section.layout}
-                    onPlanTrip={(dest) => setSelectedDest(dest)}
-                  />
-                </motion.div>
-                {section.id === 'trending' && (
+            <motion.div
+              key="sections"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="space-y-8 md:space-y-10"
+            >
+              {sections.map((section, idx) => (
+                <React.Fragment key={section.id}>
                   <motion.div
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={{ opacity: 0, y: 10 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
                   >
-                    <PersonalisedSection onPlanTrip={(dest) => setSelectedDest(dest)} />
+                    <SectionRow
+                      title={section.title}
+                      subtitle={section.subtitle}
+                      data={section.data}
+                      layout={section.layout}
+                      onPlanTrip={(dest) => setSelectedDest(dest)}
+                    />
                   </motion.div>
-                )}
-              </React.Fragment>
-            ))
+                  {section.id === 'trending' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
+                    >
+                      <PersonalisedSection onPlanTrip={(dest) => setSelectedDest(dest)} />
+                    </motion.div>
+                  )}
+                </React.Fragment>
+              ))}
+            </motion.div>
           )}
         </AnimatePresence>
       </div>

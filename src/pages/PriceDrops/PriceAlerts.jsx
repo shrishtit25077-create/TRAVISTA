@@ -87,7 +87,8 @@ const AlertCard = ({ drop }) => {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
-      className="relative h-[240px] md:h-[280px] lg:h-[320px] bg-slate-900 border border-white/10 rounded-3xl md:rounded-[2rem] overflow-hidden hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 group"
+      whileHover={{ y: -4 }}
+      className="relative h-[300px] bg-slate-900 border border-white/10 rounded-[28px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-300 group cursor-pointer"
     >
       {/* Background Image */}
       <div className="absolute inset-0">
@@ -120,14 +121,14 @@ const AlertCard = ({ drop }) => {
         {/* Price + sparkline */}
         <div className="flex items-center justify-between pt-2 border-t border-white/10">
           <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5">
-              <span className="text-white/40 line-through text-[9px]">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
-              <span className="text-base font-black text-white">₹{(drop.newPrice/1000).toFixed(0)}k</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-white/40 line-through text-[10px]">₹{(drop.oldPrice/1000).toFixed(0)}k</span>
+              <span className="text-xl md:text-2xl font-black text-white">₹{(drop.newPrice/1000).toFixed(0)}k</span>
             </div>
             <Sparkline data={drop.trend} color={color} />
           </div>
-          <button className="px-3 py-1.5 bg-white text-slate-900 rounded-lg text-[8px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-all">
-             Book
+          <button className="px-4 py-2 bg-white text-slate-900 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white hover:scale-105 active:scale-95 transition-all">
+             Book Now
           </button>
         </div>
       </div>
@@ -202,12 +203,12 @@ const PriceAlerts = () => {
         </div>
 
         {/* Main Layout */}
-        <div className="flex flex-col xl:flex-row gap-6">
+        <div className="flex flex-col xl:grid xl:grid-cols-[1fr_340px] gap-6 items-start content-start">
 
           {/* Cards Grid */}
           <div className="flex-1 min-w-0">
             <AnimatePresence mode="popLayout">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filtered.map(drop => <AlertCard key={drop.id} drop={drop} />)}
               </div>
             </AnimatePresence>
@@ -222,48 +223,48 @@ const PriceAlerts = () => {
           </div>
 
           {/* AI Insights Sidebar */}
-          <aside className="xl:w-80 shrink-0 space-y-4">
+          <aside className="sticky top-24 self-start space-y-4">
             {/* Insights panel */}
-            <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm">
+            <div className="bg-white/80 backdrop-blur-xl border border-white rounded-[24px] p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles size={14} className="text-emerald-500" />
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-700">AI Travel Insights</h3>
               </div>
-              <div className="space-y-2.5">
+              <div className="space-y-2">
                 {AI_INSIGHTS.map((ins, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.08 }}
-                    className={`flex items-start gap-2.5 p-3 rounded-2xl ${ins.bg}`}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl ${ins.bg}`}
                   >
                     <ins.icon size={13} className={`${ins.color} shrink-0 mt-0.5`} />
-                    <p className="text-[11px] text-slate-600 font-medium leading-snug">{ins.text}</p>
+                    <p className="text-[10px] text-slate-700 font-bold leading-snug">{ins.text}</p>
                   </motion.div>
                 ))}
               </div>
             </div>
 
             {/* Fare Prediction Card */}
-            <div className="bg-slate-900 rounded-3xl p-5">
+            <div className="bg-slate-900 rounded-[24px] p-5 shadow-lg shadow-slate-900/10">
               <div className="flex items-center gap-2 mb-3">
                 <Zap size={14} className="text-emerald-400" />
                 <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">AI Fare Prediction</p>
               </div>
-              <p className="text-white font-black text-base mb-1 leading-snug">Tokyo flights likely to rise 18% by Oct 15.</p>
-              <p className="text-slate-400 text-[11px] font-medium mb-4">Based on historical trends and seat availability data.</p>
-              <div className="w-full bg-slate-800 rounded-full h-2 mb-1">
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2 rounded-full" style={{ width: '72%' }} />
+              <p className="text-white font-black text-sm mb-1 leading-snug">Tokyo flights likely to rise 18% by Oct 15.</p>
+              <p className="text-slate-400 text-[10px] font-medium mb-4">Based on historical trends and seat availability data.</p>
+              <div className="w-full bg-slate-800 rounded-full h-1.5 mb-2">
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-400 h-1.5 rounded-full" style={{ width: '72%' }} />
               </div>
-              <div className="flex justify-between text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                <span>Price Confidence</span><span className="text-emerald-400">72%</span>
+              <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                <span>Confidence</span><span className="text-emerald-400">72%</span>
               </div>
               <button
                 onClick={() => navigate('/planner', { state: { destInput: 'Tokyo' } })}
-                className="mt-4 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5"
+                className="mt-5 w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-1.5"
               >
-                Plan Now <ArrowRight size={12} />
+                Plan Trip <ArrowRight size={12} />
               </button>
             </div>
 
@@ -272,15 +273,15 @@ const PriceAlerts = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
-              className="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm flex items-start gap-3"
+              className="bg-white/80 backdrop-blur-xl border border-white rounded-[24px] p-4 shadow-sm flex items-start gap-3"
             >
-              <div className="w-9 h-9 rounded-2xl bg-emerald-50 flex items-center justify-center shrink-0">
-                <Plane size={16} className="text-emerald-500" />
+              <div className="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                <Plane size={14} className="text-emerald-500" />
               </div>
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Latest Alert</p>
-                <p className="text-xs font-semibold text-slate-800">Flights to Bali dropped 28% — lowest in 90 days.</p>
-                <p className="text-[9px] text-slate-400 mt-1">Travista AI · 4 minutes ago</p>
+                <p className="text-[8px] font-black uppercase tracking-widest text-emerald-600 mb-0.5">Latest Alert</p>
+                <p className="text-[11px] font-bold text-slate-800 leading-tight">Flights to Bali dropped 28% — lowest in 90 days.</p>
+                <p className="text-[9px] text-slate-400 mt-1 font-medium">Travista AI · 4m ago</p>
               </div>
             </motion.div>
           </aside>

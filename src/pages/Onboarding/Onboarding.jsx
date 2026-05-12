@@ -170,9 +170,10 @@ const Onboarding = () => {
                   </div>
                 </div>
               </div>
-            )}
-          </motion.div>
-        </AnimatePresence>
+            </motion.div>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
         {/* Navigation Buttons */}
         <div className="absolute bottom-[-80px] w-full flex justify-between items-center">

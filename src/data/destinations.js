@@ -377,12 +377,5 @@ const enrichWithDefaults = (d) => {
 };
 
 export const destinations = [
-  ...baseDestinations.map(enrichWithDefaults),
-  ...baseDestinations.map(d => ({
-    ...enrichWithDefaults(d),
-    id: d.id + 20,
-    rating: Math.min(5, (parseFloat(d.rating) - 0.2 + Math.random() * 0.4).toFixed(1)),
-    popularity: Math.floor(Math.random() * 100),
-    image: d.image.includes('?auto=format') ? `${d.image}&sig=${d.id + 20}` : d.image
-  }))
+  ...baseDestinations.map(enrichWithDefaults)
 ].sort(() => Math.random() - 0.5);

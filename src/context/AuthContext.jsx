@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../services/firebase';
 import { login as fbLogin, signup as fbSignup, logout as fbLogout, loginWithGoogle as fbGoogleLogin } from '../services/auth';
@@ -26,23 +26,22 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const login = async (email, password) => {
-    // throws with human-readable message from auth.js
+  const login = useCallback(async (email, password) => {
     await fbLogin(email, password);
-  };
+  }, []);
 
-  const signup = async (email, password) => {
+  const signup = useCallback(async (email, password) => {
     await fbSignup(email, password);
-  };
+  }, []);
 
-  const loginWithGoogle = async () => {
+  const loginWithGoogle = useCallback(async () => {
     await fbGoogleLogin();
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await fbLogout();
     localStorage.removeItem('travista_user');
-  };
+  }, []);
 
   const [savedPlaces, setSavedPlaces] = useState(() => {
     try {
@@ -57,27 +56,31 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("savedPlaces", JSON.stringify(savedPlaces));
   }, [savedPlaces]);
 
-  const toggleSave = (place) => {
-    const exists = savedPlaces.find((p) => p.id === place.id);
+  const toggleSave = useCallback((place) => {
+    setSavedPlaces((prev) => {
+      const exists = prev.find((p) => p.id === place.id);
+      if (exists) {
+        import('react-hot-toast').then(toast => toast.default.success("Removed from saved"));
+        return prev.filter((p) => p.id !== place.id);
+      } else {
+        import('react-hot-toast').then(toast => toast.default.success("Saved!"));
+        return [...prev, place];
+      }
+    });
+  }, []);
 
-    if (exists) {
-      setSavedPlaces(savedPlaces.filter((p) => p.id !== place.id));
-      import('react-hot-toast').then(toast => toast.default.success("Removed from saved"));
-    } else {
-      setSavedPlaces([...savedPlaces, place]);
-      import('react-hot-toast').then(toast => toast.default.success("Saved!"));
-    }
-  };
-
-  const updateUser = (updates) => {
-    try {
-      const updatedUser = { ...user, ...updates };
-      setUser(updatedUser);
-      localStorage.setItem('travista_user', JSON.stringify(updatedUser));
-    } catch (error) {
-      console.error("Update user error:", error);
-    }
-  };
+  const updateUser = useCallback((updates) => {
+    setUser((prev) => {
+      try {
+        const updatedUser = { ...prev, ...updates };
+        localStorage.setItem('travista_user', JSON.stringify(updatedUser));
+        return updatedUser;
+      } catch (error) {
+        console.error("Update user error:", error);
+        return prev;
+      }
+    });
+  }, []);
 
   const [itineraries, setItineraries] = useState(() => {
     try {
@@ -102,7 +105,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user]);
 
-  const addItinerary = async (trip) => {
+  const addItinerary = useCallback(async (trip) => {
     const { saveTrip } = await import('../services/db');
     try {
       const saved = await saveTrip(trip);
@@ -115,9 +118,9 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       import('react-hot-toast').then(toast => toast.default.error("Failed to save trip", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#7f1d1d', border: '1px solid #ef4444' }}));
     }
-  };
+  }, []);
 
-  const deleteItinerary = async (id) => {
+  const deleteItinerary = useCallback(async (id) => {
     const { deleteTrip } = await import('../services/db');
     try {
       await deleteTrip(String(id));
@@ -130,7 +133,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       import('react-hot-toast').then(toast => toast.default.error("Failed to delete trip", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#7f1d1d', border: '1px solid #ef4444' }}));
     }
-  };
+  }, []);
 
   const [searchHistory, setSearchHistory] = useState(() => {
     try {
@@ -145,31 +148,48 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
   }, [searchHistory]);
 
-  const addToHistory = (query) => {
-    if (!query || searchHistory.includes(query)) return;
-    setSearchHistory(prev => [query, ...prev].slice(0, 5));
-  };
+  const addToHistory = useCallback((query) => {
+    setSearchHistory(prev => {
+      if (!query || prev.includes(query)) return prev;
+      return [query, ...prev].slice(0, 5);
+    });
+  }, []);
+
+  const value = useMemo(() => ({
+    user,
+    loading,
+    login,
+    signup,
+    loginWithGoogle,
+    logout,
+    updateUser,
+    savedPlaces,
+    toggleSave,
+    itineraries,
+    setItineraries,
+    addItinerary,
+    deleteItinerary,
+    searchHistory,
+    addToHistory
+  }), [
+    user,
+    loading,
+    login,
+    signup,
+    loginWithGoogle,
+    logout,
+    updateUser,
+    savedPlaces,
+    toggleSave,
+    itineraries,
+    addItinerary,
+    deleteItinerary,
+    searchHistory,
+    addToHistory
+  ]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        signup,
-        loginWithGoogle,
-        logout,
-        updateUser,
-        savedPlaces,
-        toggleSave,
-        itineraries,
-        setItineraries,
-        addItinerary,
-        deleteItinerary,
-        searchHistory,
-        addToHistory
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

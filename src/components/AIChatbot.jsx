@@ -198,7 +198,7 @@ export default function AIChatbot() {
             }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`fixed bottom-0 right-0 md:bottom-6 md:right-6 w-full md:w-[400px] bg-white/95 backdrop-blur-2xl rounded-t-3xl md:rounded-[28px] shadow-2xl border border-white/40 z-[1000] overflow-hidden flex flex-col ${isMinimized ? 'h-[64px]' : 'h-[85vh] md:h-[600px] max-h-[800px]'}`}
+            className={`fixed bottom-0 right-0 md:bottom-6 md:right-6 w-full md:w-[400px] bg-white/95 backdrop-blur-2xl rounded-t-3xl md:rounded-[28px] shadow-2xl border border-white/40 z-[1050] overflow-hidden flex flex-col pointer-events-auto ${isMinimized ? 'h-[64px]' : 'h-[85vh] md:h-[600px] max-h-[800px]'}`}
           >
             {/* Header */}
             <div 
@@ -233,7 +233,7 @@ export default function AIChatbot() {
                 <div className="flex-1 overflow-y-auto p-5 space-y-6 hide-scrollbar relative bg-slate-50/50">
                   {messages.map((msg, i) => (
                     <motion.div 
-                      key={i}
+                      key={`msg-${msg.role}-${i}`}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} max-w-full`}
@@ -263,13 +263,20 @@ export default function AIChatbot() {
                           {msg.cards && (
                             <div className="space-y-2 w-[85%]">
                               {msg.cards.map((card, idx) => (
-                                <div key={idx} className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex gap-3 group hover:border-emerald-200 transition-colors cursor-pointer">
-                                  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 text-emerald-500 group-hover:bg-emerald-50 transition-colors">
+                                <div 
+                                  key={idx} 
+                                  onClick={() => window.location.href = '/planner'}
+                                  className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex gap-3 group hover:border-emerald-300 hover:shadow-md cursor-pointer transition-all duration-200 hover:scale-[1.02] active:scale-95 pointer-events-auto relative overflow-hidden"
+                                >
+                                  <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 text-emerald-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                                     {card.type === 'place' ? <MapPin size={16}/> : <Calendar size={16}/>}
                                   </div>
-                                  <div>
-                                    <h4 className="text-xs font-bold text-slate-800">{card.title || card.day}</h4>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">{card.title || card.day}</h4>
                                     <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-2">{card.desc}</p>
+                                  </div>
+                                  <div className="absolute top-0 right-0 bottom-0 w-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-l from-white to-transparent">
+                                    <Sparkles size={12} className="text-emerald-500" />
                                   </div>
                                 </div>
                               ))}
@@ -283,10 +290,13 @@ export default function AIChatbot() {
                   {/* Typing Indicator */}
                   {isTyping && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-start">
-                      <div className="bg-white border border-slate-100 p-4 rounded-2xl rounded-tl-sm shadow-sm flex gap-1.5 items-center h-[52px]">
-                        <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
-                        <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
-                        <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-slate-300 rounded-full" />
+                      <div className="bg-white border border-slate-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex gap-3 items-center">
+                        <div className="flex gap-1.5 items-center">
+                          <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0 }} className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                          <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }} className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                          <motion.div animate={{ y: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }} className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                        </div>
+                        <span className="text-xs font-medium text-slate-400">Travista AI is thinking...</span>
                       </div>
                     </motion.div>
                   )}
@@ -302,8 +312,9 @@ export default function AIChatbot() {
                         <button 
                           key={i}
                           onClick={() => handleSend(prompt)}
-                          className="whitespace-nowrap px-3 py-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 text-xs font-medium rounded-full border border-slate-200 hover:border-emerald-200 transition-colors"
+                          className="whitespace-nowrap px-3 py-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700 active:scale-95 text-xs font-medium rounded-full border border-slate-200 hover:border-emerald-300 transition-all duration-200 cursor-pointer pointer-events-auto flex items-center gap-1.5"
                         >
+                          <Sparkles size={10} className="text-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity hidden" />
                           {prompt}
                         </button>
                       ))}
@@ -311,8 +322,8 @@ export default function AIChatbot() {
                   )}
 
                   {/* Input Box */}
-                  <div className="relative flex items-center">
-                    <button className="absolute left-3 text-slate-400 hover:text-emerald-500 transition-colors">
+                  <div className="relative flex items-center group">
+                    <button className="absolute left-3 text-slate-400 hover:text-emerald-500 transition-colors z-10 p-1 rounded-md hover:bg-slate-100">
                       <Mic size={18} />
                     </button>
                     <input
@@ -320,15 +331,20 @@ export default function AIChatbot() {
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyDown={handleKeyDown}
-                      placeholder="Ask about a destination..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3 pl-10 pr-12 text-sm font-medium text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-400 focus:bg-white transition-all focus:ring-4 focus:ring-emerald-500/10"
+                      placeholder={isTyping ? "AI is generating..." : "Message Travista AI..."}
+                      disabled={isTyping}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl py-3.5 pl-11 pr-14 text-sm font-medium text-slate-800 placeholder-slate-400 outline-none focus:border-emerald-400 focus:bg-white transition-all duration-200 focus:ring-2 focus:ring-emerald-400/20 shadow-sm focus:shadow-emerald-500/10 disabled:opacity-60 disabled:cursor-not-allowed caret-emerald-500"
                     />
                     <button 
                       onClick={() => handleSend()}
                       disabled={!inputValue.trim() || isTyping}
-                      className="absolute right-2 p-2 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 disabled:opacity-50 disabled:bg-slate-300 transition-all"
+                      className={`absolute right-2 p-2 rounded-xl transition-all duration-200 z-10 flex items-center justify-center ${
+                        inputValue.trim() && !isTyping 
+                          ? 'bg-emerald-500 text-white hover:bg-emerald-600 hover:scale-105 active:scale-95 shadow-md shadow-emerald-500/20' 
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
                     >
-                      <Send size={14} />
+                      {isTyping ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} className={inputValue.trim() ? 'translate-x-0.5' : ''} />}
                     </button>
                   </div>
                 </div>

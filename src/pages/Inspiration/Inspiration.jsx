@@ -139,7 +139,7 @@ const Inspiration = () => {
         <div className="space-y-20">
           {rows?.map((row, idx) => (
             <motion.div
-              key={idx}
+              key={row.title}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
