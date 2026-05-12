@@ -440,7 +440,7 @@ export default function AIPlanner() {
         .hide-scrollbar::-webkit-scrollbar { display: none; }
       `}</style>
       {/* ─── Left Sidebar: Input Form ─── */}
-      <aside className="w-full md:w-[400px] shrink-0 h-full overflow-y-auto bg-white border-r border-slate-100 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30 flex flex-col">
+      <aside className="w-full md:w-[400px] shrink-0 h-full overflow-y-auto bg-white border-r border-slate-100 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30 flex flex-col transition-transform duration-300 ease-out" style={{ WebkitOverflowScrolling: 'touch', transform: 'translate3d(0,0,0)' }}>
         <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-3 shrink-0">
           <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
             <Navigation size={18} />
@@ -521,7 +521,7 @@ export default function AIPlanner() {
       </aside>
 
       {/* ─── Right Area: Results & Tabs ─── */}
-      <main className="flex-1 min-w-0 h-full overflow-y-auto flex flex-col bg-slate-50 relative">
+      <main className="flex-1 min-w-0 h-full overflow-y-auto flex flex-col bg-slate-50 relative" style={{ WebkitOverflowScrolling: 'touch', transform: 'translate3d(0,0,0)' }}>
         {!plan ? (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 min-h-[600px] text-center bg-transparent w-full">
             {hydrating ? (
@@ -540,7 +540,7 @@ export default function AIPlanner() {
           </div>
         ) : (
           <>
-            <div className="bg-white/90 backdrop-blur-xl px-4 md:px-6 pt-6 pb-4 border-b border-slate-200 shrink-0 sticky top-0 z-20">
+            <div className="bg-white px-4 md:px-6 pt-6 pb-4 border-b border-slate-200 shrink-0 sticky top-0 z-20">
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
                 <div>
                   {plan.labels && plan.labels.length > 0 && (

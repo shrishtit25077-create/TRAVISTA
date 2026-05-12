@@ -96,10 +96,10 @@ body::before {
   overflow-x: hidden;
 }
 
-/* Ensure no horizontal scroll globally */
+/* Ensure snappy scrolling */
 html {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  scroll-behavior: auto !important; /* Force instant scroll response */
 }
 
 body {
@@ -111,7 +111,8 @@ body {
   position: relative;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  text-rendering: auto; /* optimizeLegibility can cause scroll lag */
+  transform: translate3d(0, 0, 0); /* Force GPU acceleration */
 }
 
 /* Section Spacing Optimization */
@@ -141,8 +142,7 @@ section {
   display: flex;
   flex-direction: column;
   z-index: 50;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: white; /* Removed backdrop-filter for performance */
   transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
@@ -209,9 +209,7 @@ section {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px) saturate(160%);
-  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  background: #ffffff; /* Solid background for performance */
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 2px 16px rgba(0, 0, 0, 0.04);
   width: 100%;
