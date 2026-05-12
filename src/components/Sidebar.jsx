@@ -31,8 +31,8 @@ const NavItem = ({ icon: Icon, label, path, onClose }) => {
       <Icon
         size={16}
         className={`shrink-0 transition-all duration-150 ${active
-            ? 'text-[#15803d]'
-            : 'text-slate-400 group-hover:text-[#374151] dark:group-hover:text-slate-300'
+          ? 'text-[#15803d]'
+          : 'text-slate-400 group-hover:text-[#374151] dark:group-hover:text-slate-300'
           }`}
       />
       <span className="truncate leading-none">{label}</span>

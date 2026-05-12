@@ -15,7 +15,7 @@ const CountdownBanner = ({ itineraries }) => {
     try {
       const stored = localStorage.getItem('travista_checklist');
       if (stored) setCheckedItems(JSON.parse(stored));
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   const toggleCheck = (id) => {
@@ -84,7 +84,7 @@ const CountdownBanner = ({ itineraries }) => {
             <div className="text-4xl font-black tracking-tight text-emerald-400">{timeLeft || 'Calculating...'}</div>
           </div>
         </div>
-        
+
         <div className="bg-emerald-800/50 rounded-2xl p-6 border border-emerald-700/50">
           <h4 className="text-sm font-bold uppercase tracking-widest text-emerald-300 mb-4 flex items-center gap-2">
             <CheckSquare className="w-4 h-4" /> Smart Packing Checklist
@@ -120,9 +120,9 @@ function Itineraries() {
   return (
     <div className="min-h-screen px-4 sm:px-6 md:px-8 py-8 md:py-16 pb-24 md:pb-32 transition-colors duration-300" style={{ background: 'var(--bg-primary)' }}>
       <div className="flex-1 min-w-0 w-full space-y-12">
-        
+
         <div className="space-y-4">
-        <h1 className="text-5xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="text-5xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
             My <span className="text-emerald-600">Itineraries</span>
           </h1>
           <p className="text-xl text-slate-400 font-medium">
@@ -142,7 +142,7 @@ function Itineraries() {
               <h3 className="text-2xl font-black text-slate-800 tracking-tight italic">No trips planned yet.</h3>
               <p className="text-slate-400 font-medium max-w-sm mx-auto">Use the AI Planner or search for a destination to create your first itinerary.</p>
             </div>
-            <button 
+            <button
               onClick={() => navigate('/explore')}
               className="mt-4 px-8 py-4 bg-emerald-600 text-white rounded-full font-bold shadow-lg hover:bg-emerald-700 transition-all"
             >
@@ -223,13 +223,13 @@ function Itineraries() {
 
                   <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <input 
-                        type="date" 
+                      <input
+                        type="date"
                         value={trip.travelDate || ''}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
                           e.stopPropagation();
-                          const updated = itineraries.map(t => t.id === trip.id ? {...t, travelDate: e.target.value} : t);
+                          const updated = itineraries.map(t => t.id === trip.id ? { ...t, travelDate: e.target.value } : t);
                           setItineraries(updated);
                         }}
                         className="text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-emerald-500 w-full"
