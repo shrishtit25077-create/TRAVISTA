@@ -106,24 +106,27 @@ body::before {
   overflow-x: hidden;
 }
 
-/* ─── Scroll lock: only content column scrolls, never the document ─── */
-html,
+/* ─── Base reset: height only, NO overflow:hidden on body or root ─── */
+html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   height: 100%;
-  overflow: hidden; /* body must NOT scroll — DashboardLayout handles it */
   margin: 0;
   padding: 0;
   width: 100%;
   max-width: 100vw;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: auto;
-  transform: translate3d(0, 0, 0);
+  /* NO overflow:hidden here — it permanently kills all scroll events */
 }
 
 #root {
   height: 100%;
-  overflow: hidden;
+  /* NO overflow:hidden here — DashboardLayout's flex wrapper handles containment */
 }
 
 
