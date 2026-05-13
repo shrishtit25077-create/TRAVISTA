@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Plus, Sparkles } from 'lucide-react';
 import { useDestinationPhoto } from '../hooks/useDestinationPhoto';
@@ -11,6 +11,17 @@ const BudgetModal = ({ destination, onClose }) => {
   const [budget, setBudget] = useState('');
   const [duration, setDuration] = useState(5);
   const [travellerType, setTravellerType] = useState('Solo');
+
+  // ESC key close + body scroll lock
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleKey);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
 
   const budgetChips = [
     { label: 'Budget', value: 15000 },
@@ -49,7 +60,7 @@ const BudgetModal = ({ destination, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-md"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/40 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <motion.div

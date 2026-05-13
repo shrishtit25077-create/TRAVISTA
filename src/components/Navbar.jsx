@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Bell, MapPin, Moon, Sun, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { searchLocations } from '../data/locations';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme } from '../hooks/use-theme';
 import { smartSearch } from '../services/ai';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,7 +14,7 @@ const Navbar = ({ searchTerm, setSearchTerm, onMenuClick }) => {
   const wrapperRef = useRef(null);
   const inputRef = useRef(null);
   const navigate = useNavigate();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -156,11 +156,10 @@ const Navbar = ({ searchTerm, setSearchTerm, onMenuClick }) => {
 
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl border text-slate-500 dark:text-slate-300 hover:text-emerald-500 hover:border-emerald-400 transition-all"
-            style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}
+            className="p-2 rounded-xl border transition-all bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-emerald-500 dark:hover:text-emerald-400 hover:border-emerald-400 dark:hover:border-emerald-500/50"
             aria-label="Toggle theme"
           >
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
           </button>
 
           <button

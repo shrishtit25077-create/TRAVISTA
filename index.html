@@ -11,6 +11,21 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#1D9E75" />
     <link rel="apple-touch-icon" href="/vite.svg" />
+    <!-- Blocking theme script: applies dark class BEFORE paint to prevent flash -->
+    <script>
+      (function() {
+        try {
+          var theme = localStorage.getItem('travista-ui-theme');
+          if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else if (theme === 'light') {
+            document.documentElement.classList.add('light');
+          } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

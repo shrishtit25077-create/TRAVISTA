@@ -43,8 +43,8 @@ const getCurvedPath = (start, end) => {
   ];
   for (let i = 0; i <= 100; i++) {
     const t = i / 100;
-    const lat = (1-t)*(1-t)*start[0] + 2*(1-t)*t*midPoint[0] + t*t*end[0];
-    const lng = (1-t)*(1-t)*start[1] + 2*(1-t)*t*midPoint[1] + t*t*end[1];
+    const lat = (1 - t) * (1 - t) * start[0] + 2 * (1 - t) * t * midPoint[0] + t * t * end[0];
+    const lng = (1 - t) * (1 - t) * start[1] + 2 * (1 - t) * t * midPoint[1] + t * t * end[1];
     latlngs.push([lat, lng]);
   }
   return latlngs;
@@ -124,21 +124,21 @@ const DestinationAutocomplete = ({ value, onChange, placeholder, label }) => {
   return (
     <div className="relative z-[110]" ref={wrapperRef}>
       {label && <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</label>}
-      <input 
-        type="text" 
-        value={value} 
-        onChange={handleInputChange} 
+      <input
+        type="text"
+        value={value}
+        onChange={handleInputChange}
         onFocus={() => setShowDropdown(true)}
         onKeyDown={handleKeyDown}
-        className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm" 
-        placeholder={placeholder} 
+        className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm"
+        placeholder={placeholder}
       />
-      
+
       <AnimatePresence>
         {showDropdown && (suggestions.length > 0 || isSearching) && (
-          <motion.div 
-            initial={{ opacity: 0, y: -5, scale: 0.98 }} 
-            animate={{ opacity: 1, y: 0, scale: 1 }} 
+          <motion.div
+            initial={{ opacity: 0, y: -5, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -5, scale: 0.98 }}
             transition={{ duration: 0.15 }}
             className="absolute top-full mt-2 w-full bg-white/90 backdrop-blur-2xl border border-slate-200 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] overflow-hidden z-[200]"
@@ -148,8 +148,8 @@ const DestinationAutocomplete = ({ value, onChange, placeholder, label }) => {
             ) : (
               <ul className="max-h-60 overflow-y-auto hide-scrollbar">
                 {suggestions.map((s, i) => (
-                  <li 
-                    key={i} 
+                  <li
+                    key={i}
                     onClick={() => handleSelect(s)}
                     onMouseEnter={() => setSelectedIndex(i)}
                     className={`px-4 py-3 cursor-pointer flex items-center gap-3 transition-colors border-b border-slate-50 last:border-0 ${selectedIndex === i ? 'bg-emerald-50' : 'hover:bg-slate-50'}`}
@@ -184,7 +184,7 @@ const TRANSPORT_MODES = [
 const TransportSelector = ({ selected, onChange, distance }) => {
   // Smart logic rules
   const recommendFlight = distance > 1000;
-  
+
   useEffect(() => {
     if (distance > 1500 && selected !== 'flight') {
       onChange('flight');
@@ -198,14 +198,14 @@ const TransportSelector = ({ selected, onChange, distance }) => {
         <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Transport Mode</label>
         {distance > 0 && <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{distance.toLocaleString('en-IN')} km</span>}
       </div>
-      
+
       <div className="grid grid-cols-2 gap-2.5">
         {TRANSPORT_MODES.map((mode) => {
           const isWalkingDisabled = mode.id === 'walking' && distance > 50;
           const isRoadDisabled = (mode.id === 'car' || mode.id === 'bus') && distance > 3000;
           const isTrainDisabled = mode.id === 'train' && distance > 5000;
           const isDisabled = isWalkingDisabled || isRoadDisabled || isTrainDisabled;
-          
+
           const isRecommended = recommendFlight && mode.id === 'flight' || (!recommendFlight && mode.id === 'train' && distance > 50);
           const active = selected === mode.id;
 
@@ -214,11 +214,10 @@ const TransportSelector = ({ selected, onChange, distance }) => {
               key={mode.id}
               disabled={isDisabled}
               onClick={() => onChange(mode.id)}
-              className={`relative flex items-center justify-center gap-1.5 px-2 py-2 h-10 rounded-xl transition-all select-none overflow-visible ${
-                active 
-                  ? 'bg-emerald-100 text-emerald-800' 
+              className={`relative flex items-center justify-center gap-1.5 px-2 py-2 h-10 rounded-xl transition-all select-none overflow-visible ${active
+                  ? 'bg-emerald-100 text-emerald-800'
                   : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-              } ${isDisabled ? 'opacity-30 cursor-not-allowed saturate-0' : ''}`}
+                } ${isDisabled ? 'opacity-30 cursor-not-allowed saturate-0' : ''}`}
             >
               {isRecommended && !isDisabled && (
                 <span className="absolute -top-2 -right-1 bg-gradient-to-r from-emerald-500 to-teal-400 text-white text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full shadow-sm whitespace-nowrap z-10 pointer-events-none">
@@ -245,7 +244,7 @@ const RouteMap = React.memo(({ routeData, transport }) => {
     <MapContainer zoom={4} style={{ height: '100%', width: '100%' }} zoomControl={false} className="z-0">
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
       <MapBoundsFitter geometry={routeData.geometry} />
-      
+
       {routeData.markers.map((m, i) => (
         <Marker key={i} position={m.coords}>
           <Popup className="font-bold text-sm text-slate-800">{m.name}</Popup>
@@ -254,7 +253,7 @@ const RouteMap = React.memo(({ routeData, transport }) => {
 
       {transport === 'flight' && routeData.geometry.length > 1 ? (
         routeData.geometry.slice(0, -1).map((start, i) => (
-          <Polyline key={i} positions={getCurvedPath(start, routeData.geometry[i+1])} color="#10b981" weight={3} opacity={0.8} dashArray="8, 8" />
+          <Polyline key={i} positions={getCurvedPath(start, routeData.geometry[i + 1])} color="#10b981" weight={3} opacity={0.8} dashArray="8, 8" />
         ))
       ) : (
         <Polyline positions={routeData.geometry} color="#10b981" weight={4} opacity={0.8} />
@@ -271,7 +270,7 @@ export default function AIPlanner() {
   const [activeTab, setActiveTab] = useState('map');
   const [loading, setLoading] = useState(false);
   const [hydrating, setHydrating] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     startLocation: '',
     destinations: [''],
@@ -293,7 +292,7 @@ export default function AIPlanner() {
         setHydrating(true);
         const data = JSON.parse(localStorage.getItem('travista_itineraries')) || [];
         const storedTrip = data.find(t => String(t.id) === String(location.state.tripId));
-        
+
         if (storedTrip) {
           setFormData({
             startLocation: storedTrip.startLocation || 'Unknown Origin',
@@ -322,7 +321,7 @@ export default function AIPlanner() {
               const coords = await Promise.all(places.filter(Boolean).map(place => geocodePlace(place)));
               const route = await getRoute(coords, storedTrip.transport || 'flight');
               setRouteData(route);
-            } catch(e) {}
+            } catch (e) { }
           }
           setActiveTab('itinerary');
           toast.success("Itinerary fully restored", { icon: "✨" });
@@ -352,7 +351,7 @@ export default function AIPlanner() {
       setRouteData(prev => ({ ...prev, distance: route.distance, time: route.time }));
     };
     recalc();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.transport]);
 
   const handleGenerate = async () => {
@@ -360,11 +359,11 @@ export default function AIPlanner() {
       toast.error('Please fill in all required fields.');
       return;
     }
-    
+
     setLoading(true);
     setIsSaved(false); // Reset save state for new generations
     const { geocodePlace, getRoute, generateItinerary } = await import('../../services/aiService');
-    
+
     try {
       toast.loading('📍 Geocoding locations...', { id: 'planner' });
       const allPlaces = [formData.startLocation, ...formData.destinations.filter(d => d)];
@@ -396,7 +395,7 @@ export default function AIPlanner() {
 
   const handleSave = () => {
     if (!plan || isSaved) return;
-    
+
     addItinerary({
       id: location.state?.tripId || Date.now(), // update existing if restoring, else create new
       title: plan.title,
@@ -449,21 +448,21 @@ export default function AIPlanner() {
         </h2>
 
         <div className="space-y-4 flex-1">
-          <DestinationAutocomplete 
+          <DestinationAutocomplete
             label="Starting Location"
-            value={formData.startLocation} 
-            onChange={v => setFormData({...formData, startLocation: v})} 
-            placeholder="E.g. New Delhi, India" 
+            value={formData.startLocation}
+            onChange={v => setFormData({ ...formData, startLocation: v })}
+            placeholder="E.g. New Delhi, India"
           />
 
           <div className="space-y-2">
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Destinations</label>
             {formData.destinations.map((dest, i) => (
-              <DestinationAutocomplete 
+              <DestinationAutocomplete
                 key={i}
-                value={dest} 
-                onChange={v => handleDestChange(i, v)} 
-                placeholder={`Destination ${i + 1}`} 
+                value={dest}
+                onChange={v => handleDestChange(i, v)}
+                placeholder={`Destination ${i + 1}`}
               />
             ))}
             <button onClick={handleAddDestination} className="text-emerald-600 text-[11px] font-black uppercase tracking-wider mt-1 hover:text-emerald-700 flex items-center gap-1 transition-colors">
@@ -474,24 +473,24 @@ export default function AIPlanner() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Start Date</label>
-              <input type="date" value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
+              <input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">End Date</label>
-              <input type="date" value={formData.endDate} onChange={e => setFormData({...formData, endDate: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
+              <input type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
             </div>
           </div>
 
           <div>
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Travelers</label>
-            <select value={formData.travelers} onChange={e => setFormData({...formData, travelers: e.target.value})} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 appearance-none">
-              {[1,2,3,4,5,6,7,8].map(n => <option key={n} value={n}>{n} Person{n>1?'s':''}</option>)}
+            <select value={formData.travelers} onChange={e => setFormData({ ...formData, travelers: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 appearance-none">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <option key={n} value={n}>{n} Person{n > 1 ? 's' : ''}</option>)}
             </select>
           </div>
 
-          <TransportSelector 
-            selected={formData.transport} 
-            onChange={v => setFormData({...formData, transport: v})} 
+          <TransportSelector
+            selected={formData.transport}
+            onChange={v => setFormData({ ...formData, transport: v })}
             distance={routeData?.distance || 0}
           />
 
@@ -499,9 +498,9 @@ export default function AIPlanner() {
             <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Travel Style</label>
             <div className="flex flex-wrap gap-2.5">
               {['Adventure', 'Relaxing', 'Cultural', 'Food', 'Luxury', 'Budget'].map(style => (
-                <button 
-                  key={style} 
-                  onClick={() => setFormData({...formData, style})} 
+                <button
+                  key={style}
+                  onClick={() => setFormData({ ...formData, style })}
                   className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${formData.style === style ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                 >
                   {style}
@@ -511,12 +510,12 @@ export default function AIPlanner() {
           </div>
         </div>
 
-        <button 
-          onClick={handleGenerate} 
-          disabled={loading || hydrating} 
+        <button
+          onClick={handleGenerate}
+          disabled={loading || hydrating}
           className="w-full h-12 mt-4 bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shrink-0"
         >
-          {loading || hydrating ? <Loader2 size={16} className="animate-spin" /> : (location.state?.tripId ? 'Regenerate Itinerary' : 'Generate Itinerary')} 
+          {loading || hydrating ? <Loader2 size={16} className="animate-spin" /> : (location.state?.tripId ? 'Regenerate Itinerary' : 'Generate Itinerary')}
         </button>
       </aside>
 
@@ -525,9 +524,9 @@ export default function AIPlanner() {
         {!plan ? (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 min-h-[600px] text-center bg-transparent w-full">
             {hydrating ? (
-               <Loader2 size={48} className="text-emerald-500 animate-spin mb-4" />
+              <Loader2 size={48} className="text-emerald-500 animate-spin mb-4" />
             ) : (
-              <motion.div 
+              <motion.div
                 animate={{ y: [0, -10, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                 className="w-32 h-32 bg-emerald-50 rounded-[2rem] flex items-center justify-center mb-6 shadow-xl shadow-emerald-500/5 border border-emerald-100"
@@ -554,9 +553,9 @@ export default function AIPlanner() {
                   )}
                   <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-3 tracking-tight">{plan.title}</h1>
                   <div className="flex flex-wrap gap-2 md:gap-4">
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-black text-slate-600 uppercase tracking-widest"><Calendar size={14}/> {formData.startDate || 'Any Date'}</span>
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-black text-slate-600 uppercase tracking-widest"><Users size={14}/> {formData.travelers} Pax</span>
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-lg text-xs font-black text-emerald-700 uppercase tracking-widest"><Activity size={14}/> {formData.style}</span>
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-black text-slate-600 uppercase tracking-widest"><Calendar size={14} /> {formData.startDate || 'Any Date'}</span>
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg text-xs font-black text-slate-600 uppercase tracking-widest"><Users size={14} /> {formData.travelers} Pax</span>
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 rounded-lg text-xs font-black text-emerald-700 uppercase tracking-widest"><Activity size={14} /> {formData.style}</span>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -584,7 +583,7 @@ export default function AIPlanner() {
             </div>
 
             <div className="flex-1 bg-slate-50 relative">
-              
+
               {/* TAB 1: MAP */}
               {activeTab === 'map' && routeData && (
                 <div className="flex-1 w-full relative bg-[#f8fafc] z-0 overflow-hidden min-h-[500px]">
@@ -592,19 +591,19 @@ export default function AIPlanner() {
 
                   {/* FIXED: Positioning the overlay safely within the map wrapper with a high z-index and safe padding */}
                   <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[1000] max-w-[calc(100vw-2rem)] md:max-w-sm pointer-events-none">
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="bg-white/90 backdrop-blur-xl p-6 rounded-[2rem] shadow-2xl shadow-slate-900/10 border border-white/50 pointer-events-auto"
                     >
                       <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4">
                         <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-                          {formData.transport === 'flight' ? <Plane size={20}/> : formData.transport === 'train' ? <Train size={20}/> : <Car size={20}/>}
+                          {formData.transport === 'flight' ? <Plane size={20} /> : formData.transport === 'train' ? <Train size={20} /> : <Car size={20} />}
                         </div>
                         <div className="min-w-0">
                           <h4 className="font-black text-slate-900 uppercase tracking-widest text-[10px] mb-0.5">Route Summary</h4>
                           <p className="text-xs text-slate-500 font-bold truncate">
-                            {formData.startLocation.split(',')[0]} → {formData.destinations[formData.destinations.length-1].split(',')[0]}
+                            {formData.startLocation.split(',')[0]} → {formData.destinations[formData.destinations.length - 1].split(',')[0]}
                           </p>
                         </div>
                       </div>
@@ -628,11 +627,11 @@ export default function AIPlanner() {
                 <div className="w-full px-4 md:px-6 py-6 space-y-6 pb-20 relative">
                   <div className="absolute left-10 top-12 bottom-12 w-0.5 bg-slate-200/50 hidden md:block"></div>
                   {plan.days.map((day, idx) => (
-                    <motion.div 
-                      key={day.day} 
-                      initial={{opacity:0, y:10}} 
-                      animate={{opacity:1, y:0}} 
-                      transition={{ duration: 0.25, ease: "easeOut", delay: Math.min(idx*0.05, 0.3) }} 
+                    <motion.div
+                      key={day.day}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.25, ease: "easeOut", delay: Math.min(idx * 0.05, 0.3) }}
                       className="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-100 shadow-md relative z-10 hover:shadow-lg transition-shadow duration-300"
                       style={{ willChange: 'transform', transform: 'translateZ(0)' }}
                     >
@@ -665,7 +664,7 @@ export default function AIPlanner() {
                     <div className="p-8 md:p-10 bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col md:flex-row md:justify-between md:items-center gap-4 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
                       <div className="z-10">
-                        <h3 className="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><DollarSign size={16}/> Estimated Total Cost</h3>
+                        <h3 className="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><DollarSign size={16} /> Estimated Total Cost</h3>
                         <p className="text-4xl md:text-5xl font-black tracking-tight">{formatINR(plan.budget?.total)}</p>
                       </div>
                       <div className="z-10 bg-white/10 px-4 py-2 rounded-xl border border-white/20 backdrop-blur-sm w-fit">
@@ -674,19 +673,19 @@ export default function AIPlanner() {
                     </div>
                     <div className="p-8 md:p-10 space-y-6">
                       <div className="flex justify-between items-center border-b border-slate-50 pb-4 group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0"><Plane size={18} className="text-blue-500"/></div><span className="font-bold text-slate-700 text-sm md:text-base">Transport</span></div>
+                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0"><Plane size={18} className="text-blue-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Transport</span></div>
                         <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.transport)}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-slate-50 pb-4 group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><Bed size={18} className="text-emerald-500"/></div><span className="font-bold text-slate-700 text-sm md:text-base">Accommodation</span></div>
+                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><Bed size={18} className="text-emerald-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Accommodation</span></div>
                         <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.stay)}</span>
                       </div>
                       <div className="flex justify-between items-center border-b border-slate-50 pb-4 group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0"><Utensils size={18} className="text-orange-500"/></div><span className="font-bold text-slate-700 text-sm md:text-base">Food & Dining</span></div>
+                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0"><Utensils size={18} className="text-orange-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Food & Dining</span></div>
                         <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.food)}</span>
                       </div>
                       <div className="flex justify-between items-center group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shrink-0"><Activity size={18} className="text-purple-500"/></div><span className="font-bold text-slate-700 text-sm md:text-base">Activities</span></div>
+                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shrink-0"><Activity size={18} className="text-purple-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Activities</span></div>
                         <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.activities)}</span>
                       </div>
                     </div>
@@ -699,7 +698,7 @@ export default function AIPlanner() {
                 <div className="w-full px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 pb-20">
                   <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white p-5 md:p-6 rounded-[2rem] border border-emerald-100 shadow-xl shadow-emerald-100/50 hover:-translate-y-1 transition-transform">
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0"><Lightbulb size={20}/></div>
+                      <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0"><Lightbulb size={20} /></div>
                       <h3 className="text-lg md:text-xl font-black text-emerald-900 uppercase tracking-widest text-[10px] md:text-sm">Packing Checklist</h3>
                     </div>
                     <ul className="space-y-4">
@@ -712,7 +711,7 @@ export default function AIPlanner() {
                   </motion.div>
                   <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="bg-white p-6 md:p-8 rounded-[2rem] border border-amber-100 shadow-xl shadow-amber-100/50 hover:-translate-y-1 transition-transform">
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 shrink-0"><AlertCircle size={20}/></div>
+                      <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 shrink-0"><AlertCircle size={20} /></div>
                       <h3 className="text-lg md:text-xl font-black text-amber-900 uppercase tracking-widest text-[10px] md:text-sm">Local Insights</h3>
                     </div>
                     <ul className="space-y-4">

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -9,8 +9,19 @@ const DashboardLayout = () => {
 
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
 
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [sidebarOpen]);
+
   return (
-    <div className="flex min-h-screen relative overflow-x-hidden" style={{ background: 'var(--bg-primary)' }}>
+    // Root: full viewport, flex row — body never scrolls
+    <div className="flex h-screen overflow-hidden bg-[#fcfdfe] dark:bg-slate-950 transition-colors duration-300">
 
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -20,21 +31,27 @@ const DashboardLayout = () => {
         />
       )}
 
+      {/* Sidebar — fixed to left, always visible, never scrolls with content */}
       <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
 
-      {/* Content column — offsets fixed sidebar on desktop */}
-      <div className="flex flex-col flex-1 min-w-0 min-h-screen lg:pl-[220px]">
+      {/* Right column: takes all remaining width, flex column */}
+      <div className="flex flex-col flex-1 min-w-0 lg:pl-[220px] h-screen">
 
+        {/* Navbar — always visible at top, never scrolls away */}
         <Navbar
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           onMenuClick={() => setSidebarOpen(o => !o)}
         />
 
-        <main className="flex-1 min-w-0 overflow-x-hidden w-full">
-          <div className="flex-1 min-w-0 w-full">
-            <Outlet context={{ searchTerm, setSearchTerm }} />
-          </div>
+        {/*
+          Main scroll area — THIS is the ONLY thing that scrolls.
+          flex-1 + min-h-0 forces it to fill remaining height inside
+          the flex column without growing beyond the viewport.
+          overflow-y-auto gives it its own scroll track.
+        */}
+        <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full">
+          <Outlet context={{ searchTerm, setSearchTerm }} />
         </main>
 
       </div>

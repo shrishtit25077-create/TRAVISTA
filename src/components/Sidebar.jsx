@@ -19,32 +19,31 @@ const NavItem = ({ icon: Icon, label, path, onClose }) => {
     <button
       onClick={() => { navigate(path); onClose?.(); }}
       className={`
-        w-full flex items-center gap-3 px-3 py-2.5 rounded-xl
-        text-[15px] font-medium tracking-[-0.01em]
-        transition-all duration-150 group border-l-2
+        w-full flex items-center gap-2.5 px-3 py-2 rounded-lg
+        text-[13px] font-medium transition-all duration-200 group
         ${active
-          ? 'bg-[#f0fdf4] text-[#15803d] border-[#16a34a] font-semibold'
-          : 'text-[#374151] dark:text-slate-400 hover:bg-[#f0f0eb] dark:hover:bg-slate-800/50 hover:text-[#0f172a] dark:hover:text-slate-200 border-transparent'
+          ? 'bg-emerald-500/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 font-semibold'
+          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-100'
         }
       `}
     >
       <Icon
         size={16}
-        className={`shrink-0 transition-all duration-150 ${active
-          ? 'text-[#15803d]'
-          : 'text-slate-400 group-hover:text-[#374151] dark:group-hover:text-slate-300'
-          }`}
+        className={`shrink-0 transition-colors duration-200 ${
+          active
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300'
+        }`}
       />
-      <span className="truncate leading-none">{label}</span>
+      <span className="truncate">{label}</span>
     </button>
   );
 };
 
 // ─── Section Label ───────────────────────────────────────────────────────────
 const Section = ({ title, children }) => (
-  <div className="mt-5 first:mt-2">
-    <div className="px-3 mb-2 text-[12px] font-semibold uppercase tracking-[0.12em]"
-      style={{ color: 'var(--text-secondary)', opacity: 0.55 }}>
+  <div className="mb-6 last:mb-0">
+    <div className="px-3 mb-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-600 uppercase tracking-[0.15em] transition-colors duration-300">
       {title}
     </div>
     <div className="space-y-0.5">{children}</div>
@@ -63,19 +62,18 @@ const SidebarContent = ({ onClose }) => {
   };
 
   return (
-    <div className="flex flex-col h-full select-none"
-      style={{ background: 'var(--card-bg)', borderRight: '1px solid var(--border)' }}>
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-r border-slate-100 dark:border-slate-800 shadow-[4px_0_24px_rgba(0,0,0,0.04)] dark:shadow-[4px_0_24px_rgba(0,0,0,0.3)] select-none transition-colors duration-300">
 
       {/* ── Logo ── */}
-      <div className="flex items-center justify-between px-4 pt-5 pb-4">
+      <div className="h-16 flex items-center justify-between px-4 shrink-0">
         <div
-          className="flex items-center gap-2.5 cursor-pointer group"
+          className="flex items-center gap-2 cursor-pointer group"
           onClick={() => { navigate('/'); onClose?.(); }}
         >
-          <div className="w-8 h-8 bg-emerald-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-600/25 group-hover:scale-105 transition-transform shrink-0">
-            <Compass size={16} className="text-white" />
+          <div className="w-7 h-7 bg-emerald-500 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20 transition-transform group-hover:scale-105 shrink-0">
+            <Compass size={14} className="text-white" />
           </div>
-          <span className="font-black text-[19px] tracking-tight" style={{ color: 'var(--text-primary)' }}>
+          <span className="font-black text-[17px] tracking-tight text-slate-900 dark:text-white transition-colors duration-300">
             Travista
           </span>
         </div>
@@ -83,15 +81,14 @@ const SidebarContent = ({ onClose }) => {
         {/* Close — mobile only */}
         <button
           onClick={onClose}
-          className="lg:hidden p-1.5 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-          style={{ color: 'var(--text-secondary)' }}
+          className="lg:hidden p-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-colors duration-200"
         >
           <X size={16} />
         </button>
       </div>
 
       {/* ── Navigation ── */}
-      <div className="flex-1 overflow-y-auto no-scrollbar px-2.5 pb-3">
+      <div className="flex-1 overflow-y-auto hide-scrollbar px-3 py-2">
         <Section title="Discover">
           <NavItem icon={Compass} label="Inspiration" path="/" onClose={onClose} />
           <NavItem icon={Map} label="Explore" path="/explore" onClose={onClose} />
@@ -99,23 +96,15 @@ const SidebarContent = ({ onClose }) => {
 
         <Section title="AI Travel">
           <NavItem icon={Sparkles} label="AI Planner" path="/planner" onClose={onClose} />
-          {/* Book Flights — triggers overlay, not a route */}
           <button
             onClick={() => { onClose?.(); setFlightPanelOpen(true); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium tracking-[-0.01em] transition-all duration-150 group border-l-2 text-[#374151] dark:text-slate-400 hover:bg-[#eff6ff] hover:text-blue-700 border-transparent"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-700 dark:hover:text-blue-400 transition-all duration-200 group"
           >
-            <Plane size={16} className="shrink-0 text-slate-400 group-hover:text-blue-500 transition-all duration-150" />
-            <span className="truncate leading-none">Book Flights</span>
+            <Plane size={16} className="shrink-0 text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200" />
+            <span className="truncate">Book Flights</span>
           </button>
           <NavItem icon={TrendingDown} label="Price Drops" path="/price-drops" onClose={onClose} />
         </Section>
-
-        {/* Flight Panel overlay */}
-        <AnimatePresence>
-          {flightPanelOpen && (
-            <FlightPanel plan={null} onClose={() => setFlightPanelOpen(false)} />
-          )}
-        </AnimatePresence>
 
         <Section title="My Trips">
           <NavItem icon={Calendar} label="Itineraries" path="/itineraries" onClose={onClose} />
@@ -126,15 +115,21 @@ const SidebarContent = ({ onClose }) => {
           <NavItem icon={User} label="Profile" path="/profile" onClose={onClose} />
           <NavItem icon={Settings} label="Settings" path="/settings" onClose={onClose} />
         </Section>
+
+        <AnimatePresence>
+          {flightPanelOpen && (
+            <FlightPanel plan={null} onClose={() => setFlightPanelOpen(false)} />
+          )}
+        </AnimatePresence>
       </div>
 
       {/* ── User Footer ── */}
-      <div className="px-2.5 pb-3 pt-2 border-t" style={{ borderColor: 'var(--border)' }}>
+      <div className="p-3 border-t border-slate-100 dark:border-slate-800 mt-auto transition-colors duration-300">
         <div
-          className="flex items-center gap-3 px-2.5 py-2.5 rounded-xl cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60"
+          className="flex items-center gap-2.5 p-2 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 border border-transparent hover:border-slate-100 dark:hover:border-slate-700 group"
           onClick={() => { navigate('/profile'); onClose?.(); }}
         >
-          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 ring-2 ring-slate-100 dark:ring-slate-700">
+          <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-slate-200 dark:border-slate-700 shadow-sm transition-transform group-hover:scale-105">
             <img
               src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=80"
               alt="User"
@@ -142,16 +137,16 @@ const SidebarContent = ({ onClose }) => {
             />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[14px] font-semibold truncate leading-tight" style={{ color: 'var(--text-primary)' }}>
+            <div className="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate leading-tight transition-colors duration-300">
               {user?.name || 'Traveller'}
             </div>
-            <div className="text-[12px] truncate leading-tight mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+            <div className="text-[11px] text-slate-400 dark:text-slate-500 truncate leading-tight mt-0.5 transition-colors duration-300">
               {user?.email || 'View profile'}
             </div>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); handleLogout(); }}
-            className="p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all shrink-0"
+            className="p-1.5 rounded-lg text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 shrink-0"
             title="Sign out"
           >
             <LogOut size={14} />

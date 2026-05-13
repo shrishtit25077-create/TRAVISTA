@@ -374,7 +374,7 @@ const Home = () => {
   }, [filteredData]);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="min-h-full bg-[#fcfdfe] dark:bg-slate-950 transition-colors duration-300">
       {/* Hero — full width, zero outer container */}
       <div className="pt-4 md:pt-6">
         <HomeHero
