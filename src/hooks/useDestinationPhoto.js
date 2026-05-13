@@ -11,7 +11,7 @@ export function useDestinationPhoto(destinationName) {
     if (!destinationName) return;
     
     // Normalize name for cache (e.g. "Paris, France" -> "Paris")
-    const cleanName = destinationName.split(',')[0].trim();
+    const cleanName = destinationName?.split(',')[0].trim() || 'Travel';
     
     if (cache[cleanName]) {
       setPhotoUrl(cache[cleanName]);

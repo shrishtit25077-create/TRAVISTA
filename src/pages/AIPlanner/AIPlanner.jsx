@@ -90,7 +90,7 @@ const DestinationAutocomplete = ({ value, onChange, placeholder, label }) => {
 
   const handleSelect = (item) => {
     // Keep just the primary name and first context (e.g. Paris, Ile-de-France)
-    const parts = item.display_name.split(',');
+    const parts = item?.display_name?.split(',') || [];
     onChange(parts.slice(0, 2).join(','));
     setShowDropdown(false);
   };
@@ -317,7 +317,7 @@ export default function AIPlanner() {
             // Lazy geocode if map data was missing
             try {
               const { geocodePlace, getRoute } = await import('../../services/aiService');
-              const places = [storedTrip.startLocation || storedTrip.destination, ...storedTrip.destination.split(', ')];
+              const places = [storedTrip.startLocation || storedTrip.destination, ...(storedTrip.destination?.split(', ') || [])];
               const coords = await Promise.all(places.filter(Boolean).map(place => geocodePlace(place)));
               const route = await getRoute(coords, storedTrip.transport || 'flight');
               setRouteData(route);
@@ -603,7 +603,7 @@ export default function AIPlanner() {
                         <div className="min-w-0">
                           <h4 className="font-black text-slate-900 uppercase tracking-widest text-[10px] mb-0.5">Route Summary</h4>
                           <p className="text-xs text-slate-500 font-bold truncate">
-                            {formData.startLocation.split(',')[0]} → {formData.destinations[formData.destinations.length - 1].split(',')[0]}
+                            {formData.startLocation?.split(',')[0]} → {formData.destinations[formData.destinations.length - 1]?.split(',')[0]}
                           </p>
                         </div>
                       </div>

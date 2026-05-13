@@ -22,13 +22,8 @@ const DashboardLayout = () => {
   }, [sidebarOpen]);
 
   return (
-    /*
-      Layout root: h-screen + overflow-hidden ONLY here.
-      This creates the viewport boundary.
-      body/html/root have NO overflow:hidden (that kills scroll events).
-    */
-    <div className="flex h-screen overflow-hidden bg-[#fcfdfe] dark:bg-slate-950 transition-colors duration-300">
-
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
+      
       {/* Mobile backdrop overlay */}
       {sidebarOpen && (
         <div
@@ -37,19 +32,18 @@ const DashboardLayout = () => {
         />
       )}
 
-      {/* Sidebar — rendered fixed inside, always on screen */}
-      <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+      {/* Fixed Sidebar */}
+      <aside className="fixed left-0 top-0 z-40 h-screen w-[220px] hidden lg:block">
+        <Sidebar isOpen={true} onClose={closeSidebar} />
+      </aside>
 
-      {/*
-        Right column:
-        - flex-col to stack navbar + main vertically
-        - lg:pl-[220px] offsets fixed sidebar width
-        - h-screen so column matches viewport height exactly
-        - overflow-hidden clips the column (not the scroll)
-      */}
-      <div className="flex flex-col flex-1 min-w-0 lg:pl-[220px] h-screen overflow-hidden">
+      {/* Mobile sidebar (Drawer) */}
+      <div className="lg:hidden">
+        <Sidebar isOpen={sidebarOpen} onClose={closeSidebar} />
+      </div>
 
-        {/* Navbar: shrink-0 so it never shrinks or scrolls away */}
+      {/* Main Scroll Container */}
+      <main className="ml-0 lg:ml-[220px] flex-1 h-screen overflow-y-auto min-h-0 flex flex-col relative w-full bg-[#fcfdfe] dark:bg-slate-950">
         <div className="shrink-0">
           <Navbar
             searchTerm={searchTerm}
@@ -57,20 +51,11 @@ const DashboardLayout = () => {
             onMenuClick={() => setSidebarOpen(o => !o)}
           />
         </div>
-
-        {/*
-          THE KEY FIX:
-          flex-1     → takes all remaining height after navbar
-          min-h-0    → REQUIRED for flex children to be scrollable;
-                       without this, flex-1 grows past parent height
-                       and overflow-y-auto never triggers
-          overflow-y-auto → this element scrolls, nothing else does
-        */}
-        <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1">
           <Outlet context={{ searchTerm, setSearchTerm }} />
-        </main>
+        </div>
+      </main>
 
-      </div>
     </div>
   );
 };

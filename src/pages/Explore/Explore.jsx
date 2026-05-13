@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Map as MapIcon, Heart, MapPin, Sparkles, Navigation, CloudRain, Sun, Wind, CloudSnow, Flame, TreePine, Loader2, TrendingDown, ArrowRight } from 'lucide-react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import BudgetModal from '../../components/BudgetModal';
 import DestinationCard, { DestinationSkeleton } from '../../components/DestinationCard';
 
 // ─── Massive Curated Premium Data ──────────────────────────────────────────
@@ -54,7 +53,6 @@ export default function Explore() {
   const navigate = useNavigate();
   const [activeWeather, setActiveWeather] = useState(null);
   const [activeCategory, setActiveCategory] = useState('All');
-  const [selectedDest, setSelectedDest] = useState(null);
   
   // Infinite Scroll State
   const [displayedItems, setDisplayedItems] = useState([]);
@@ -175,7 +173,6 @@ export default function Explore() {
                   <DestinationCard 
                     key={item.id} 
                     item={item} 
-                    onPlanTrip={setSelectedDest} 
                   />
                 ))}
               </AnimatePresence>
@@ -238,15 +235,6 @@ export default function Explore() {
           </button>
         </motion.div>
 
-        {/* Budget Plan Modal */}
-        <AnimatePresence>
-          {selectedDest && (
-            <BudgetModal 
-              destination={selectedDest} 
-              onClose={() => setSelectedDest(null)} 
-            />
-          )}
-        </AnimatePresence>
 
         <style>{`
           .hide-scrollbar::-webkit-scrollbar { display: none; }

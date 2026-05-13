@@ -213,8 +213,7 @@ const FILTERS = [
 
 const FlightPanel = ({ plan, onClose }) => {
   const destGuess = plan?.title?.match(/(?:to|in|for)\s+([A-Za-z\s]+?)(?:,|\s*$)/i)?.[1]?.trim()
-    || plan?.title?.split(' ').slice(-2).join(' ')
-    || null;
+    || plan?.title?.split(' ')?.slice(-2)?.join(' ') || 'Destination';
 
   const defaultDepart = formatDate(addDays(new Date(), 14));
   const defaultReturn = formatDate(addDays(new Date(), 14 + (plan?.days?.length || 5)));

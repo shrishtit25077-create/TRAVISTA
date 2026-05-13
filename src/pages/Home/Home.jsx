@@ -9,8 +9,6 @@ import { useDestinationPhotos } from '../../hooks/useTravista';
 import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
 import { track } from '../../services/trackingService';
 import { useRecommendations } from '../../hooks/useRecommendations';
-import BudgetModal from '../../components/BudgetModal';
-
 import { Bell } from 'lucide-react';
 
 export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reasonChip, onPlanTrip }) => {
@@ -29,11 +27,7 @@ export const DestinationCard = ({ item, size = 'medium', layout = 'grid', reason
   const handleClick = () => {
     if (showAlertModal) return;
     track.viewed(item.name);
-    if (onPlanTrip) {
-      onPlanTrip(item);
-    } else {
-      navigate(`/destination/${item.id}`, { state: item });
-    }
+    navigate(`/destination/${item.id}`, { state: item });
   };
 
   const handleSetAlert = (e) => {
@@ -302,7 +296,6 @@ const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedDest, setSelectedDest] = useState(null);
 
   useEffect(() => {
     setIsSearching(true);
@@ -382,7 +375,6 @@ const Home = () => {
           setActiveCategory={setActiveCategory}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          onPlanTrip={(dest) => setSelectedDest(dest)}
         />
       </div>
 
@@ -438,7 +430,6 @@ const Home = () => {
                       subtitle={section.subtitle}
                       data={section.data}
                       layout={section.layout}
-                      onPlanTrip={(dest) => setSelectedDest(dest)}
                     />
                   </motion.div>
                   {section.id === 'trending' && (
@@ -448,7 +439,7 @@ const Home = () => {
                       viewport={{ once: true }}
                       transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
                     >
-                      <PersonalisedSection onPlanTrip={(dest) => setSelectedDest(dest)} />
+                      <PersonalisedSection />
                     </motion.div>
                   )}
                 </React.Fragment>
@@ -458,14 +449,6 @@ const Home = () => {
         </AnimatePresence>
       </div>
 
-      <AnimatePresence>
-        {selectedDest && (
-          <BudgetModal
-            destination={selectedDest}
-            onClose={() => setSelectedDest(null)}
-          />
-        )}
-      </AnimatePresence>
 
     </div>
   );

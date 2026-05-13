@@ -4,11 +4,8 @@ import { Map, ArrowLeft } from 'lucide-react';
 import MapView from '../../components/Explore/MapView';
 import { exploreDestinations } from '../../data/exploreDestinations';
 import { useNavigate } from 'react-router-dom';
-import BudgetModal from '../../components/BudgetModal';
-
 const MapPage = () => {
   const navigate = useNavigate();
-  const [selectedDest, setSelectedDest] = useState(null);
 
   return (
     <div className="flex flex-col h-full min-h-screen bg-[#F8FAFC]">
@@ -33,19 +30,10 @@ const MapPage = () => {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-[calc(100vh-73px)] w-full relative z-0">
           <MapView 
             destinations={exploreDestinations} 
-            onPlanTrip={(d) => setSelectedDest(d)}
+            onPlanTrip={(d) => navigate(`/destination/${d.id}`, { state: d })}
           />
         </motion.div>
       </div>
-
-      <AnimatePresence>
-        {selectedDest && (
-          <BudgetModal 
-            destination={selectedDest} 
-            onClose={() => setSelectedDest(null)} 
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };

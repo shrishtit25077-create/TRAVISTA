@@ -1,312 +1,296 @@
-import React, { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, MapPin, Star, Sparkles, Navigation, Calendar, Wallet, ArrowRight, Type, Check, Users, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { ArrowLeft, ArrowRight, Heart, MapPin, Star, CloudSun, Clock, Globe, Shield, Wifi, Calendar, Wallet, Navigation, Camera, Utensils, Music, Map } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
 import { track } from '../../services/trackingService';
-import { generateCaptions } from '../../services/ai';
 
-const API_KEY = import.meta.env.VITE_OPENROUTER_KEY;
-async function callAI(prompt) {
-  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'mistralai/mistral-7b-instruct', messages: [{ role: 'user', content: prompt }] }),
-  });
-  const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
-}
-
-const DestinationDetail = () => {
+export default function DestinationDetail() {
+  const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { savedPlaces, toggleSave, addItinerary } = useAuth();
+  const { savedPlaces, toggleSave } = useAuth();
+  
+  // Accept state passed via router, or fallback to undefined
   const data = location.state;
   const { photoUrl, loading: photoLoading } = useDestinationPhoto(data?.name);
 
-  // Tabs: Overview | Solo vs Group
-  const [activeTab, setActiveTab] = useState('overview');
-
-  // Solo vs Group state (Feature 6)
-  const [soloGroupData, setSoloGroupData] = useState('');
-  const [loadingSG, setLoadingSG] = useState(false);
-  const [sgLoaded, setSgLoaded] = useState(false);
-
-  React.useEffect(() => {
-    if (!data) return;
-    const start = Date.now();
-    return () => {
-      track.timeSpent(data.name, Math.floor((Date.now() - start) / 1000));
-    };
+  useEffect(() => {
+    if (data) {
+      const start = Date.now();
+      return () => track.timeSpent(data.name, Math.floor((Date.now() - start) / 1000));
+    }
   }, [data]);
 
-  // Switch to Solo vs Group tab + load AI
-  const handleTabChange = async (tab) => {
-    setActiveTab(tab);
-    if (tab === 'sologroup' && !sgLoaded) {
-      setLoadingSG(true);
-      const prompt = `Compare solo travel vs group travel in ${data.name}. Give 4 bullet points for each in this format:
-SOLO TRAVEL:
-• point 1
-• point 2
-• point 3
-• point 4
+  // Safe fallback if accessed directly without state
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-[#fafaf9] dark:bg-slate-900 flex flex-col items-center justify-center p-6">
+        <div className="w-24 h-24 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-slate-200/20 dark:shadow-none">
+          <MapPin className="w-10 h-10 text-emerald-500" />
+        </div>
+        <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Destination Not Found</h1>
+        <p className="text-slate-500 font-medium mb-8 text-center max-w-sm">We couldn't load the details for this destination. Let's find somewhere else to explore.</p>
+        <button 
+          onClick={() => navigate('/explore')}
+          className="px-8 py-4 bg-slate-900 dark:bg-emerald-500 hover:bg-slate-800 dark:hover:bg-emerald-400 text-white rounded-full font-black uppercase tracking-widest text-[11px] transition-all"
+        >
+          Return to Explore
+        </button>
+      </div>
+    );
+  }
 
-GROUP TRAVEL:
-• point 1
-• point 2
-• point 3
-• point 4
+  const isSaved = savedPlaces?.some(p => p.id === data.id);
+  const cityName = data.name?.split(',')[0] || "This destination";
+  const countryName = data.country || data.name?.split(',')[1]?.trim() || "";
 
-Keep each bullet under 15 words.`;
-      const res = await callAI(prompt);
-      setSoloGroupData(res);
-      setSgLoaded(true);
-      setLoadingSG(false);
-    }
-  };
+  // Mock data for the immersive sections based on destination
+  const attractions = [
+    { title: "Historic Old Town", desc: "Wander through centuries of history.", img: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=800&q=80", rating: 4.8 },
+    { title: "Coastal Views", desc: "Breathtaking panoramic sunset spots.", img: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=800&q=80", rating: 4.9 },
+    { title: "Cultural Museum", desc: "Discover ancient artifacts and art.", img: "https://images.unsplash.com/photo-1518998053401-b4391cb169cd?w=800&q=80", rating: 4.6 }
+  ];
 
-  if (!data) return (
-    <div className="h-screen flex items-center justify-center bg-slate-50">
-       <div className="text-center space-y-4">
-          <Navigation className="w-12 h-12 text-slate-200 mx-auto animate-bounce" />
-          <h2 className="text-2xl font-black text-slate-800">Destination Not Found</h2>
-          <button onClick={() => navigate('/')} className="px-6 py-3 bg-emerald-500 text-white rounded-full font-bold">Go Home</button>
-       </div>
-    </div>
-  );
-
-  const isSaved = savedPlaces.some(p => p.id === data.id);
-
-  const handleQuickPlan = () => {
-    const newTrip = {
-      id: Date.now(),
-      destination: data.name,
-      createdAt: new Date().toISOString(),
-      budget: { stay: 18000, food: 6000, travel: 12000, activities: 5000, total: 41000 },
-      days: [{ day: 1, activities: [
-        { id: `a-${Date.now()}-1`, time: 'Morning', title: `Arrival in ${data.name} & Check-in` },
-        { id: `a-${Date.now()}-2`, time: 'Afternoon', title: 'Explore Local Landmarks' },
-        { id: `a-${Date.now()}-3`, time: 'Evening', title: 'Traditional Dinner Experience' },
-      ]}]
-    };
-    addItinerary(newTrip);
-    navigate(`/itinerary/${newTrip.id}`);
-  };
-
-  // Caption generator (Feature 5)
-  const [captions, setCaptions] = useState([]);
-  const [loadingCaptions, setLoadingCaptions] = useState(false);
-  const [copiedIndex, setCopiedIndex] = useState(null);
-
-  const handleGenerateCaptions = async () => {
-    setLoadingCaptions(true);
-    try {
-      const result = await generateCaptions(data.name);
-      setCaptions(Array.isArray(result) ? result : [result]);
-    } catch (e) { console.error(e); }
-    finally { setLoadingCaptions(false); }
-  };
-
-  const handleCopy = (text, idx) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(idx);
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
-
-  // Parse Solo vs Group response into two columns
-  const parseSoloGroup = (text) => {
-    if (!text) return { solo: [], group: [] };
-    const soloMatch = text.match(/SOLO TRAVEL:([\s\S]*?)(?:GROUP TRAVEL:|$)/i);
-    const groupMatch = text.match(/GROUP TRAVEL:([\s\S]*?)$/i);
-    const extractBullets = (match) =>
-      (match?.[1] || '').split('\n').map(l => l.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean);
-    return { solo: extractBullets(soloMatch), group: extractBullets(groupMatch) };
-  };
-
-  const { solo, group } = parseSoloGroup(soloGroupData);
+  const gallery = [
+    "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?w=800&q=80",
+    "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800&q=80",
+    "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=800&q=80",
+    "https://images.unsplash.com/photo-1533676802871-eca1ae998cd5?w=800&q=80",
+    "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800&q=80"
+  ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900">
-      <div className="relative h-[40vh] sm:h-[50vh] md:h-[60vh] overflow-hidden group">
-        {photoLoading ? (
-          <div className="absolute inset-0 bg-slate-200 dark:bg-slate-700 animate-pulse" />
-        ) : (
-          <motion.img
+    <div className="min-h-screen bg-[#fcfdfe] dark:bg-slate-950 font-sans selection:bg-emerald-500/30">
+      
+      {/* ─── SECTION 1: CINEMATIC HERO ────────────────────────────────────── */}
+      <div className="relative h-[85vh] w-full overflow-hidden group">
+        <div className="absolute inset-0 bg-slate-900">
+          <motion.img 
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 1.5 }}
-            src={photoUrl}
-            className="absolute inset-0 w-full h-full object-cover"
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            src={photoUrl || data.image} 
+            className="w-full h-full object-cover opacity-80"
             alt={data.name}
-            onError={(e) => { e.target.src = `https://picsum.photos/seed/${encodeURIComponent(data.name)}/1600/900`; }}
           />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-900 via-transparent to-black/40 z-[1]" />
-        
-        {/* Top Actions */}
-        <div className="absolute top-8 left-8 right-8 flex justify-between items-center z-10">
-          <button onClick={() => navigate(-1)} className="w-12 h-12 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white border border-white/20 hover:bg-white hover:text-slate-900 transition-all">
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90" />
+
+        {/* Top Nav */}
+        <div className="absolute top-0 left-0 right-0 p-6 md:p-8 flex justify-between items-center z-20">
+          <button onClick={() => navigate(-1)} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <button onClick={() => toggleSave(data)} className={`w-12 h-12 backdrop-blur-xl rounded-full flex items-center justify-center border transition-all ${isSaved ? 'bg-red-500 text-white border-red-500' : 'bg-white/20 text-white border-white/20 hover:bg-white hover:text-red-500'}`}>
+          <button onClick={() => toggleSave(data)} className={`w-12 h-12 rounded-full backdrop-blur-md border transition-colors flex items-center justify-center ${isSaved ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white/10 border-white/20 text-white hover:bg-white hover:text-rose-500 hover:border-white'}`}>
             <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
           </button>
         </div>
-      </div>
 
-      {/* Content Section */}
-      <div className="max-w-4xl mx-auto px-8 -translate-y-20 relative z-10 pb-20">
-        <div className="bg-white dark:bg-slate-800 rounded-[3rem] p-12 shadow-2xl border border-slate-100 dark:border-slate-700 space-y-8">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-[0.2em] w-fit">
-               <Sparkles className="w-3 h-3" /> Editorial Pick
+        {/* Hero Content */}
+        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 lg:p-24 z-20 flex flex-col justify-end h-full">
+          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8 }}>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="px-3 py-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-white">
+                {data.category || "Premium Destination"}
+              </span>
+              <span className="flex items-center gap-1 text-amber-300 font-bold text-sm">
+                <Star className="w-4 h-4 fill-amber-300" /> {data.rating || 4.8}
+              </span>
             </div>
-            <div className="flex justify-between items-start">
-              <h1 className="text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-none">{data.name}</h1>
-              <div className="flex items-center gap-1.5 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 rounded-2xl border border-amber-100 dark:border-amber-700">
-                <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                <span className="text-lg font-black text-slate-800 dark:text-white">{data.rating}</span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-4">
+              {cityName}
+            </h1>
+            {countryName && (
+              <p className="text-xl md:text-2xl font-light text-white/80 tracking-wide mb-8 italic">
+                {data.tagline || `Experience the magic of ${countryName}.`}
+              </p>
+            )}
+
+            {/* Floating Quick Stats */}
+            <div className="flex flex-wrap items-center gap-4 md:gap-8 mt-4 pt-8 border-t border-white/20">
+              <div className="text-white">
+                <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">Avg Budget</p>
+                <p className="text-lg md:text-xl font-black">{data.price || "₹80k"}</p>
+              </div>
+              <div className="text-white">
+                <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">Ideal Duration</p>
+                <p className="text-lg md:text-xl font-black">5 - 7 Days</p>
+              </div>
+              <div className="text-white">
+                <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">Best Season</p>
+                <p className="text-lg md:text-xl font-black">{data.weather || "Autumn"}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-4 text-slate-400 font-bold text-sm uppercase tracking-widest">
-              <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-emerald-500" /> {data.category}</span>
-              <span className="flex items-center gap-2"><Wallet className="w-4 h-4 text-sky-500" /> Starting from {data.price}</span>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-24 py-16 md:py-24 space-y-24 md:space-y-32">
+        
+        {/* ─── SECTION 2: DESTINATION OVERVIEW ──────────────────────────────── */}
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
+          <div className="md:col-span-5 space-y-6">
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+              A journey unlike any other.
+            </h2>
+            <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+              {data.description || `${cityName} offers an unparalleled blend of vibrant culture, stunning landscapes, and unforgettable experiences. Whether you are seeking profound spiritual calm or heart-racing adventure, this destination promises to captivate your soul and leave you breathless.`}
+            </p>
+            <div className="flex flex-wrap gap-2 pt-4">
+              {(data.tags || ["luxury", "culture", "scenic"]).map(tag => (
+                <span key={tag} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-xs font-bold uppercase tracking-widest">
+                  {tag}
+                </span>
+              ))}
             </div>
           </div>
+          <div className="md:col-span-7 grid grid-cols-2 gap-4">
+            <img src={gallery[0]} className="w-full h-64 object-cover rounded-[2rem] rounded-tr-none shadow-xl" alt="" />
+            <img src={gallery[1]} className="w-full h-64 object-cover rounded-[2rem] rounded-bl-none shadow-xl mt-8" alt="" />
+          </div>
+        </section>
 
-          {/* Tabs (Feature 6) */}
-          <div className="flex gap-2 border-b border-slate-100 dark:border-slate-700 pb-0">
+        {/* ─── SECTION 3: QUICK TRAVEL INFO ─────────────────────────────────── */}
+        <section>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {[
-              { id: 'overview', label: 'Overview' },
-              { id: 'sologroup', label: '👤 Solo vs 👥 Group' },
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`px-5 py-3 text-xs font-black uppercase tracking-widest transition-all border-b-2 -mb-px ${
-                  activeTab === tab.id
-                    ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                    : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
-                }`}
-              >
-                {tab.label}
-              </button>
+              { icon: Globe, label: "Language", value: "English, Local" },
+              { icon: Wallet, label: "Currency", value: data.currency || "USD" },
+              { icon: CloudSun, label: "Weather", value: "24°C Average" },
+              { icon: Shield, label: "Safety", value: "High Rating" },
+              { icon: Wifi, label: "Internet", value: "Fast & Available" },
+              { icon: Clock, label: "Time Zone", value: "GMT+5:30" },
+              { icon: Calendar, label: "Best Time", value: "Oct - March" },
+              { icon: Map, label: "Visa", value: "On Arrival" }
+            ].map((info, i) => (
+              <div key={i} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col gap-4 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:-translate-y-1">
+                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center">
+                  <info.icon size={18} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{info.label}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{info.value}</p>
+                </div>
+              </div>
             ))}
           </div>
+        </section>
 
-          <AnimatePresence mode="wait">
-            {activeTab === 'overview' ? (
-              <motion.div key="overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white italic tracking-tight uppercase">About the Journey</h3>
-                    <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-                      Experience the magic of {data.name}. This destination offers a unique blend of {data.tags?.join(', ')} and stunning landscapes. Whether you're looking for a peaceful retreat or an adventurous getaway, {data.name.split(',')[0]} has something for everyone.
-                    </p>
-
-                    {/* AI Captions (Feature 5) */}
-                    <div className="pt-4">
-                      <button
-                        onClick={handleGenerateCaptions}
-                        disabled={loadingCaptions}
-                        className="px-5 py-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 border border-emerald-100 dark:border-emerald-700 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-emerald-100 transition-all flex items-center gap-2 disabled:opacity-50"
-                      >
-                        <Type className="w-4 h-4" />
-                        {loadingCaptions ? 'Writing...' : '📸 Generate IG Captions'}
-                      </button>
-
-                      {captions.length > 0 && (
-                        <div className="mt-4 space-y-3">
-                          {captions.map((cap, i) => (
-                            <div key={i} className="flex justify-between items-start gap-4 p-4 bg-slate-50 dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-2xl">
-                              <p className="text-sm font-medium text-slate-700 dark:text-slate-200 italic">"{cap}"</p>
-                              <button onClick={() => handleCopy(cap, i)} className="shrink-0 text-slate-400 hover:text-emerald-500 transition-all p-1">
-                                {copiedIndex === i ? <Check className="w-4 h-4 text-emerald-500" /> : <span className="text-[10px] font-bold uppercase tracking-wider">Copy</span>}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+        {/* ─── SECTION 4: TOP ATTRACTIONS ───────────────────────────────────── */}
+        <section className="space-y-10">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Must-Visit Spots</h2>
+              <p className="text-slate-500 font-medium mt-2">Curated highlights you simply cannot miss.</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {attractions.map((attr, i) => (
+              <div key={i} className="group relative h-96 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500">
+                <img src={attr.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80" />
+                <div className="absolute inset-0 p-8 flex flex-col justify-end">
+                  <div className="flex items-center gap-1 mb-2 bg-black/40 backdrop-blur-md w-fit px-3 py-1.5 rounded-full border border-white/20">
+                    <Star size={10} className="fill-amber-400 text-amber-400" />
+                    <span className="text-xs font-bold text-white">{attr.rating}</span>
                   </div>
-
-                  <div className="space-y-6">
-                    <div className="p-6 bg-slate-50 dark:bg-slate-700/50 rounded-3xl space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Estimated Budget</h4>
-                        <span className="text-emerald-600 font-black">{data.price}</span>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400"><span>Accommodation</span><span>₹15k+</span></div>
-                        <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden"><div className="bg-emerald-400 h-full w-[70%]" /></div>
-                        <div className="flex justify-between text-xs font-bold text-slate-500 dark:text-slate-400"><span>Flights</span><span>₹25k+</span></div>
-                        <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden"><div className="bg-sky-400 h-full w-[45%]" /></div>
-                      </div>
-                    </div>
-
-                    <button onClick={handleQuickPlan} className="w-full py-5 bg-slate-900 dark:bg-emerald-600 text-white rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-emerald-600 dark:hover:bg-emerald-500 transition-all shadow-xl flex items-center justify-center gap-3">
-                      Plan Itinerary to {data.name.split(',')[0]} <ArrowRight className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <h3 className="text-2xl font-black text-white mb-2">{attr.title}</h3>
+                  <p className="text-sm text-white/80 font-medium line-clamp-2">{attr.desc}</p>
                 </div>
-              </motion.div>
-            ) : (
-              <motion.div key="sologroup" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
-                {loadingSG ? (
-                  <div className="flex items-center justify-center py-16 gap-3">
-                    <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-slate-500 font-medium text-sm">AI is comparing...</span>
-                  </div>
-                ) : soloGroupData ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Solo Column */}
-                    <div className="bg-sky-50 dark:bg-sky-900/20 rounded-3xl p-6 border border-sky-100 dark:border-sky-800">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="w-10 h-10 bg-sky-100 dark:bg-sky-800 rounded-2xl flex items-center justify-center">
-                          <User className="w-5 h-5 text-sky-600 dark:text-sky-400" />
-                        </div>
-                        <h3 className="text-sm font-black text-sky-700 dark:text-sky-300 uppercase tracking-widest">Solo Travel</h3>
-                      </div>
-                      <ul className="space-y-3">
-                        {solo.map((pt, i) => (
-                          <li key={i} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                            <span className="mt-1 w-5 h-5 bg-sky-200 dark:bg-sky-700 rounded-full flex items-center justify-center text-[10px] font-black text-sky-700 dark:text-sky-200 shrink-0">{i + 1}</span>
-                            {pt}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-                    {/* Group Column */}
-                    <div className="bg-violet-50 dark:bg-violet-900/20 rounded-3xl p-6 border border-violet-100 dark:border-violet-800">
-                      <div className="flex items-center gap-3 mb-5">
-                        <div className="w-10 h-10 bg-violet-100 dark:bg-violet-800 rounded-2xl flex items-center justify-center">
-                          <Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />
-                        </div>
-                        <h3 className="text-sm font-black text-violet-700 dark:text-violet-300 uppercase tracking-widest">Group Travel</h3>
-                      </div>
-                      <ul className="space-y-3">
-                        {group.map((pt, i) => (
-                          <li key={i} className="flex items-start gap-3 text-sm text-slate-700 dark:text-slate-300 font-medium">
-                            <span className="mt-1 w-5 h-5 bg-violet-200 dark:bg-violet-700 rounded-full flex items-center justify-center text-[10px] font-black text-violet-700 dark:text-violet-200 shrink-0">{i + 1}</span>
-                            {pt}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-10 text-slate-400">No data available</div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        {/* ─── SECTION 5 & 6: EXPERIENCES & FOOD ─────────────────────────────── */}
+        <section className="bg-slate-900 rounded-[3rem] p-8 md:p-16 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-16">
+            <div className="space-y-8">
+              <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400">
+                <Camera size={24} />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight">Curated Experiences</h2>
+              <p className="text-slate-400 leading-relaxed font-medium">From sunset cruises to hidden mountain trails, we've cataloged the most breathtaking activities to elevate your trip from ordinary to unforgettable.</p>
+              <ul className="space-y-4">
+                {['Local Guided Tours', 'Sunset Viewpoints', 'Historic Walks', 'Nightlife & Bars'].map(item => (
+                  <li key={item} className="flex items-center gap-3 font-bold text-sm text-slate-300">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" /> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-8">
+              <div className="w-14 h-14 bg-amber-500/20 rounded-full flex items-center justify-center text-amber-400">
+                <Utensils size={24} />
+              </div>
+              <h2 className="text-3xl md:text-4xl font-black tracking-tight">Food & Culture</h2>
+              <p className="text-slate-400 leading-relaxed font-medium">Taste the soul of {cityName}. Discover bustling street food markets, hidden local cafes, and Michelin-starred dining experiences that define the regional palette.</p>
+              <ul className="space-y-4">
+                {['Authentic Street Food', 'Fine Dining', 'Local Cafes', 'Traditional Markets'].map(item => (
+                  <li key={item} className="flex items-center gap-3 font-bold text-sm text-slate-300">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" /> {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        {/* ─── SECTION 8: PHOTO GALLERY ─────────────────────────────────────── */}
+        <section className="space-y-10">
+          <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight text-center">Visual Story</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-[600px]">
+            <div className="col-span-2 row-span-2 rounded-[2rem] overflow-hidden group relative">
+              <img src={gallery[2]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </div>
+            <div className="rounded-[2rem] overflow-hidden group relative">
+              <img src={gallery[3]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+            </div>
+            <div className="rounded-[2rem] overflow-hidden group relative">
+              <img src={gallery[4]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+            </div>
+            <div className="col-span-2 rounded-[2rem] overflow-hidden group relative">
+              <img src={gallery[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+            </div>
+          </div>
+        </section>
+
+        {/* ─── SECTION 10: AI TRIP PLANNER CTA ──────────────────────────────── */}
+        <section className="pt-12">
+          <div className="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-emerald-500/20">
+            {/* Background decorative elements */}
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-black/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+            
+            <div className="relative z-10 max-w-2xl mx-auto space-y-8 flex flex-col items-center">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white border border-white/30 shadow-xl">
+                <Navigation size={28} className="transform -rotate-45" />
+              </div>
+              
+              <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+                Ready to experience {cityName} your way?
+              </h2>
+              
+              <p className="text-lg text-emerald-50 font-medium">
+                Let Travista AI instantly design a personalized, day-by-day itinerary perfectly matched to your budget, travel style, and duration.
+              </p>
+              
+              <button 
+                onClick={() => navigate('/planner', { state: { destInput: data.name } })}
+                className="mt-4 px-10 py-5 bg-slate-900 hover:bg-black text-white rounded-full font-black uppercase tracking-widest text-sm transition-all shadow-2xl flex items-center gap-3 group active:scale-[0.98]"
+              >
+                Design My AI Trip
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+        </section>
+
       </div>
     </div>
   );
-};
-
-export default DestinationDetail;
+}

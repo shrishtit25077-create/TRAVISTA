@@ -19,7 +19,7 @@ const BudgetModal = ({ destination, onClose }) => {
     document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
+      document.body.style.removeProperty('overflow');
     };
   }, [onClose]);
 

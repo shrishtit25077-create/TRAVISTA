@@ -130,8 +130,10 @@ export function DestinationCard({ item, reasonChip, onPlanTrip }) {
   };
 
   const handleCardClick = () => {
+    if (!item?.id) return;
     track.viewed(item.name);
-    navigate(`/destination/${item.id}`, { state: { destination: item } });
+    // Always pass the full destination object as state so DestinationDetail never gets undefined
+    navigate(`/destination/${item.id}`, { state: item });
   };
 
   return (

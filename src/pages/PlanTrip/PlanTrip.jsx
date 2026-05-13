@@ -214,7 +214,7 @@ const PlanTrip = () => {
                             {logistics.hotels.map((h, i) => (
                               <div key={i} className="flex justify-between items-center py-4 border-b border-gray-100 last:border-0">
                                  <div>
-                                    <p className="font-bold text-gray-900 text-base">{h.name.split(' ').slice(0, 2).join(' ')}</p>
+                                    <p className="font-bold text-gray-900 text-base">{h?.name?.split(' ').slice(0, 2).join(' ') || 'Hotel'}</p>
                                     <p className="text-[11px] text-gray-400 font-bold uppercase mt-1">★ {h.rating || '4.8'} • Boutique</p>
                                  </div>
                                  <span className="text-xl font-black text-emerald-600">{h.price}</span>

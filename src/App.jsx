@@ -141,7 +141,6 @@ function App() {
         <AuthProvider>
           <LocationProvider>
             <Router>
-              <SmoothScroll />
               <PWAInstallBanner />
               <Toaster
                 position="bottom-right"
