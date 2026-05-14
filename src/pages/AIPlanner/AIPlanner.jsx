@@ -122,7 +122,7 @@ const DestinationAutocomplete = ({ value, onChange, placeholder, label }) => {
   };
 
   return (
-    <div className="relative z-[110]" ref={wrapperRef}>
+    <div className={`relative ${showDropdown ? 'z-[150]' : 'z-[110]'}`} ref={wrapperRef}>
       {label && <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{label}</label>}
       <input
         type="text"
