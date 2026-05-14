@@ -41,7 +41,7 @@ export const TripSummaryCard = ({ plan, budget, duration, travelers, destination
              <Wallet size={12} /> Per Person / Day
            </span>
            <span className="text-sm font-black text-[#1D9E75]">
-              ₹{Math.round((plan.totalCostBreakdown?.transport + plan.totalCostBreakdown?.accommodation + plan.totalCostBreakdown?.food + plan.totalCostBreakdown?.activities + plan.totalCostBreakdown?.misc) / (duration * travelers)).toLocaleString() || '?'}
+              ₹{Number(Math.round(((plan.totalCostBreakdown?.transport || 0) + (plan.totalCostBreakdown?.accommodation || 0) + (plan.totalCostBreakdown?.food || 0) + (plan.totalCostBreakdown?.activities || 0) + (plan.totalCostBreakdown?.misc || 0)) / Math.max(duration * travelers, 1)) || 0).toLocaleString()}
            </span>
         </div>
       </div>

@@ -65,7 +65,7 @@ export function calculateRealisticTripCost({ destinations: targetDestinations, t
   if (!bestFit) {
     selectedTier = 'ultraBudget';
     bestFit = { tier: 'ultraBudget', cost: minPossible };
-    warnings = `Your budget of ₹${userBudget.toLocaleString()} is very tight for this trip. The absolute minimum realistic cost is approx ₹${minPossible.total.toLocaleString()}. We will plan a shoestring budget trip.`;
+    warnings = `Your budget of ₹${Number(userBudget || 0).toLocaleString()} is very tight for this trip. The absolute minimum realistic cost is approx ₹${Number(minPossible.total || 0).toLocaleString()}. We will plan a shoestring budget trip.`;
   } else {
     // We want to pick the highest tier they can afford
     selectedTier = bestFit.tier;

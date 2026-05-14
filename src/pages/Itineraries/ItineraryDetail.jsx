@@ -7,6 +7,7 @@ import {
   ChevronRight, Wallet, RotateCcw, Copy, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { calculateSmartBudget } from '../../services/aiService';
 import toast from 'react-hot-toast';
 
 // ─── Time slot options ────────────────────────────────────────────────────────
@@ -97,11 +98,11 @@ const ActivityCard = ({ act, dayIndex, actIndex, onEdit, onDelete }) => {
 
 // ─── Budget card ──────────────────────────────────────────────────────────────
 const BudgetBar = ({ label, amount, total, color }) => {
-  const pct = Math.round((amount / total) * 100);
+  const pct = total ? Math.round((Number(amount || 0) / Number(total || 1)) * 100) : 0;
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between text-xs font-bold text-slate-500">
-        <span>{label}</span><span>₹{amount.toLocaleString('en-IN')}</span>
+        <span>{label}</span><span>₹{Number(amount || 0).toLocaleString('en-IN')}</span>
       </div>
       <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
         <motion.div
@@ -133,16 +134,35 @@ const ItineraryDetail = () => {
     const data = JSON.parse(localStorage.getItem('travista_itineraries')) || [];
     const found = data.find(t => String(t.id) === String(id));
     if (found) {
+      let needsMigration = false;
       // Normalise old format (plan array) → new format (days array)
       if (found.plan && !found.days) {
         found.days = found.plan.map((text, i) => ({
           day: i + 1,
           activities: [{ id: `${found.id}-${i}-0`, time: 'Morning', title: text.replace(/^Day \d+:\s*/, '') }]
         }));
-        found.budget = { stay: 18000, food: 6000, travel: 12000, activities: 5000, total: 41000 };
+        needsMigration = true;
       }
+      
+      // Migrate old fake budgets to realistic smart budgets
+      if (!found.budget || found.budget.total < 50000 || needsMigration) {
+        found.budget = calculateSmartBudget(
+          [found.destination], 
+          found.days?.length || 3, 
+          found.travelers || 2, 
+          found.style || 'Comfort'
+        );
+        needsMigration = true;
+      }
+
       setTrip(found);
       setDestInput(found.destination);
+      
+      // Auto-save the migrated data quietly so it fixes it globally for this user
+      if (needsMigration) {
+        const updated = data.map(t => String(t.id) === String(id) ? found : t);
+        localStorage.setItem('travista_itineraries', JSON.stringify(updated));
+      }
     }
   }, [id]);
 
@@ -317,15 +337,15 @@ const ItineraryDetail = () => {
 
               <div className="flex flex-wrap gap-3 text-sm">
                 <span className="flex items-center gap-1.5 text-slate-500 font-medium">
-                  <Calendar className="w-4 h-4" /> {trip.days.length} Days
+                  <Calendar className="w-4 h-4" /> {(trip.days || []).length} Days
                 </span>
                 <span className="flex items-center gap-1.5 text-slate-500 font-medium">
                   <Clock className="w-4 h-4" />
-                  {trip.days.reduce((acc, d) => acc + d.activities.length, 0)} Activities
+                  {(trip.days || []).reduce((acc, d) => acc + (d.activities || []).length, 0)} Activities
                 </span>
                 {trip.budget && (
                   <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
-                    <Wallet className="w-4 h-4" /> ₹{trip.budget.total.toLocaleString('en-IN')} est.
+                    <Wallet className="w-4 h-4" /> ₹{Number(trip.budget.total || 0).toLocaleString('en-IN')} est.
                   </span>
                 )}
               </div>
@@ -376,7 +396,7 @@ const ItineraryDetail = () => {
           {/* Day Switcher */}
           <div className="space-y-2 print:hidden">
             <p className="text-xs font-black uppercase tracking-widest text-slate-400 px-2 mb-3">Days</p>
-            {trip.days.map((d, i) => (
+            {(trip.days || []).map((d, i) => (
               <button key={i} onClick={() => setActiveDay(i)}
                 className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-sm transition-all ${
                   activeDay === i
@@ -385,7 +405,7 @@ const ItineraryDetail = () => {
                 }`}>
                 <span>Day {d.day}</span>
                 <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${activeDay === i ? 'bg-white/20' : 'bg-slate-100 text-slate-400'}`}>
-                  {d.activities.length}
+                  {(d.activities || []).length}
                 </span>
               </button>
             ))}
@@ -453,13 +473,18 @@ const ItineraryDetail = () => {
         {trip.budget && (
           <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-slate-900">Budget Estimate</h3>
-              <span className="text-2xl font-black text-emerald-600">₹{trip.budget.total.toLocaleString('en-IN')}</span>
+              <div>
+                <h3 className="text-lg font-black text-slate-900">Budget Estimate</h3>
+                <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest">
+                  Avg. ₹{Number(Math.round((trip.budget.total || 0) / Math.max(trip.days?.length || 1, 1))).toLocaleString('en-IN')} / Day
+                </p>
+              </div>
+              <span className="text-2xl font-black text-emerald-600">₹{Number(trip.budget.total || 0).toLocaleString('en-IN')}</span>
             </div>
             <div className="space-y-4">
               <BudgetBar label="Stay / Accommodation" amount={trip.budget.stay} total={trip.budget.total} color="bg-emerald-400" />
               <BudgetBar label="Food & Dining" amount={trip.budget.food} total={trip.budget.total} color="bg-amber-400" />
-              <BudgetBar label="Travel & Transport" amount={trip.budget.travel} total={trip.budget.total} color="bg-sky-400" />
+              <BudgetBar label="Travel & Transport" amount={trip.budget.transport || trip.budget.travel} total={trip.budget.total} color="bg-sky-400" />
               <BudgetBar label="Activities & Experiences" amount={trip.budget.activities} total={trip.budget.total} color="bg-violet-400" />
             </div>
           </div>

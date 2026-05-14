@@ -70,7 +70,7 @@ const AlertCard = ({ alert, onDelete }) => {
         <div className="flex items-end gap-4 mb-6">
           <div>
             <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">Target Price</div>
-            <div className="text-xl font-bold text-slate-800 dark:text-slate-200">₹{alert.targetPrice.toLocaleString()}</div>
+            <div className="text-xl font-bold text-slate-800 dark:text-slate-200">₹{Number(alert.targetPrice || 0).toLocaleString()}</div>
           </div>
           <div className="h-8 w-px bg-slate-200 dark:bg-slate-700 mx-2" />
           <div>

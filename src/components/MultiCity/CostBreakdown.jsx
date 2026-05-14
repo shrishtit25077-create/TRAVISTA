@@ -40,7 +40,7 @@ export const CostBreakdown = ({ budget, breakdown }) => {
             <div className="w-3 h-3 rounded-full mt-1 shrink-0" style={{ backgroundColor: item.color }} />
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
-              <span className="text-xs font-bold text-slate-900">₹{item.value.toLocaleString()}</span>
+              <span className="text-xs font-bold text-slate-900">₹{Number(item.value || 0).toLocaleString()}</span>
               <span className="text-[9px] font-bold text-slate-400">{((item.value / total) * 100).toFixed(0)}%</span>
             </div>
           </div>
@@ -50,11 +50,11 @@ export const CostBreakdown = ({ budget, breakdown }) => {
       <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-end">
         <div>
           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Target Budget</span>
-          <span className="text-sm font-bold text-slate-500">₹{budget.toLocaleString()}</span>
+          <span className="text-sm font-bold text-slate-500">₹{Number(budget || 0).toLocaleString()}</span>
         </div>
         <div className="text-right">
           <span className="text-[10px] font-black text-[#1D9E75] uppercase tracking-widest block mb-1">Estimated Total</span>
-          <span className="text-2xl font-black text-slate-900">₹{total.toLocaleString()}</span>
+          <span className="text-2xl font-black text-slate-900">₹{Number(total || 0).toLocaleString()}</span>
         </div>
       </div>
     </div>

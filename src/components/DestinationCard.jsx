@@ -34,7 +34,7 @@ function PriceAlertModal({ item, onClose }) {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      toast.success(`Alert set for ${item.name}! We'll notify you if it drops below ₹${Math.floor(item.price * 0.9).toLocaleString('en-IN')}`);
+      toast.success(`Alert set for ${item.name}! We'll notify you if it drops below ₹${Number(Math.floor((item.price || 0) * 0.9)).toLocaleString('en-IN')}`);
       onClose();
     }, 800);
   };

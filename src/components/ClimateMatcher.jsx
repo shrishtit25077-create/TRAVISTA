@@ -35,7 +35,7 @@ const ClimateMatcher = () => {
     setResults('');
     const prompt = `Suggest 5 travel destinations from India for someone who:
 - Prefers ${temp}°C temperature
-- Has a budget of ₹${budget.toLocaleString()}
+- Has a budget of ₹${Number(budget || 0).toLocaleString()}
 - Wants to travel in ${month || 'any month'}
 Return a clean numbered list with destination name, best temp, and one-line reason. Keep it concise.`;
     const res = await callAI(prompt);
@@ -90,7 +90,7 @@ Return a clean numbered list with destination name, best temp, and one-line reas
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest flex justify-between">
                   <span><Wallet size={12} className="inline mr-1" />Budget</span>
-                  <span className="text-slate-700 dark:text-slate-300">₹{budget.toLocaleString()}</span>
+                  <span className="text-slate-700 dark:text-slate-300">₹{Number(budget || 0).toLocaleString()}</span>
                 </label>
                 <input
                   type="range" min={10000} max={300000} step={5000} value={budget}

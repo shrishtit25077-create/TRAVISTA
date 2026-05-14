@@ -82,21 +82,54 @@ export const AuthProvider = ({ children }) => {
     });
   }, []);
 
+  const migrateBudgets = async (trips) => {
+    let modified = false;
+    const { calculateSmartBudget } = await import('../services/aiService');
+    const updated = trips.map(t => {
+      if (!t.budget || t.budget.total < 50000) {
+        modified = true;
+        t.budget = calculateSmartBudget(
+          [t.destination || ''], 
+          t.days?.length || 3, 
+          t.travelers || 2, 
+          t.style || 'Comfort'
+        );
+      }
+      return t;
+    });
+    return { updated, modified };
+  };
+
   const [itineraries, setItineraries] = useState(() => {
     try {
       const stored = localStorage.getItem("travista_itineraries");
-      return stored ? JSON.parse(stored) : [];
+      const parsed = stored ? JSON.parse(stored) : [];
+      return parsed;
     } catch {
       return [];
     }
   });
 
   useEffect(() => {
+    const checkAndMigrate = async () => {
+      if (itineraries.length > 0) {
+        const { updated, modified } = await migrateBudgets(itineraries);
+        if (modified) {
+          setItineraries(updated);
+          localStorage.setItem("travista_itineraries", JSON.stringify(updated));
+        }
+      }
+    };
+    checkAndMigrate();
+  }, [itineraries.length]);
+
+  useEffect(() => {
     if (user) {
       import('../services/db').then(({ getTrips }) => {
-        getTrips().then(data => {
-          setItineraries(data);
-          localStorage.setItem("travista_itineraries", JSON.stringify(data));
+        getTrips().then(async data => {
+          const { updated, modified } = await migrateBudgets(data);
+          setItineraries(updated);
+          localStorage.setItem("travista_itineraries", JSON.stringify(updated));
         });
       });
     } else {

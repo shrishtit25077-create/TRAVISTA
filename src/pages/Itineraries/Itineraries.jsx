@@ -1,153 +1,138 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
-import { Trash2, Edit2, Map, Calendar, Users, DollarSign, Clock, CheckSquare, ChevronRight, Activity, Navigation, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { Trash2, Edit2, Calendar, MapPin, DollarSign, Clock, ChevronRight, Activity, Navigation, Globe, Plus, AlertCircle } from 'lucide-react';
+import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
 
-const CountdownBanner = ({ itineraries }) => {
-  const [closestTrip, setClosestTrip] = useState(null);
-  const [timeLeft, setTimeLeft] = useState('');
-  const [checkedItems, setCheckedItems] = useState({});
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('travista_checklist');
-      if (stored) setCheckedItems(JSON.parse(stored));
-    } catch (e) { }
-  }, []);
-
-  const toggleCheck = (id) => {
-    const newChecked = { ...checkedItems, [id]: !checkedItems[id] };
-    setCheckedItems(newChecked);
-    localStorage.setItem('travista_checklist', JSON.stringify(newChecked));
-  };
-
-  useEffect(() => {
-    // find upcoming trip
-    const tripsWithDates = itineraries.filter(t => t.travelDate);
-    if (!tripsWithDates.length) {
-      setClosestTrip(null);
-      return;
-    }
-
-    const now = new Date();
-    let closest = null;
-    let minDiff = Infinity;
-
-    tripsWithDates.forEach(t => {
-      const date = new Date(t.travelDate);
-      const diff = date - now;
-      if (diff > 0 && diff < minDiff) {
-        minDiff = diff;
-        closest = { ...t, diff };
-      }
-    });
-
-    setClosestTrip(closest);
-  }, [itineraries]);
-
-  useEffect(() => {
-    if (!closestTrip) return;
-    const interval = setInterval(() => {
-      const now = new Date();
-      const date = new Date(closestTrip.travelDate);
-      const diff = date - now;
-      if (diff <= 0) {
-        setTimeLeft('Trip Started!');
-        return;
-      }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const mins = Math.floor((diff / 1000 / 60) % 60);
-      const secs = Math.floor((diff / 1000) % 60);
-      setTimeLeft(`${days}d ${hours}h ${mins}m ${secs}s`);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [closestTrip]);
-
-  if (!closestTrip) return null;
-
-  const daysUntil = Math.floor(closestTrip.diff / (1000 * 60 * 60 * 24));
+const TripCard = ({ trip, idx, confirmDelete, navigate }) => {
+  const { photoUrl } = useDestinationPhoto(trip.destination?.split(',')[0]);
+  
+  const daysArray = Array.isArray(trip.days) ? trip.days : [];
+  const dayCount = daysArray.length;
+  const activityCount = daysArray.reduce((acc, d) => acc + (Array.isArray(d.activities) ? d.activities.length : 0), 0);
+  
+  const budgetFormatted = (trip.budget && typeof trip.budget.total === 'number' && !isNaN(trip.budget.total)) 
+    ? `₹ ${trip.budget.total.toLocaleString('en-IN')}` 
+    : null;
 
   return (
-    <div className="bg-slate-900 rounded-[2.5rem] p-8 md:p-10 shadow-2xl shadow-slate-900/10 text-white relative overflow-hidden group mb-12 border border-slate-800">
-      <div className="absolute -right-20 -top-20 w-80 h-80 bg-emerald-500 rounded-full blur-[80px] opacity-20 group-hover:opacity-40 transition-opacity duration-700 pointer-events-none" />
-      <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-blue-500 rounded-full blur-[80px] opacity-10 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none" />
-      
-      <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10">
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10 shadow-lg shadow-black/20">
-              <Clock className="w-7 h-7 text-emerald-400" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-1">Next Adventure</h3>
-              <p className="text-2xl font-bold text-white capitalize">{closestTrip.destination}</p>
-            </div>
-          </div>
-          <div className="bg-black/20 rounded-3xl p-6 border border-white/5 backdrop-blur-sm">
-             <div className="text-5xl md:text-6xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200 drop-shadow-sm">{timeLeft || 'Calculating...'}</div>
-          </div>
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: idx * 0.05 }}
+      onClick={() => navigate(`/itinerary/${trip.id}`)}
+      className="group relative bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full"
+    >
+      {/* Premium Image Header */}
+      <div className="relative h-48 w-full bg-slate-900 overflow-hidden">
+        {photoUrl ? (
+          <img src={photoUrl} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" alt={trip.destination} />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-teal-900/40 group-hover:scale-105 transition-transform duration-700" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        {/* Floating Actions */}
+        <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300 z-20">
+          <button 
+            onClick={(e) => { e.stopPropagation(); navigate(`/itinerary/${trip.id}`); }}
+            className="w-8 h-8 bg-white/20 hover:bg-white text-white hover:text-emerald-600 backdrop-blur-md rounded-full flex items-center justify-center transition-colors shadow-sm"
+          >
+            <Edit2 size={14} />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); confirmDelete(trip); }}
+            className="w-8 h-8 bg-white/20 hover:bg-white text-white hover:text-rose-500 backdrop-blur-md rounded-full flex items-center justify-center transition-colors shadow-sm"
+          >
+            <Trash2 size={14} />
+          </button>
         </div>
 
-        <div className="bg-white/5 rounded-3xl p-6 md:p-8 border border-white/10 backdrop-blur-md">
-          <h4 className="text-xs font-black uppercase tracking-widest text-emerald-400 mb-5 flex items-center gap-2">
-            <CheckSquare className="w-4 h-4" /> Smart Checklist
-          </h4>
-          <div className="space-y-4">
-            <label className={`flex items-start gap-4 cursor-pointer group/chk ${daysUntil <= 28 ? 'opacity-100' : 'opacity-40 select-none'}`}>
-              <div className="mt-0.5"><input type="checkbox" disabled={daysUntil > 28} checked={checkedItems['chk1'] || false} onChange={() => toggleCheck('chk1')} className="w-5 h-5 accent-emerald-500 rounded-lg cursor-pointer" /></div>
-              <span className="font-bold text-sm text-slate-200 group-hover/chk:text-white transition-colors">4+ weeks before: Book flights & hotels</span>
-            </label>
-            <label className={`flex items-start gap-4 cursor-pointer group/chk ${daysUntil <= 14 ? 'opacity-100' : 'opacity-40 select-none'}`}>
-              <div className="mt-0.5"><input type="checkbox" disabled={daysUntil > 14} checked={checkedItems['chk2'] || false} onChange={() => toggleCheck('chk2')} className="w-5 h-5 accent-emerald-500 rounded-lg cursor-pointer" /></div>
-              <span className="font-bold text-sm text-slate-200 group-hover/chk:text-white transition-colors">2 weeks before: Apply for visa, get travel insurance</span>
-            </label>
-            <label className={`flex items-start gap-4 cursor-pointer group/chk ${daysUntil <= 7 ? 'opacity-100' : 'opacity-40 select-none'}`}>
-              <div className="mt-0.5"><input type="checkbox" disabled={daysUntil > 7} checked={checkedItems['chk3'] || false} onChange={() => toggleCheck('chk3')} className="w-5 h-5 accent-emerald-500 rounded-lg cursor-pointer" /></div>
-              <span className="font-bold text-sm text-slate-200 group-hover/chk:text-white transition-colors">1 week before: Pack clothes, download offline maps</span>
-            </label>
-          </div>
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+          <h3 className="text-2xl font-bold text-white leading-tight drop-shadow-md line-clamp-2">
+            {trip.destination}
+          </h3>
+          <p className="text-white/80 text-sm font-medium mt-1 flex items-center gap-1.5 drop-shadow-md">
+            <Calendar size={14} /> {dayCount} Days <span className="mx-1 opacity-50">•</span> {activityCount} Activities
+          </p>
         </div>
       </div>
-    </div>
+
+      <div className="p-6 flex flex-col flex-1 bg-white relative z-10">
+        {/* Timeline Preview */}
+        <div className="space-y-3 flex-1 mb-6">
+          {daysArray.slice(0, 3).map((d, i) => (
+            <div key={i} className="flex gap-3 items-start group/item">
+              <div className="w-8 h-8 bg-slate-50 text-slate-400 group-hover/item:bg-emerald-50 group-hover/item:text-emerald-600 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 transition-colors">
+                D{d.day}
+              </div>
+              <p className="text-sm font-medium text-slate-600 line-clamp-2 pt-1">
+                {d.activities?.[0]?.title || 'Explore local sights'}
+              </p>
+            </div>
+          ))}
+          {dayCount > 3 && (
+            <div className="pl-11 pt-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">+ {dayCount - 3} more days</span>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="pt-5 border-t border-slate-100 flex items-center justify-between mt-auto">
+          {budgetFormatted ? (
+            <div className="flex items-center gap-1.5 text-emerald-600">
+              <DollarSign size={16} />
+              <span className="text-xs font-bold">{budgetFormatted} est.</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <Clock size={16} />
+              <span className="text-xs font-bold">Budget Pending</span>
+            </div>
+          )}
+
+          <button 
+            onClick={(e) => { e.stopPropagation(); navigate(`/itinerary/${trip.id}`); }}
+            className="text-xs font-bold text-slate-900 hover:text-emerald-600 uppercase tracking-widest transition-colors flex items-center gap-1"
+          >
+            Open <ChevronRight size={14} />
+          </button>
+        </div>
+      </div>
+    </motion.div>
   );
 };
 
 export default function Itineraries() {
-  const { itineraries, deleteItinerary, setItineraries, loading } = useAuth();
+  const { itineraries, deleteItinerary, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Deduplicate and filter out corrupted trips
-  const validTrips = React.useMemo(() => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedTripToDelete, setSelectedTripToDelete] = useState(null);
+
+  // Strictly valid trips (removing broken/corrupted data)
+  // Removed overzealous deduplication so all saved trips stay persistent
+  const validTrips = useMemo(() => {
     if (!itineraries) return [];
-    
-    // Filter corrupted/empty
-    const filtered = itineraries.filter(trip => {
+    return itineraries.filter(trip => {
       if (!trip || !trip.destination || trip.destination.trim() === '') return false;
       const daysArray = Array.isArray(trip.days) ? trip.days : [];
       if (daysArray.length === 0) return false;
       return true;
     });
-
-    // Deduplicate by destination + roughly same dates (or just ID dedupe)
-    // We will deduplicate exactly identical destinations generated recently to avoid spam.
-    const seen = new Set();
-    const unique = [];
-    for (const trip of filtered) {
-      const dedupeKey = trip.destination.toLowerCase().trim();
-      if (!seen.has(dedupeKey)) {
-        seen.add(dedupeKey);
-        unique.push(trip);
-      }
-    }
-    
-    return unique;
   }, [itineraries]);
 
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedTripToDelete, setSelectedTripToDelete] = useState(null);
+  // Derived Stats
+  const totalTrips = validTrips.length;
+  const uniqueCountries = new Set(validTrips.map(t => {
+    const parts = t.destination.split(',');
+    return parts[parts.length - 1].trim();
+  })).size;
+  const totalDays = validTrips.reduce((acc, t) => acc + (Array.isArray(t.days) ? t.days.length : 0), 0);
 
   const confirmDelete = (trip) => {
     setSelectedTripToDelete(trip);
@@ -162,186 +147,155 @@ export default function Itineraries() {
     }
   };
 
-  // Format currency securely
-  const formatBudget = (budgetObj) => {
-    if (!budgetObj || typeof budgetObj.total !== 'number' || isNaN(budgetObj.total)) return null;
-    return `₹ ${budgetObj.total.toLocaleString('en-IN')}`;
-  };
-
   return (
-    <div className="min-h-screen px-4 sm:px-6 md:px-8 py-8 md:py-16 pb-24 md:pb-32 bg-[#fafaf9] transition-colors duration-300 relative">
-      <div className="max-w-7xl mx-auto space-y-12">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 font-sans selection:bg-emerald-500/30">
+      <div className="max-w-7xl mx-auto px-6 md:px-8 py-10 md:py-16 space-y-10 md:space-y-16">
+        
+        {/* ─── PREMIUM HEADER & STATS ────────────────────────────────────────── */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 border-b border-slate-200 dark:border-slate-800 pb-10">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                Travel Wallet
+              </span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white leading-[1.1]">
+              My Itineraries
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-xl">
+              Manage your upcoming adventures, past journeys, and AI-curated travel plans securely in one place.
+            </p>
+          </div>
 
-        <div className="space-y-4">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-none text-slate-900">
-            My <span className="text-emerald-600">Itineraries</span>
-          </h1>
-          <p className="text-lg md:text-xl text-slate-500 font-medium max-w-2xl">
-            Your personalized travel plans and upcoming adventures safely stored in your travel wallet.
-          </p>
+          <div className="flex flex-wrap gap-4 lg:gap-8">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-6 py-4 flex flex-col justify-center min-w-[120px] shadow-sm">
+              <span className="text-3xl font-black text-slate-900 dark:text-white leading-none mb-1">{totalTrips}</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Planned Trips</span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-6 py-4 flex flex-col justify-center min-w-[120px] shadow-sm">
+              <span className="text-3xl font-black text-slate-900 dark:text-white leading-none mb-1">{uniqueCountries}</span>
+              <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Destinations</span>
+            </div>
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl px-6 py-4 flex flex-col justify-center min-w-[120px] shadow-sm">
+              <span className="text-3xl font-black text-emerald-600 leading-none mb-1">{totalDays}</span>
+              <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold">Travel Days</span>
+            </div>
+          </div>
         </div>
 
-        {/* Countdown Banner */}
-        <CountdownBanner itineraries={validTrips} />
-
+        {/* ─── LOADING STATE ─────────────────────────────────────────────────── */}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1,2,3].map(i => (
-              <div key={i} className="animate-pulse bg-white rounded-3xl p-8 border border-slate-100 h-80">
-                <div className="w-1/2 h-8 bg-slate-100 rounded-lg mb-4"></div>
-                <div className="w-full h-4 bg-slate-50 rounded mb-2"></div>
-                <div className="w-3/4 h-4 bg-slate-50 rounded mb-8"></div>
-                <div className="w-full h-24 bg-slate-50 rounded-2xl"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-100 dark:border-slate-800 h-[400px] flex flex-col">
+                <div className="w-full h-40 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-6"></div>
+                <div className="w-3/4 h-6 bg-slate-100 dark:bg-slate-800 rounded mb-4"></div>
+                <div className="w-1/2 h-4 bg-slate-100 dark:bg-slate-800 rounded mb-8"></div>
+                <div className="space-y-3 mt-auto">
+                  <div className="w-full h-10 bg-slate-100 dark:bg-slate-800 rounded-xl"></div>
+                </div>
               </div>
             ))}
           </div>
         ) : validTrips.length === 0 ? (
+          
+          /* ─── PREMIUM EMPTY STATE ──────────────────────────────────────────── */
           <motion.div 
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="py-24 md:py-32 text-center space-y-8 bg-white/50 backdrop-blur-xl rounded-[3rem] border border-white shadow-xl shadow-slate-200/20 relative overflow-hidden"
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full bg-white dark:bg-slate-900 rounded-[3rem] border border-slate-200 dark:border-slate-800 p-12 md:p-24 text-center relative overflow-hidden shadow-sm flex flex-col items-center justify-center min-h-[500px]"
           >
-            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-50 rounded-full blur-3xl -mr-48 -mt-48 opacity-50" />
-            <div className="relative z-10 w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-slate-200/50 border border-slate-50 rotate-3 hover:rotate-0 transition-transform">
-              <Map className="w-10 h-10 text-emerald-500" />
+            <div className="absolute top-1/2 left-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
+            
+            <div className="relative z-10 w-20 h-20 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-8 border border-slate-100 dark:border-slate-700 shadow-sm">
+              <Globe className="w-8 h-8 text-emerald-500" />
             </div>
-            <div className="relative z-10 space-y-3">
-              <h3 className="text-3xl font-black text-slate-900 tracking-tight">No trips planned yet.</h3>
-              <p className="text-slate-500 font-medium text-lg max-w-md mx-auto">Design your first premium itinerary using our AI-powered trip architect.</p>
-            </div>
+            <h3 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white tracking-tight mb-4">
+              No journeys planned yet.
+            </h3>
+            <p className="text-slate-500 dark:text-slate-400 font-medium text-lg max-w-md mx-auto mb-10 leading-relaxed">
+              Start creating your dream adventure with Travista AI. Generate personalized, day-by-day itineraries instantly.
+            </p>
+            
             <button
               onClick={() => navigate('/planner')}
-              className="relative z-10 mt-4 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:bg-emerald-600 hover:shadow-emerald-500/20 transition-all flex items-center justify-center gap-3 mx-auto active:scale-95"
+              className="relative z-10 px-8 py-4 bg-slate-900 dark:bg-emerald-500 text-white rounded-full font-bold uppercase tracking-widest text-xs hover:bg-slate-800 dark:hover:bg-emerald-400 transition-all shadow-xl hover:shadow-2xl flex items-center gap-3 active:scale-[0.98]"
             >
-              Create First Journey <ChevronRight size={18} />
+              <Plus size={16} /> Create New Trip
             </button>
           </motion.div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+
+          /* ─── GRID LAYOUT ──────────────────────────────────────────────────── */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             <AnimatePresence>
-              {validTrips.map((trip, idx) => {
-                const daysArray = Array.isArray(trip.days) ? trip.days : [];
-                const dayCount = daysArray.length;
-                const activityCount = daysArray.reduce((acc, d) => acc + (Array.isArray(d.activities) ? d.activities.length : 0), 0);
-                const budgetFormatted = formatBudget(trip.budget);
-
-                return (
-                  <motion.div
-                    key={trip.id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: idx * 0.05 }}
-                    onClick={() => navigate(`/itinerary/${trip.id}`)}
-                    className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/20 hover:shadow-2xl hover:shadow-slate-300/30 transition-all group cursor-pointer relative overflow-hidden flex flex-col h-full"
-                  >
-                    {/* Hover Glow */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-3xl opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none" />
-                    
-                    <div className="flex justify-between items-start mb-6 relative z-10">
-                      <div className="space-y-3">
-                        <h2 className="text-2xl font-black text-slate-900 tracking-tight capitalize leading-tight group-hover:text-emerald-600 transition-colors line-clamp-2">
-                          {trip.destination}
-                        </h2>
-                        
-                        <div className="flex flex-wrap gap-2">
-                          <span className="flex items-center gap-1.5 text-slate-600 font-bold bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl text-[10px] uppercase tracking-widest">
-                            <Calendar className="w-3 h-3" /> {dayCount} Days
-                          </span>
-                          <span className="flex items-center gap-1.5 text-slate-600 font-bold bg-slate-50 border border-slate-100 px-3 py-1.5 rounded-xl text-[10px] uppercase tracking-widest">
-                            <Activity className="w-3 h-3" /> {activityCount} Activities
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Floating Actions */}
-                      <div className="flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0 -mt-2 -mr-2 bg-white/80 backdrop-blur-md p-2 rounded-2xl shadow-sm border border-slate-100">
-                        <button onClick={(e) => { e.stopPropagation(); navigate(`/itinerary/${trip.id}`); }}
-                          className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); confirmDelete(trip); }}
-                          className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Preview Timeline */}
-                    <div className="space-y-3 relative z-10 flex-1">
-                      {daysArray.slice(0, 3).map((d, i) => (
-                        <div key={i} className="flex gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:border-emerald-100 transition-colors">
-                          <div className="w-12 shrink-0 pt-0.5">
-                            <span className="font-black text-emerald-600 text-[10px] uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded-lg">D{d.day}</span>
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-slate-700 font-bold text-sm line-clamp-1">{d.activities?.[0]?.title || 'Explore local sights'}</p>
-                          </div>
-                        </div>
-                      ))}
-                      {dayCount > 3 && (
-                        <div className="text-center pt-2">
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">+ {dayCount - 3} more days</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 relative z-10">
-                      
-                      {/* Dynamic Budget Badge */}
-                      {budgetFormatted ? (
-                        <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl border border-emerald-100">
-                          <DollarSign className="w-4 h-4" />
-                          <span className="text-xs font-black uppercase tracking-widest">{budgetFormatted} est.</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 bg-slate-50 text-slate-500 px-4 py-2 rounded-xl border border-slate-200">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-xs font-black uppercase tracking-widest">Budget Pending</span>
-                        </div>
-                      )}
-
-                      <button onClick={(e) => { e.stopPropagation(); navigate('/planner', { state: { tripId: trip.id } }); }}
-                        className="w-full xl:w-auto text-[10px] font-black bg-slate-900 text-white hover:bg-emerald-600 uppercase tracking-widest px-4 py-3 rounded-xl transition-colors flex items-center justify-center gap-2">
-                        Open Planner <ExternalLink size={14} />
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
+              {validTrips.map((trip, idx) => (
+                <TripCard 
+                  key={trip.id} 
+                  trip={trip} 
+                  idx={idx} 
+                  confirmDelete={confirmDelete} 
+                  navigate={navigate} 
+                />
+              ))}
             </AnimatePresence>
+            
+            {/* Quick Add Card */}
+            <motion.div
+              layout
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              onClick={() => navigate('/planner')}
+              className="group bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-emerald-400 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/10 transition-all duration-300 cursor-pointer flex flex-col items-center justify-center min-h-[400px] text-center p-8"
+            >
+              <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100 dark:border-slate-700 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 text-slate-400">
+                <Plus className="w-6 h-6" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-emerald-700 transition-colors">Plan Another Trip</h3>
+              <p className="text-slate-500 text-sm font-medium px-4">Use AI to generate a brand new personalized itinerary.</p>
+            </motion.div>
           </div>
         )}
-
       </div>
 
-      {/* ── Delete Confirmation Modal ── */}
+      {/* ─── DELETE CONFIRMATION MODAL ─────────────────────────────────────── */}
       <AnimatePresence>
         {showDeleteModal && selectedTripToDelete && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
-            onClick={() => setShowDeleteModal(false)}>
-            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
+            onClick={() => setShowDeleteModal(false)}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }} 
+              animate={{ scale: 1, y: 0 }} 
+              exit={{ scale: 0.95, opacity: 0 }}
               onClick={e => e.stopPropagation()}
-              className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl space-y-6">
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto border border-red-100">
-                <Trash2 className="w-7 h-7 text-red-500" />
+              className="bg-white dark:bg-slate-900 rounded-[2rem] p-8 max-w-sm w-full shadow-2xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center"
+            >
+              <div className="w-16 h-16 bg-rose-50 dark:bg-rose-500/10 rounded-full flex items-center justify-center mb-6 border border-rose-100 dark:border-rose-500/20">
+                <AlertCircle className="w-8 h-8 text-rose-500" />
               </div>
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-black text-slate-900">Delete this trip?</h3>
-                <p className="text-slate-400 text-sm font-medium">
-                  "<span className="font-bold text-slate-700">{selectedTripToDelete.destination}</span>" will be permanently removed.
-                </p>
-                <p className="text-[10px] uppercase tracking-widest font-black text-red-400 pt-2">This action cannot be undone.</p>
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 transition-all text-sm">
+              
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight mb-2">Delete Itinerary?</h3>
+              <p className="text-slate-500 dark:text-slate-400 font-medium mb-8 leading-relaxed">
+                Are you sure you want to permanently delete your trip to <strong className="text-slate-900 dark:text-white">"{selectedTripToDelete.destination}"</strong>? This cannot be undone.
+              </p>
+              
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={() => setShowDeleteModal(false)}
+                  className="flex-1 py-3.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm uppercase tracking-widest"
+                >
                   Cancel
                 </button>
-                <button onClick={handleDelete}
-                  className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-all shadow-lg shadow-red-500/20 text-sm">
-                  Delete Trip
+                <button 
+                  onClick={handleDelete}
+                  className="flex-1 py-3.5 rounded-xl bg-rose-500 text-white font-bold hover:bg-rose-600 transition-all shadow-md shadow-rose-500/20 text-sm uppercase tracking-widest"
+                >
+                  Delete
                 </button>
               </div>
             </motion.div>

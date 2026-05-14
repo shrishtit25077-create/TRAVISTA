@@ -81,21 +81,79 @@ export async function generateTrip(prompt) {
   }
 }
 
+// Realistic Pricing Engine Configuration
+const destinationPricing = {
+  paris: { base: 120000, hotelMultiplier: 1.8, foodMultiplier: 1.5, activityMultiplier: 1.6 },
+  newyork: { base: 150000, hotelMultiplier: 2.2, foodMultiplier: 1.8, activityMultiplier: 1.7 },
+  london: { base: 130000, hotelMultiplier: 2.0, foodMultiplier: 1.7, activityMultiplier: 1.6 },
+  tokyo: { base: 140000, hotelMultiplier: 1.9, foodMultiplier: 1.6, activityMultiplier: 1.5 },
+  switzerland: { base: 180000, hotelMultiplier: 2.5, foodMultiplier: 2.0, activityMultiplier: 1.8 },
+  dubai: { base: 90000, hotelMultiplier: 1.6, foodMultiplier: 1.4, activityMultiplier: 1.5 },
+  singapore: { base: 85000, hotelMultiplier: 1.5, foodMultiplier: 1.3, activityMultiplier: 1.4 },
+  bali: { base: 50000, hotelMultiplier: 0.8, foodMultiplier: 0.7, activityMultiplier: 0.9 },
+  thailand: { base: 45000, hotelMultiplier: 0.7, foodMultiplier: 0.6, activityMultiplier: 0.8 },
+  vietnam: { base: 35000, hotelMultiplier: 0.5, foodMultiplier: 0.5, activityMultiplier: 0.6 },
+  nepal: { base: 25000, hotelMultiplier: 0.4, foodMultiplier: 0.4, activityMultiplier: 0.5 },
+  goa: { base: 30000, hotelMultiplier: 0.6, foodMultiplier: 0.5, activityMultiplier: 0.6 },
+  manali: { base: 20000, hotelMultiplier: 0.4, foodMultiplier: 0.4, activityMultiplier: 0.5 },
+  default: { base: 80000, hotelMultiplier: 1.0, foodMultiplier: 1.0, activityMultiplier: 1.0 }
+};
+
+export function calculateSmartBudget(destinations, totalDaysRaw, travelersRaw, style) {
+  const travelers = Number(travelersRaw) || 1;
+  const totalDays = Number(totalDaysRaw) || 3;
+  const destName = ((destinations && destinations[0]) || '').toLowerCase().replace(/\s+/g, '');
+  const pricing = destinationPricing[destName] || 
+                 Object.keys(destinationPricing).find(k => destName.includes(k)) ? 
+                 destinationPricing[Object.keys(destinationPricing).find(k => destName.includes(k))] : 
+                 destinationPricing.default;
+
+  // Base daily costs per person in INR
+  const baseDailyHotel = 4000 * pricing.hotelMultiplier;
+  const baseDailyFood = 2000 * pricing.foodMultiplier;
+  const baseDailyActivity = 1500 * pricing.activityMultiplier;
+  
+  // Style multipliers
+  const styleMultiplier = style === 'Luxury' ? 2.5 : style === 'Comfort' ? 1.5 : 0.8;
+  
+  // Travelers multiplier (slight discount per person for groups)
+  const groupDiscount = Math.max(0.7, 1 - ((travelers - 1) * 0.05));
+  
+  // Calculate breakdown
+  // Hotel is per room, assume 2 people per room
+  const roomsNeeded = Math.ceil(travelers / 2);
+  const stayCost = Math.round(baseDailyHotel * styleMultiplier * totalDays * roomsNeeded);
+  
+  const foodCost = Math.round(baseDailyFood * styleMultiplier * totalDays * travelers * groupDiscount);
+  const activitiesCost = Math.round(baseDailyActivity * styleMultiplier * totalDays * travelers * groupDiscount);
+  
+  // Transport (Intercity + Local)
+  // We assume flights are booked separately, so transport is local trains/cabs + minor intercity
+  const baseLocalTransport = 1500 * pricing.hotelMultiplier * styleMultiplier * totalDays * travelers * groupDiscount;
+  let intercityCost = 2000;
+  if (['paris', 'newyork', 'london', 'tokyo', 'switzerland'].some(k => destName.includes(k))) intercityCost = 10000;
+  else if (['dubai', 'singapore', 'bali', 'thailand', 'vietnam'].some(k => destName.includes(k))) intercityCost = 4000;
+  
+  intercityCost = intercityCost * travelers * (style === 'Luxury' ? 2 : style === 'Comfort' ? 1.3 : 1);
+  const transportCost = Math.round(baseLocalTransport + intercityCost);
+  
+  const total = stayCost + foodCost + activitiesCost + transportCost;
+
+  return { total, stay: stayCost, food: foodCost, transport: transportCost, activities: activitiesCost };
+}
+
 export async function generateItinerary(params) {
-  // Map the new structured UI params to the generateTrip string prompt
   const prompt = `From ${params.origin} to ${params.destinations.join(', ')} for ${params.travelers} people. Style: ${params.style}. Transport: ${params.modeLabel}.`;
   
+  let itinerary;
   try {
-    // Attempt the user's provided backend function first
-    return await generateTrip(prompt);
+    itinerary = await generateTrip(prompt);
   } catch (e) {
-    // Fallback Mock data to keep the UI working dynamically
     const dest = params.destinations[0] || 'Unknown';
     const destLower = dest.toLowerCase();
     
     let activities = [];
     let localTips = ["Tipping is usually 10%", "Public transport is reliable", "Tap water is safe"];
-    let baseBudget = 125000;
     
     if (destLower.includes('goa')) {
       activities = [
@@ -104,23 +162,6 @@ export async function generateItinerary(params) {
         { time: "Evening", title: "Sunset Cruise & Tito's Lane", desc: "Experience a sunset cruise followed by nightlife at Tito's." }
       ];
       localTips = ["Rent a scooter for easy travel", "Try the Goan fish curry", "Bargain at flea markets"];
-      baseBudget = 45000;
-    } else if (destLower.includes('kyoto')) {
-      activities = [
-        { time: "Morning", title: "Fushimi Inari Shrine", desc: "Hike through the iconic thousands of vermilion torii gates." },
-        { time: "Afternoon", title: "Matcha Tasting & Tea House", desc: "Experience a traditional tea ceremony." },
-        { time: "Evening", title: "Gion District Walk", desc: "Stroll through the historic geisha district at dusk." }
-      ];
-      localTips = ["Buy a Pasmo/Suica card", "Learn basic Japanese bowing etiquette", "Book temples early"];
-      baseBudget = 140000;
-    } else if (destLower.includes('iceland') || destLower.includes('reykjavik')) {
-      activities = [
-        { time: "Morning", title: "Golden Circle Tour", desc: "Visit geysers, waterfalls, and national parks." },
-        { time: "Afternoon", title: "Glacier Hiking", desc: "Explore the ancient ice formations." },
-        { time: "Evening", title: "Northern Lights Chase", desc: "Drive out of the city to hunt for the Aurora Borealis." }
-      ];
-      localTips = ["Dress in layers", "Rent a 4x4 if driving outside ring road", "Alcohol is expensive, buy at duty-free"];
-      baseBudget = 220000;
     } else if (destLower.includes('paris')) {
       activities = [
         { time: "Morning", title: "Louvre Museum", desc: "See the Mona Lisa and classical art masterpieces." },
@@ -128,48 +169,39 @@ export async function generateItinerary(params) {
         { time: "Evening", title: "Seine River Cruise", desc: "See the Eiffel Tower sparkling from the water." }
       ];
       localTips = ["Learn 'Bonjour' and 'Merci'", "Beware of pickpockets near tourist sites", "Book Eiffel tower tickets months ahead"];
-      baseBudget = 160000;
     } else {
-      // Generic random
       activities = [
         { time: "Morning", title: `Explore Central ${dest}`, desc: `Walk around the main squares and landmarks of ${dest}.` },
         { time: "Afternoon", title: "Local Culinary Tour", desc: "Taste the best street food and local delicacies." },
         { time: "Evening", title: "City Viewpoint", desc: "Watch the sunset from the highest point in the city." }
       ];
-      baseBudget = 80000 + Math.floor(Math.random() * 100000);
     }
     
-    // Scale budget by travelers and style
-    const multiplier = params.travelers * (params.style === 'Luxury' ? 2 : params.style === 'Budget' ? 0.6 : 1);
-    const total = Math.round(baseBudget * multiplier);
-    const transportCost = Math.round(total * 0.25);
-    const stayCost = Math.round(total * 0.45);
-    const foodCost = Math.round(total * 0.2);
-    const activitiesCost = total - transportCost - stayCost - foodCost;
-
     const dynamicLabels = [
       `Optimized for ${params.style.toLowerCase()}`,
       Math.random() > 0.5 ? "Best weather week" : "Low crowd timing",
       params.travelers === 1 ? "Popular among solo travelers" : `Perfect for ${params.travelers} people`
     ];
 
-    return {
+    itinerary = {
       title: `Epic Journey to ${dest}`,
       labels: dynamicLabels,
-      budget: { total, transport: transportCost, stay: stayCost, food: foodCost, activities: activitiesCost },
-      days: [
-        {
-          day: 1,
-          title: `Discovering ${dest}`,
-          activities: activities
-        }
-      ],
+      days: Array.from({ length: params.totalDays || 3 }).map((_, i) => ({
+        day: i + 1,
+        title: `Day ${i + 1} in ${dest}`,
+        activities: activities
+      })),
       tips: {
         packing: ["Comfortable walking shoes", "Camera and spare batteries", "Weather-appropriate clothing", "Universal power adapter"],
         local: localTips
       }
     };
   }
+
+  // OVERRIDE BUDGET WITH SMART DESTINATION PRICING
+  itinerary.budget = calculateSmartBudget(params.destinations, params.totalDays || itinerary.days?.length || 3, params.travelers, params.style);
+  
+  return itinerary;
 }
 
 

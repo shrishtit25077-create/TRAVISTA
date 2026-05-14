@@ -373,6 +373,10 @@ export default function AIPlanner() {
       const route = await getRoute(coords, formData.transport);
       setRouteData(route);
 
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      const totalDays = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1) || 3;
+
       toast.loading('🤖 AI is building your itinerary...', { id: 'planner' });
       const itinerary = await generateItinerary({
         origin: formData.startLocation,
@@ -380,6 +384,7 @@ export default function AIPlanner() {
         travelers: formData.travelers,
         style: formData.style,
         modeLabel: formData.transport,
+        totalDays: totalDays
       });
 
       setPlan(itinerary);
@@ -610,7 +615,7 @@ export default function AIPlanner() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Distance</p>
-                          <p className="text-base md:text-lg font-black text-slate-800">{routeData.distance.toLocaleString('en-IN')} <span className="text-xs text-slate-400">km</span></p>
+                          <p className="text-base md:text-lg font-black text-slate-800">{Number(routeData.distance || 0).toLocaleString('en-IN')} <span className="text-xs text-slate-400">km</span></p>
                         </div>
                         <div>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Est. Travel Time</p>
