@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Heart, MapPin, Star, CloudSun, Clock, Globe, Shield, Wifi, Calendar, Wallet, Navigation, Camera, Utensils, Music, Map } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart, MapPin, Star, CloudSun, Clock, Globe, Shield, Wifi, Calendar, Wallet, Navigation, Camera, Utensils, Map as MapIcon } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useDestinationPhoto } from '../../hooks/useDestinationPhoto';
 import { track } from '../../services/trackingService';
@@ -30,11 +30,11 @@ export default function DestinationDetail() {
         <div className="w-24 h-24 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-slate-200/20 dark:shadow-none">
           <MapPin className="w-10 h-10 text-emerald-500" />
         </div>
-        <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2 tracking-tight">Destination Not Found</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">Destination Not Found</h1>
         <p className="text-slate-500 font-medium mb-8 text-center max-w-sm">We couldn't load the details for this destination. Let's find somewhere else to explore.</p>
         <button 
           onClick={() => navigate('/explore')}
-          className="px-8 py-4 bg-slate-900 dark:bg-emerald-500 hover:bg-slate-800 dark:hover:bg-emerald-400 text-white rounded-full font-black uppercase tracking-widest text-[11px] transition-all"
+          className="px-8 py-3.5 bg-slate-900 dark:bg-emerald-500 hover:bg-slate-800 dark:hover:bg-emerald-400 text-white rounded-full font-bold uppercase tracking-widest text-xs transition-all shadow-md"
         >
           Return to Explore
         </button>
@@ -62,99 +62,89 @@ export default function DestinationDetail() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#fcfdfe] dark:bg-slate-950 font-sans selection:bg-emerald-500/30">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-slate-950 font-sans selection:bg-emerald-500/30">
       
       {/* ─── SECTION 1: CINEMATIC HERO ────────────────────────────────────── */}
-      <div className="relative h-[85vh] w-full overflow-hidden group">
+      {/* Reduced height from h-[85vh] to a tighter, cinematic banner height */}
+      <div className="relative h-[40vh] sm:h-[50vh] md:h-[55vh] w-full overflow-hidden group">
         <div className="absolute inset-0 bg-slate-900">
           <motion.img 
-            initial={{ scale: 1.1 }}
+            initial={{ scale: 1.05 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 1.5, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             src={photoUrl || data.image} 
-            className="w-full h-full object-cover opacity-80"
+            className="w-full h-full object-cover opacity-90"
             alt={data.name}
           />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/90" />
+        {/* Softer gradient for better text readability and premium feel */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
 
         {/* Top Nav */}
-        <div className="absolute top-0 left-0 right-0 p-6 md:p-8 flex justify-between items-center z-20">
-          <button onClick={() => navigate(-1)} className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-colors">
+        <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-20">
+          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-black/20 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-slate-900 transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <button onClick={() => toggleSave(data)} className={`w-12 h-12 rounded-full backdrop-blur-md border transition-colors flex items-center justify-center ${isSaved ? 'bg-rose-500 border-rose-500 text-white' : 'bg-white/10 border-white/20 text-white hover:bg-white hover:text-rose-500 hover:border-white'}`}>
-            <Heart className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`} />
+          <button onClick={() => toggleSave(data)} className={`w-10 h-10 rounded-full backdrop-blur-md border transition-colors flex items-center justify-center ${isSaved ? 'bg-rose-500 border-rose-500 text-white' : 'bg-black/20 border-white/20 text-white hover:bg-white hover:text-rose-500 hover:border-white'}`}>
+            <Heart className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
           </button>
         </div>
 
-        {/* Hero Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-16 lg:p-24 z-20 flex flex-col justify-end h-full">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.8 }}>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="px-3 py-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-[10px] font-black uppercase tracking-[0.2em] text-white">
-                {data.category || "Premium Destination"}
-              </span>
-              <span className="flex items-center gap-1 text-amber-300 font-bold text-sm">
-                <Star className="w-4 h-4 fill-amber-300" /> {data.rating || 4.8}
-              </span>
-            </div>
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9] mb-4">
-              {cityName}
-            </h1>
-            {countryName && (
-              <p className="text-xl md:text-2xl font-light text-white/80 tracking-wide mb-8 italic">
-                {data.tagline || `Experience the magic of ${countryName}.`}
-              </p>
-            )}
-
-            {/* Floating Quick Stats */}
-            <div className="flex flex-wrap items-center gap-4 md:gap-8 mt-4 pt-8 border-t border-white/20">
-              <div className="text-white">
-                <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">Avg Budget</p>
-                <p className="text-lg md:text-xl font-black">{data.price || "₹80k"}</p>
+        {/* Hero Content - Tighter padding and margins */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 z-20 flex flex-col justify-end">
+          <div className="max-w-6xl mx-auto w-full">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.6 }}>
+              <div className="flex items-center gap-2.5 mb-3">
+                <span className="px-3 py-1 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-[10px] font-bold uppercase tracking-widest text-white">
+                  {data.category || "Premium"}
+                </span>
+                <span className="flex items-center gap-1 text-amber-300 font-bold text-sm bg-black/20 backdrop-blur-sm px-2 py-1 rounded-full border border-white/10">
+                  <Star className="w-3.5 h-3.5 fill-amber-300" /> {data.rating || 4.8}
+                </span>
               </div>
-              <div className="text-white">
-                <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">Ideal Duration</p>
-                <p className="text-lg md:text-xl font-black">5 - 7 Days</p>
-              </div>
-              <div className="text-white">
-                <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold mb-1">Best Season</p>
-                <p className="text-lg md:text-xl font-black">{data.weather || "Autumn"}</p>
-              </div>
-            </div>
-          </motion.div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1] mb-2">
+                {cityName}
+              </h1>
+              {countryName && (
+                <p className="text-lg md:text-xl font-medium text-white/90 tracking-wide">
+                  {data.tagline || `Experience the magic of ${countryName}.`}
+                </p>
+              )}
+            </motion.div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 md:px-12 lg:px-24 py-16 md:py-24 space-y-24 md:space-y-32">
+      {/* Main Content Container - Tighter width and section gaps */}
+      <div className="max-w-6xl mx-auto px-6 md:px-10 py-10 md:py-16 space-y-16 md:space-y-20">
         
         {/* ─── SECTION 2: DESTINATION OVERVIEW ──────────────────────────────── */}
-        <section className="grid grid-cols-1 md:grid-cols-12 gap-12 items-center">
-          <div className="md:col-span-5 space-y-6">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-center">
+          <div className="md:col-span-5 space-y-5">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
               A journey unlike any other.
             </h2>
-            <p className="text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+            <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
               {data.description || `${cityName} offers an unparalleled blend of vibrant culture, stunning landscapes, and unforgettable experiences. Whether you are seeking profound spiritual calm or heart-racing adventure, this destination promises to captivate your soul and leave you breathless.`}
             </p>
-            <div className="flex flex-wrap gap-2 pt-4">
+            <div className="flex flex-wrap gap-2 pt-2">
               {(data.tags || ["luxury", "culture", "scenic"]).map(tag => (
-                <span key={tag} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full text-xs font-bold uppercase tracking-widest">
+                <span key={tag} className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-[11px] font-semibold uppercase tracking-wider border border-slate-200 dark:border-slate-700">
                   {tag}
                 </span>
               ))}
             </div>
           </div>
           <div className="md:col-span-7 grid grid-cols-2 gap-4">
-            <img src={gallery[0]} className="w-full h-64 object-cover rounded-[2rem] rounded-tr-none shadow-xl" alt="" />
-            <img src={gallery[1]} className="w-full h-64 object-cover rounded-[2rem] rounded-bl-none shadow-xl mt-8" alt="" />
+            <img src={gallery[0]} className="w-full h-56 md:h-64 object-cover rounded-2xl rounded-tr-none shadow-sm" alt="" />
+            <img src={gallery[1]} className="w-full h-56 md:h-64 object-cover rounded-2xl rounded-bl-none shadow-sm mt-6 md:mt-8" alt="" />
           </div>
         </section>
 
         {/* ─── SECTION 3: QUICK TRAVEL INFO ─────────────────────────────────── */}
         <section>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {/* Tighter grid gap and crisp, high-contrast cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: Globe, label: "Language", value: "English, Local" },
               { icon: Wallet, label: "Currency", value: data.currency || "USD" },
@@ -163,15 +153,15 @@ export default function DestinationDetail() {
               { icon: Wifi, label: "Internet", value: "Fast & Available" },
               { icon: Clock, label: "Time Zone", value: "GMT+5:30" },
               { icon: Calendar, label: "Best Time", value: "Oct - March" },
-              { icon: Map, label: "Visa", value: "On Arrival" }
+              { icon: MapIcon, label: "Visa", value: "On Arrival" }
             ].map((info, i) => (
-              <div key={i} className="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-6 rounded-[2rem] flex flex-col gap-4 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-xl hover:-translate-y-1">
-                <div className="w-10 h-10 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl flex items-center justify-center">
-                  <info.icon size={18} />
+              <div key={i} className="bg-white dark:bg-slate-900 border border-zinc-200 dark:border-slate-800 p-5 rounded-2xl flex flex-col gap-3 transition-all hover:shadow-md hover:-translate-y-0.5">
+                <div className="w-8 h-8 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-700">
+                  <info.icon size={14} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">{info.label}</p>
-                  <p className="text-sm font-bold text-slate-900 dark:text-white">{info.value}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-0.5">{info.label}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{info.value}</p>
                 </div>
               </div>
             ))}
@@ -179,25 +169,24 @@ export default function DestinationDetail() {
         </section>
 
         {/* ─── SECTION 4: TOP ATTRACTIONS ───────────────────────────────────── */}
-        <section className="space-y-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">Must-Visit Spots</h2>
-              <p className="text-slate-500 font-medium mt-2">Curated highlights you simply cannot miss.</p>
-            </div>
+        <section className="space-y-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Must-Visit Spots</h2>
+            <p className="text-slate-500 font-normal text-sm mt-1">Curated highlights you simply cannot miss.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {attractions.map((attr, i) => (
-              <div key={i} className="group relative h-96 rounded-[2.5rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500">
-                <img src={attr.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/20 to-transparent opacity-80" />
-                <div className="absolute inset-0 p-8 flex flex-col justify-end">
-                  <div className="flex items-center gap-1 mb-2 bg-black/40 backdrop-blur-md w-fit px-3 py-1.5 rounded-full border border-white/20">
-                    <Star size={10} className="fill-amber-400 text-amber-400" />
-                    <span className="text-xs font-bold text-white">{attr.rating}</span>
+              <div key={i} className="group relative h-72 md:h-80 rounded-2xl overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300">
+                <img src={attr.img} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+                {/* Improved overlay contrast for premium feel */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                  <div className="flex items-center gap-1.5 mb-2 bg-black/30 backdrop-blur-md w-fit px-2.5 py-1 rounded-full border border-white/20">
+                    <Star size={10} className="fill-white text-white" />
+                    <span className="text-[11px] font-bold text-white">{attr.rating}</span>
                   </div>
-                  <h3 className="text-2xl font-black text-white mb-2">{attr.title}</h3>
-                  <p className="text-sm text-white/80 font-medium line-clamp-2">{attr.desc}</p>
+                  <h3 className="text-xl font-bold text-white mb-1.5 leading-tight">{attr.title}</h3>
+                  <p className="text-xs text-white/80 font-normal line-clamp-2">{attr.desc}</p>
                 </div>
               </div>
             ))}
@@ -205,33 +194,38 @@ export default function DestinationDetail() {
         </section>
 
         {/* ─── SECTION 5 & 6: EXPERIENCES & FOOD ─────────────────────────────── */}
-        <section className="bg-slate-900 rounded-[3rem] p-8 md:p-16 text-white overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-16">
-            <div className="space-y-8">
-              <div className="w-14 h-14 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400">
-                <Camera size={24} />
+        {/* Tighter padding, smaller border-radius, more balanced scale */}
+        <section className="bg-slate-900 dark:bg-slate-950 rounded-3xl p-8 md:p-12 text-white border border-slate-800 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-16">
+            <div className="space-y-6">
+              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white border border-white/10 shadow-inner">
+                <Camera size={20} />
               </div>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight">Curated Experiences</h2>
-              <p className="text-slate-400 leading-relaxed font-medium">From sunset cruises to hidden mountain trails, we've cataloged the most breathtaking activities to elevate your trip from ordinary to unforgettable.</p>
-              <ul className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight mb-2">Curated Experiences</h2>
+                <p className="text-slate-400 text-sm leading-relaxed font-normal">From sunset cruises to hidden mountain trails, we've cataloged the most breathtaking activities to elevate your trip from ordinary to unforgettable.</p>
+              </div>
+              <ul className="space-y-3">
                 {['Local Guided Tours', 'Sunset Viewpoints', 'Historic Walks', 'Nightlife & Bars'].map(item => (
-                  <li key={item} className="flex items-center gap-3 font-bold text-sm text-slate-300">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500" /> {item}
+                  <li key={item} className="flex items-center gap-3 font-medium text-sm text-slate-300">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> {item}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="space-y-8">
-              <div className="w-14 h-14 bg-amber-500/20 rounded-full flex items-center justify-center text-amber-400">
-                <Utensils size={24} />
+            <div className="space-y-6">
+              <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-white border border-white/10 shadow-inner">
+                <Utensils size={20} />
               </div>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight">Food & Culture</h2>
-              <p className="text-slate-400 leading-relaxed font-medium">Taste the soul of {cityName}. Discover bustling street food markets, hidden local cafes, and Michelin-starred dining experiences that define the regional palette.</p>
-              <ul className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight mb-2">Food & Culture</h2>
+                <p className="text-slate-400 text-sm leading-relaxed font-normal">Taste the soul of {cityName}. Discover bustling street food markets, hidden local cafes, and Michelin-starred dining experiences that define the regional palette.</p>
+              </div>
+              <ul className="space-y-3">
                 {['Authentic Street Food', 'Fine Dining', 'Local Cafes', 'Traditional Markets'].map(item => (
-                  <li key={item} className="flex items-center gap-3 font-bold text-sm text-slate-300">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" /> {item}
+                  <li key={item} className="flex items-center gap-3 font-medium text-sm text-slate-300">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400" /> {item}
                   </li>
                 ))}
               </ul>
@@ -240,51 +234,52 @@ export default function DestinationDetail() {
         </section>
 
         {/* ─── SECTION 8: PHOTO GALLERY ─────────────────────────────────────── */}
-        <section className="space-y-10">
-          <h2 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight text-center">Visual Story</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 h-[600px]">
-            <div className="col-span-2 row-span-2 rounded-[2rem] overflow-hidden group relative">
+        <section className="space-y-6 md:space-y-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight text-center">Visual Story</h2>
+          {/* Reduced height for better viewport composition */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 h-[350px] md:h-[400px]">
+            <div className="col-span-2 row-span-2 rounded-2xl overflow-hidden group relative bg-slate-100">
               <img src={gallery[2]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
-              <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             </div>
-            <div className="rounded-[2rem] overflow-hidden group relative">
+            <div className="rounded-2xl overflow-hidden group relative bg-slate-100">
               <img src={gallery[3]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
             </div>
-            <div className="rounded-[2rem] overflow-hidden group relative">
+            <div className="rounded-2xl overflow-hidden group relative bg-slate-100">
               <img src={gallery[4]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
             </div>
-            <div className="col-span-2 rounded-[2rem] overflow-hidden group relative">
+            <div className="col-span-2 rounded-2xl overflow-hidden group relative bg-slate-100">
               <img src={gallery[0]} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
             </div>
           </div>
         </section>
 
         {/* ─── SECTION 10: AI TRIP PLANNER CTA ──────────────────────────────── */}
-        <section className="pt-12">
-          <div className="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-[3rem] p-10 md:p-20 text-center relative overflow-hidden shadow-2xl shadow-emerald-500/20">
-            {/* Background decorative elements */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-black/10 rounded-full blur-3xl translate-y-1/3 -translate-x-1/3" />
+        <section className="pt-8 pb-12">
+          {/* Compact premium banner layout */}
+          <div className="bg-slate-900 dark:bg-slate-950 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden shadow-xl border border-slate-800">
+            {/* Subtle glow instead of giant colorful gradient */}
+            <div className="absolute top-1/2 left-1/2 w-full h-full bg-gradient-radial from-emerald-500/20 to-transparent -translate-x-1/2 -translate-y-1/2 opacity-50 pointer-events-none" />
             
-            <div className="relative z-10 max-w-2xl mx-auto space-y-8 flex flex-col items-center">
-              <div className="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-full flex items-center justify-center text-white border border-white/30 shadow-xl">
-                <Navigation size={28} className="transform -rotate-45" />
+            <div className="relative z-10 max-w-xl mx-auto flex flex-col items-center">
+              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center text-white border border-white/20 mb-6 shadow-sm">
+                <Navigation size={20} className="transform -rotate-45" />
               </div>
               
-              <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
-                Ready to experience {cityName} your way?
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight mb-3">
+                Experience {cityName} your way.
               </h2>
               
-              <p className="text-lg text-emerald-50 font-medium">
+              <p className="text-sm text-slate-300 font-normal mb-8 leading-relaxed">
                 Let Travista AI instantly design a personalized, day-by-day itinerary perfectly matched to your budget, travel style, and duration.
               </p>
               
               <button 
                 onClick={() => navigate('/planner', { state: { destInput: data.name } })}
-                className="mt-4 px-10 py-5 bg-slate-900 hover:bg-black text-white rounded-full font-black uppercase tracking-widest text-sm transition-all shadow-2xl flex items-center gap-3 group active:scale-[0.98]"
+                className="px-8 py-3.5 bg-white text-slate-900 hover:bg-slate-50 rounded-full font-bold uppercase tracking-widest text-xs transition-all shadow-lg flex items-center gap-2.5 group active:scale-[0.98]"
               >
-                Design My AI Trip
-                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                Design My Trip
+                <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           </div>
