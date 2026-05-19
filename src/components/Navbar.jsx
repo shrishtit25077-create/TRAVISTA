@@ -107,7 +107,7 @@ const Navbar = ({ searchTerm, setSearchTerm, onMenuClick }) => {
   return (
     <>
       {/* Main Navbar */}
-      <div className="top-navbar sticky top-0 z-[100] flex items-center gap-3 px-4 md:px-6 py-3 border-b"
+      <div className="top-navbar sticky top-0 z-[100] flex items-center gap-3 px-4 md:px-8 py-3 border-b"
         style={{ background: 'var(--card-bg)', borderColor: 'var(--border)' }}>
 
         {/* Hamburger — mobile/tablet only */}
@@ -180,7 +180,7 @@ const Navbar = ({ searchTerm, setSearchTerm, onMenuClick }) => {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="md:hidden overflow-hidden z-[99] sticky top-[57px] border-b"
+            className="md:hidden overflow-hidden z-[99] sticky top-[60px] border-b"
             style={{ background: 'var(--card-bg)', borderColor: 'var(--border)' }}
           >
             <div className="p-3 relative" ref={wrapperRef}>

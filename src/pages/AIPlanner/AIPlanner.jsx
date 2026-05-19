@@ -462,93 +462,103 @@ export default function AIPlanner() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full h-[calc(100vh-56px)] bg-[#fafaf9] overflow-hidden">
+    <div className="flex flex-col md:flex-row w-full bg-[#fafaf9]">
       <style>{`
         .hide-scrollbar::-webkit-scrollbar { display: none; }
       `}</style>
       {/* ─── Left Sidebar: Input Form ─── */}
-      <aside className="w-full md:w-[400px] shrink-0 h-full overflow-y-auto bg-white border-r border-slate-100 p-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30 flex flex-col transition-transform duration-300 ease-out" style={{ WebkitOverflowScrolling: 'touch', transform: 'translate3d(0,0,0)' }}>
-        <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-3 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
-            <Navigation size={18} />
-          </div>
-          Trip Studio
-        </h2>
-
-        <div className="space-y-4 flex-1">
-          <DestinationAutocomplete
-            label="Starting Location"
-            value={formData.startLocation}
-            onChange={v => setFormData({ ...formData, startLocation: v })}
-            placeholder="E.g. New Delhi, India"
-          />
-
-          <div className="space-y-2">
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Destinations</label>
-            {formData.destinations.map((dest, i) => (
-              <DestinationAutocomplete
-                key={i}
-                value={dest}
-                onChange={v => handleDestChange(i, v)}
-                placeholder={`Destination ${i + 1}`}
-              />
-            ))}
-            <button onClick={handleAddDestination} className="text-emerald-600 text-[11px] font-black uppercase tracking-wider mt-1 hover:text-emerald-700 flex items-center gap-1 transition-colors">
-              + Add Stop
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Start Date</label>
-              <input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
+      <aside
+        className="w-full md:w-[400px] shrink-0 bg-white border-r border-slate-100 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-30 planner-sidebar"
+      >
+        {/* Inner padding wrapper */}
+        <div className="flex flex-col p-6">
+          <h2 className="text-xl font-black text-slate-900 mb-4 flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
+              <Navigation size={18} />
             </div>
-            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">End Date</label>
-              <input type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
-            </div>
-          </div>
+            Trip Studio
+          </h2>
 
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Travelers</label>
-            <select value={formData.travelers} onChange={e => setFormData({ ...formData, travelers: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 appearance-none">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <option key={n} value={n}>{n} Person{n > 1 ? 's' : ''}</option>)}
-            </select>
-          </div>
+          <div className="space-y-4 flex-1">
+            <DestinationAutocomplete
+              label="Starting Location"
+              value={formData.startLocation}
+              onChange={v => setFormData({ ...formData, startLocation: v })}
+              placeholder="E.g. New Delhi, India"
+            />
 
-          <TransportSelector
-            selected={formData.transport}
-            onChange={v => setFormData({ ...formData, transport: v })}
-            distance={routeData?.distance || 0}
-          />
-
-          <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Travel Style</label>
-            <div className="flex flex-wrap gap-2.5">
-              {['Adventure', 'Relaxing', 'Cultural', 'Food', 'Luxury', 'Budget'].map(style => (
-                <button
-                  key={style}
-                  onClick={() => setFormData({ ...formData, style })}
-                  className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${formData.style === style ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
-                >
-                  {style}
-                </button>
+            <div className="space-y-2">
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Destinations</label>
+              {formData.destinations.map((dest, i) => (
+                <DestinationAutocomplete
+                  key={i}
+                  value={dest}
+                  onChange={v => handleDestChange(i, v)}
+                  placeholder={`Destination ${i + 1}`}
+                />
               ))}
+              <button onClick={handleAddDestination} className="text-emerald-600 text-[11px] font-black uppercase tracking-wider mt-1 hover:text-emerald-700 flex items-center gap-1 transition-colors">
+                + Add Stop
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Start Date</label>
+                <input type="date" value={formData.startDate} onChange={e => setFormData({ ...formData, startDate: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">End Date</label>
+                <input type="date" value={formData.endDate} onChange={e => setFormData({ ...formData, endDate: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500" />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Travelers</label>
+              <select value={formData.travelers} onChange={e => setFormData({ ...formData, travelers: e.target.value })} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-emerald-500 appearance-none">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map(n => <option key={n} value={n}>{n} Person{n > 1 ? 's' : ''}</option>)}
+              </select>
+            </div>
+
+            <TransportSelector
+              selected={formData.transport}
+              onChange={v => setFormData({ ...formData, transport: v })}
+              distance={routeData?.distance || 0}
+            />
+
+            <div>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Travel Style</label>
+              <div className="flex flex-wrap gap-2.5">
+                {['Adventure', 'Relaxing', 'Cultural', 'Food', 'Luxury', 'Budget'].map(style => (
+                  <button
+                    key={style}
+                    onClick={() => setFormData({ ...formData, style })}
+                    className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all ${
+                      formData.style === style ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                    }`}
+                  >
+                    {style}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
 
-        <button
-          onClick={handleGenerate}
-          disabled={loading || hydrating}
-          className="w-full h-12 mt-4 bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shrink-0"
-        >
-          {loading || hydrating ? <Loader2 size={16} className="animate-spin" /> : (location.state?.tripId ? 'Regenerate Itinerary' : 'Generate Itinerary')}
-        </button>
+          <button
+            onClick={handleGenerate}
+            disabled={loading || hydrating}
+            className="w-full h-12 mt-4 bg-emerald-500 text-white font-black text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100 shrink-0"
+          >
+            {loading || hydrating
+              ? <Loader2 size={16} className="animate-spin" />
+              : (location.state?.tripId ? 'Regenerate Itinerary' : 'Generate Itinerary')
+            }
+          </button>
+        </div>
       </aside>
 
       {/* ─── Right Area: Results & Tabs ─── */}
-      <main className="flex-1 min-w-0 h-full overflow-y-auto flex flex-col bg-slate-50 relative" style={{ WebkitOverflowScrolling: 'touch', transform: 'translate3d(0,0,0)' }}>
+      <main className="flex-1 min-w-0 flex flex-col bg-slate-50 relative">
         {!plan ? (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 min-h-[600px] text-center bg-transparent w-full">
             {hydrating ? (
@@ -567,8 +577,9 @@ export default function AIPlanner() {
           </div>
         ) : (
           <>
-            <div className="bg-white px-4 md:px-6 pt-6 pb-4 border-b border-slate-200 shrink-0 sticky top-0 z-20">
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+            {/* ── Static header: title, meta, actions ── */}
+            <div className="bg-white px-4 md:px-6 pt-6 pb-4 border-b border-slate-100">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
                 <div>
                   {plan.labels && plan.labels.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -623,7 +634,10 @@ export default function AIPlanner() {
                   </button>
                 </div>
               </div>
+            </div>
 
+            {/* ── Sticky tabs-only bar ── */}
+            <div className="planner-tabs-bar px-4 md:px-6 py-0">
               <div className="flex gap-2 overflow-x-auto hide-scrollbar touch-pan-x">
                 {[
                   { id: 'map', label: 'Route Map', icon: MapIcon },
@@ -631,18 +645,18 @@ export default function AIPlanner() {
                   { id: 'budget', label: 'Budget', icon: DollarSign },
                   { id: 'tips', label: 'Local Tips', icon: Lightbulb }
                 ].map(tab => (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center whitespace-nowrap gap-2 px-5 py-3 font-black text-[10px] md:text-xs uppercase tracking-widest rounded-t-2xl transition-all ${activeTab === tab.id ? 'bg-slate-50 text-emerald-600 border-t border-x border-slate-200 shadow-[0_-4px_10px_rgb(0,0,0,0.02)]' : 'bg-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50/50'}`}>
-                    <tab.icon size={16} /> {tab.label}
+                  <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center whitespace-nowrap gap-2 px-5 py-3.5 font-black text-[10px] md:text-xs uppercase tracking-widest border-b-2 transition-all ${activeTab === tab.id ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-400 hover:text-slate-600 hover:border-slate-200'}`}>
+                    <tab.icon size={15} /> {tab.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div className="flex-1 bg-slate-50 relative overflow-hidden" style={{ minHeight: 500 }}>
+            <div className="flex-1 bg-slate-50 relative" style={{ minHeight: activeTab === 'map' ? 'calc(100vh - 200px)' : 'auto' }}>
 
               {activeTab === 'map' && (
                 routeData ? (
-                  <div className="absolute inset-0 z-[1]">
+                  <div className="absolute inset-0 z-[1] min-h-[500px]">
                     <RouteMap routeData={routeData} transport={formData.transport} />
                     <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 z-[1000] max-w-[calc(100vw-2rem)] md:max-w-sm pointer-events-none">
                       <motion.div
@@ -740,7 +754,7 @@ export default function AIPlanner() {
 
               {/* TAB 2: ITINERARY */}
               {activeTab === 'itinerary' && (
-                <div className="w-full px-4 md:px-6 py-6 space-y-6 pb-20 relative">
+                <div className="w-full px-4 md:px-6 pt-8 pb-24 space-y-6 relative">
                   <div className="absolute left-10 top-12 bottom-12 w-0.5 bg-slate-200/50 hidden md:block"></div>
                   {plan.days.map((day, idx) => (
                     <motion.div

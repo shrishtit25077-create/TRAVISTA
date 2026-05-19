@@ -44,14 +44,14 @@ const DashboardLayout = () => {
 
       {/* Main Scroll Container */}
       <main className="ml-0 lg:ml-[220px] flex-1 h-screen overflow-y-auto min-h-0 flex flex-col relative w-full bg-[#fcfdfe] dark:bg-slate-950">
-        <div className="shrink-0">
+        <div className="shrink-0 sticky top-0 z-[100] w-full">
           <Navbar
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             onMenuClick={() => setSidebarOpen(o => !o)}
           />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-h-0 relative">
           <Outlet context={{ searchTerm, setSearchTerm }} />
         </div>
       </main>

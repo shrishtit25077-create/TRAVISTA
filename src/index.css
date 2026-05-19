@@ -17,16 +17,16 @@
   --green-active-bg: #f0fdf4;
   --teal: #15803d;
 
+  /* Navbar height token — all sticky offsets reference this */
+  --navbar-h: 60px;
+
   /*
    * Warm cream with a whisper of cool blue — Apple ambient feel
-   * The blue radial glow is done via body::before pseudo-element
    */
   --bg-primary: #eeecea;
-  /* warm cream, very slight cool shift */
   --bg-secondary: #e6e4e1;
   --card-bg: #ffffff;
   --text-primary: #0d1117;
-  /* near-black — maximum hierarchy */
   --text-secondary: #4b5563;
   --border: #d6d4cd;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -209,16 +209,59 @@ section {
 
 /* ─── Navbar ──────────────────────────────────── */
 .top-navbar {
-  min-height: 56px;
+  height: var(--navbar-h);
   display: flex;
   align-items: center;
   position: sticky;
   top: 0;
   z-index: 100;
-  background: #ffffff; /* Solid background for performance */
+  background: #ffffff;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 2px 16px rgba(0, 0, 0, 0.04);
   width: 100%;
+  /* Smooth glassmorphism transition */
+  transition: box-shadow 0.25s ease, background 0.25s ease;
+}
+
+/* ─── Shared sticky bar styles ─────────────────── */
+/* Use this class on any sticky sub-header below the navbar */
+.travista-sticky-bar {
+  position: sticky;
+  top: var(--navbar-h);
+  z-index: 30;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.25s ease, background 0.25s ease;
+}
+
+/* ─── Planner Sidebar (desktop only) ──────────────
+   On mobile the sidebar scrolls with the page.
+   On desktop it's a fixed-height sticky panel.   */
+@media (min-width: 768px) {
+  .planner-sidebar {
+    position: sticky;
+    top: var(--navbar-h);
+    height: calc(100vh - var(--navbar-h));
+    overflow-y: auto;
+  }
+}
+
+/* ─── Planner Tabs Bar ────────────────────────────
+   Sticks directly below the navbar, never floats.  */
+.planner-tabs-bar {
+  position: sticky;
+  top: var(--navbar-h);
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.25s ease;
 }
 
 .navbar-search {
