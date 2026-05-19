@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Compass, Map, Sparkles, Calendar, Heart,
   User, Settings, LogOut, Globe, Bell, X, Plane, TrendingDown
@@ -6,7 +6,6 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import FlightPanel from '../pages/AIPlanner/FlightPanel';
 
 // ─── Nav Item ───────────────────────────────────────────────────────────────
 const NavItem = ({ icon: Icon, label, path, onClose }) => {
@@ -54,7 +53,6 @@ const Section = ({ title, children }) => (
 const SidebarContent = ({ onClose }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [flightPanelOpen, setFlightPanelOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -97,7 +95,7 @@ const SidebarContent = ({ onClose }) => {
         <Section title="AI Travel">
           <NavItem icon={Sparkles} label="AI Planner" path="/planner" onClose={onClose} />
           <button
-            onClick={() => { onClose?.(); setFlightPanelOpen(true); }}
+            onClick={() => { navigate('/flights'); onClose?.(); }}
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-700 dark:hover:text-blue-400 transition-all duration-200 group"
           >
             <Plane size={16} className="shrink-0 text-slate-400 dark:text-slate-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors duration-200" />
@@ -116,11 +114,7 @@ const SidebarContent = ({ onClose }) => {
           <NavItem icon={Settings} label="Settings" path="/settings" onClose={onClose} />
         </Section>
 
-        <AnimatePresence>
-          {flightPanelOpen && (
-            <FlightPanel plan={null} onClose={() => setFlightPanelOpen(false)} />
-          )}
-        </AnimatePresence>
+
       </div>
 
       {/* ── User Footer ── */}

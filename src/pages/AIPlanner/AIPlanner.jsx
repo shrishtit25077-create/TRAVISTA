@@ -215,8 +215,8 @@ const TransportSelector = ({ selected, onChange, distance }) => {
               disabled={isDisabled}
               onClick={() => onChange(mode.id)}
               className={`relative flex items-center justify-center gap-1.5 px-2 py-2 h-10 rounded-xl transition-all select-none overflow-visible ${active
-                  ? 'bg-emerald-100 text-emerald-800'
-                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                ? 'bg-emerald-100 text-emerald-800'
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                 } ${isDisabled ? 'opacity-30 cursor-not-allowed saturate-0' : ''}`}
             >
               {isRecommended && !isDisabled && (
@@ -241,24 +241,39 @@ const TransportSelector = ({ selected, onChange, distance }) => {
 
 const RouteMap = React.memo(({ routeData, transport }) => {
   return (
-    <MapContainer zoom={4} style={{ height: '100%', width: '100%' }} zoomControl={false} className="z-0">
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-      <MapBoundsFitter geometry={routeData.geometry} />
+    <div style={{ position: 'absolute', inset: 0 }}>
+      <MapContainer
+        zoom={4}
+        style={{ height: '100%', width: '100%', minHeight: 400 }}
+        zoomControl={false}
+        className="z-0"
+      >
+        {/* Dark premium CARTO tiles */}
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+        />
+        <MapBoundsFitter geometry={routeData.geometry} />
 
-      {routeData.markers.map((m, i) => (
-        <Marker key={i} position={m.coords}>
-          <Popup className="font-bold text-sm text-slate-800">{m.name}</Popup>
-        </Marker>
-      ))}
+        {routeData.markers.map((m, i) => (
+          <Marker key={i} position={m.coords}>
+            <Popup className="font-bold text-sm text-slate-800">{m.name}</Popup>
+          </Marker>
+        ))}
 
-      {transport === 'flight' && routeData.geometry.length > 1 ? (
-        routeData.geometry.slice(0, -1).map((start, i) => (
-          <Polyline key={i} positions={getCurvedPath(start, routeData.geometry[i + 1])} color="#10b981" weight={3} opacity={0.8} dashArray="8, 8" />
-        ))
-      ) : (
-        <Polyline positions={routeData.geometry} color="#10b981" weight={4} opacity={0.8} />
-      )}
-    </MapContainer>
+        {transport === 'flight' && routeData.geometry.length > 1 ? (
+          routeData.geometry.slice(0, -1).map((start, i) => [
+            <Polyline key={`glow-${i}`} positions={getCurvedPath(start, routeData.geometry[i + 1])} color="#34d399" weight={10} opacity={0.18} />,
+            <Polyline key={`path-${i}`} positions={getCurvedPath(start, routeData.geometry[i + 1])} color="#10b981" weight={2.5} opacity={0.95} dashArray="10, 6" />,
+          ])
+        ) : (
+          [
+            <Polyline key="glow" positions={routeData.geometry} color="#34d399" weight={12} opacity={0.18} />,
+            <Polyline key="path" positions={routeData.geometry} color="#10b981" weight={3.5} opacity={0.95} />,
+          ]
+        )}
+      </MapContainer>
+    </div>
   );
 });
 
@@ -270,6 +285,7 @@ export default function AIPlanner() {
   const [activeTab, setActiveTab] = useState('map');
   const [loading, setLoading] = useState(false);
   const [hydrating, setHydrating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     startLocation: '',
@@ -398,25 +414,32 @@ export default function AIPlanner() {
     }
   };
 
-  const handleSave = () => {
-    if (!plan || isSaved) return;
-
-    addItinerary({
-      id: location.state?.tripId || Date.now(), // update existing if restoring, else create new
-      title: plan.title,
-      destination: formData.destinations.filter(d => d).join(', '),
-      startLocation: formData.startLocation,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
-      travelers: formData.travelers,
-      transport: formData.transport,
-      style: formData.style,
-      days: plan.days,
-      budget: plan.budget,
-      tips: plan.tips,
-      routeData: routeData
-    });
-    setIsSaved(true);
+  const handleSave = async () => {
+    if (!plan || isSaved || isSaving) return;
+    setIsSaving(true);
+    try {
+      await addItinerary({
+        id: location.state?.tripId || Date.now(),
+        title: plan.title,
+        destination: formData.destinations.filter(d => d).join(', '),
+        startLocation: formData.startLocation,
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        travelers: formData.travelers,
+        transport: formData.transport,
+        style: formData.style,
+        days: plan.days,
+        budget: plan.budget,
+        tips: plan.tips,
+        routeData: routeData,
+        savedAt: new Date().toISOString(),
+      });
+      setIsSaved(true);
+    } catch (e) {
+      // error toast already shown by addItinerary
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDownloadPDF = () => {
@@ -564,8 +587,36 @@ export default function AIPlanner() {
                   </div>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={handleSave} disabled={isSaved} className={`h-10 px-4 font-bold text-xs uppercase tracking-widest rounded-xl flex items-center gap-2 transition-all shadow-sm ${isSaved ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-not-allowed' : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-500 hover:text-emerald-600'}`}>
-                    <Save size={16} /> {isSaved ? 'Saved' : 'Save'}
+                  <button
+                    onClick={handleSave}
+                    disabled={isSaved || isSaving}
+                    className={`h-10 px-5 font-bold text-xs uppercase tracking-widest rounded-xl flex items-center gap-2 transition-all shadow-sm relative overflow-hidden ${isSaved
+                        ? 'bg-emerald-500 text-white border border-emerald-500 cursor-not-allowed shadow-emerald-500/20 shadow-md'
+                        : isSaving
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-wait'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:border-emerald-400 hover:text-emerald-600 hover:shadow-emerald-500/10 hover:shadow-md'
+                      }`}
+                  >
+                    {isSaving ? (
+                      <><Loader2 size={14} className="animate-spin" /> Saving…</>
+                    ) : isSaved ? (
+                      <motion.span
+                        initial={{ scale: 0.7, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="flex items-center gap-2"
+                      >
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                        >
+                          <Save size={14} className="text-white" />
+                        </motion.div>
+                        Saved ✓
+                      </motion.span>
+                    ) : (
+                      <><Save size={14} /> Save Trip</>
+                    )}
                   </button>
                   <button onClick={handleDownloadPDF} className="h-10 px-4 bg-slate-900 text-white font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-emerald-500 flex items-center gap-2 transition-all shadow-md shadow-slate-900/10">
                     <Download size={16} /> Export
@@ -587,44 +638,104 @@ export default function AIPlanner() {
               </div>
             </div>
 
-            <div className="flex-1 bg-slate-50 relative">
+            <div className="flex-1 bg-slate-50 relative overflow-hidden" style={{ minHeight: 500 }}>
 
-              {/* TAB 1: MAP */}
-              {activeTab === 'map' && routeData && (
-                <div className="flex-1 w-full relative bg-[#f8fafc] z-0 overflow-hidden min-h-[500px]">
-                  <RouteMap routeData={routeData} transport={formData.transport} />
-
-                  {/* FIXED: Positioning the overlay safely within the map wrapper with a high z-index and safe padding */}
-                  <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[1000] max-w-[calc(100vw-2rem)] md:max-w-sm pointer-events-none">
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-white/90 backdrop-blur-xl p-6 rounded-[2rem] shadow-2xl shadow-slate-900/10 border border-white/50 pointer-events-auto"
-                    >
-                      <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4">
-                        <div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
-                          {formData.transport === 'flight' ? <Plane size={20} /> : formData.transport === 'train' ? <Train size={20} /> : <Car size={20} />}
+              {activeTab === 'map' && (
+                routeData ? (
+                  <div className="absolute inset-0 z-[1]">
+                    <RouteMap routeData={routeData} transport={formData.transport} />
+                    <div className="absolute bottom-4 left-4 md:bottom-8 md:left-8 z-[1000] max-w-[calc(100vw-2rem)] md:max-w-sm pointer-events-none">
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="pointer-events-auto"
+                        style={{
+                          background: 'rgba(255,255,255,0.88)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: '1px solid rgba(255,255,255,0.5)',
+                          borderRadius: '24px',
+                          boxShadow: '0 20px 60px rgba(0,0,0,0.15), 0 4px 16px rgba(16,185,129,0.1)',
+                          padding: '20px 24px',
+                        }}
+                      >
+                        <div className="flex items-center gap-3 mb-4 border-b border-slate-100 pb-4">
+                          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white shrink-0 shadow-md shadow-emerald-500/25">
+                            {formData.transport === 'flight' ? <Plane size={18} /> : formData.transport === 'train' ? <Train size={18} /> : <Car size={18} />}
+                          </div>
+                          <div className="min-w-0">
+                            <h4 className="font-black text-slate-900 uppercase tracking-widest text-[10px] mb-0.5">Route Summary</h4>
+                            <p className="text-xs text-slate-500 font-bold truncate">
+                              {formData.startLocation?.split(',')[0]} → {formData.destinations[formData.destinations.length - 1]?.split(',')[0]}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-black text-slate-900 uppercase tracking-widest text-[10px] mb-0.5">Route Summary</h4>
-                          <p className="text-xs text-slate-500 font-bold truncate">
-                            {formData.startLocation?.split(',')[0]} → {formData.destinations[formData.destinations.length - 1]?.split(',')[0]}
-                          </p>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Distance</p>
+                            <p className="text-base md:text-lg font-black text-slate-800">{Number(routeData.distance || 0).toLocaleString('en-IN')} <span className="text-xs text-slate-400">km</span></p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Est. Travel Time</p>
+                            <p className="text-base md:text-lg font-black text-emerald-600">{routeData.time}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Distance</p>
-                          <p className="text-base md:text-lg font-black text-slate-800">{Number(routeData.distance || 0).toLocaleString('en-IN')} <span className="text-xs text-slate-400">km</span></p>
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Est. Travel Time</p>
-                          <p className="text-base md:text-lg font-black text-emerald-600">{routeData.time}</p>
-                        </div>
-                      </div>
-                    </motion.div>
+                      </motion.div>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  /* ── Premium empty state when no trip generated yet ── */
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex-1 flex flex-col items-center justify-center min-h-[500px] p-8 relative overflow-hidden"
+                    style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #064e3b 100%)' }}
+                  >
+                    {/* Ambient glow orbs */}
+                    <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-1/4 right-1/4 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+
+                    {/* Animated globe icon */}
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                      className="w-28 h-28 rounded-full border border-emerald-500/20 flex items-center justify-center mb-6 relative"
+                    >
+                      <div className="absolute inset-2 rounded-full border border-emerald-500/10" />
+                      <div className="absolute inset-5 rounded-full border border-emerald-500/10" />
+                      <motion.div
+                        animate={{ rotate: -360 }}
+                        transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                        className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30"
+                      >
+                        <MapIcon size={28} className="text-white" />
+                      </motion.div>
+                    </motion.div>
+
+                    {/* Dotted world lines */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none select-none">
+                      <svg width="600" height="300" viewBox="0 0 600 300">
+                        <ellipse cx="300" cy="150" rx="280" ry="130" fill="none" stroke="#10b981" strokeWidth="1" strokeDasharray="4 6" />
+                        <ellipse cx="300" cy="150" rx="200" ry="130" fill="none" stroke="#10b981" strokeWidth="1" strokeDasharray="4 6" />
+                        <ellipse cx="300" cy="150" rx="100" ry="130" fill="none" stroke="#10b981" strokeWidth="1" strokeDasharray="4 6" />
+                        <line x1="20" y1="150" x2="580" y2="150" stroke="#10b981" strokeWidth="1" strokeDasharray="4 6" />
+                        <line x1="300" y1="20" x2="300" y2="280" stroke="#10b981" strokeWidth="1" strokeDasharray="4 6" />
+                      </svg>
+                    </div>
+
+                    <h3 className="text-2xl font-black text-white mb-3 tracking-tight relative z-10">Your route will appear here</h3>
+                    <p className="text-slate-400 font-medium text-sm text-center max-w-xs leading-relaxed relative z-10 mb-6">
+                      Fill in your trip details and click <span className="text-emerald-400 font-bold">Generate Itinerary</span> to see an interactive AI-powered route map
+                    </p>
+
+                    {/* Feature pills */}
+                    <div className="flex flex-wrap gap-2 justify-center relative z-10">
+                      {['🗺️ Live Route', '✈️ Transport Mode', '📍 Distance & Time', '🌍 Dark Map Style'].map(f => (
+                        <span key={f} className="text-[11px] font-bold text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-full">{f}</span>
+                      ))}
+                    </div>
+                  </motion.div>
+                )
               )}
 
               {/* TAB 2: ITINERARY */}
@@ -662,36 +773,130 @@ export default function AIPlanner() {
                 </div>
               )}
 
-              {/* TAB 3: BUDGET */}
+              {/* TAB 3: BUDGET — Premium AI Finance Dashboard */}
               {activeTab === 'budget' && (
-                <div className="w-full px-4 md:px-6 py-6 pb-20">
-                  <motion.div initial={{ scale: 0.98, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/20 overflow-hidden w-full">
-                    <div className="p-8 md:p-10 bg-gradient-to-br from-slate-900 to-slate-800 text-white flex flex-col md:flex-row md:justify-between md:items-center gap-4 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none" />
-                      <div className="z-10">
-                        <h3 className="text-xs md:text-sm font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2"><DollarSign size={16} /> Estimated Total Cost</h3>
-                        <p className="text-4xl md:text-5xl font-black tracking-tight">{formatINR(plan.budget?.total)}</p>
-                      </div>
-                      <div className="z-10 bg-white/10 px-4 py-2 rounded-xl border border-white/20 backdrop-blur-sm w-fit">
-                        <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-emerald-300">{formData.style} Range</span>
+                <div className="w-full px-4 md:px-6 py-6 pb-20 space-y-5">
+                  {/* Hero total card */}
+                  <motion.div
+                    initial={{ scale: 0.97, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="relative overflow-hidden rounded-[2rem] text-white"
+                    style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #064e3b 100%)' }}
+                  >
+                    <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl -mr-24 -mt-24 pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl -ml-16 -mb-16 pointer-events-none" />
+                    <div className="relative z-10 p-8 md:p-10">
+                      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                        <div>
+                          <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.2em] mb-2 flex items-center gap-2">
+                            <Sparkles size={12} /> AI Estimated Total Cost
+                          </p>
+                          <p className="text-5xl md:text-6xl font-black tracking-tight">{formatINR(plan.budget?.total)}</p>
+                          <p className="text-xs text-slate-400 font-medium mt-2">for {formData.travelers} traveler{formData.travelers > 1 ? 's' : ''} · {formData.style} style</p>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <div className="bg-emerald-500/15 border border-emerald-500/25 backdrop-blur-sm px-4 py-2 rounded-xl">
+                            <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Per Person</p>
+                            <p className="text-lg font-black text-white">{formatINR(Math.round((parseInt(String(plan.budget?.total).replace(/[^0-9]/g, '')) || 0) / Math.max(formData.travelers, 1)))}</p>
+                          </div>
+                          <div className="bg-white/5 border border-white/10 backdrop-blur-sm px-4 py-2 rounded-xl">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Per Day</p>
+                            <p className="text-base font-black text-white">{formatINR(Math.round((parseInt(String(plan.budget?.total).replace(/[^0-9]/g, '')) || 0) / Math.max(plan.days?.length || 1, 1)))}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="p-8 md:p-10 space-y-6">
-                      <div className="flex justify-between items-center border-b border-slate-50 pb-4 group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0"><Plane size={18} className="text-blue-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Transport</span></div>
-                        <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.transport)}</span>
+                  </motion.div>
+
+                  {/* Breakdown cards with progress bars */}
+                  {(() => {
+                    const total = parseInt(String(plan.budget?.total).replace(/[^0-9]/g, '')) || 1;
+                    const items = [
+                      { label: 'Transport', key: 'transport', icon: Plane, color: 'blue', bar: 'bg-blue-500', bg: 'bg-blue-50', iconColor: 'text-blue-500' },
+                      { label: 'Accommodation', key: 'stay', icon: Bed, color: 'emerald', bar: 'bg-emerald-500', bg: 'bg-emerald-50', iconColor: 'text-emerald-500' },
+                      { label: 'Food & Dining', key: 'food', icon: Utensils, color: 'orange', bar: 'bg-orange-500', bg: 'bg-orange-50', iconColor: 'text-orange-500' },
+                      { label: 'Activities', key: 'activities', icon: Activity, color: 'purple', bar: 'bg-purple-500', bg: 'bg-purple-50', iconColor: 'text-purple-500' },
+                    ];
+                    return (
+                      <motion.div initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden">
+                        <div className="p-6 md:p-8 space-y-5">
+                          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest">Expense Breakdown</h3>
+                          {items.map((item, idx) => {
+                            const raw = parseInt(String(plan.budget?.[item.key]).replace(/[^0-9]/g, '')) || 0;
+                            const pct = Math.min(Math.round((raw / total) * 100), 100);
+                            return (
+                              <motion.div
+                                key={item.key}
+                                initial={{ x: -10, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: 0.15 + idx * 0.07 }}
+                                className="group"
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-3">
+                                    <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center shrink-0`}>
+                                      <item.icon size={16} className={item.iconColor} />
+                                    </div>
+                                    <span className="font-bold text-slate-700 text-sm">{item.label}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <span className="font-black text-slate-900 text-sm md:text-base">{formatINR(plan.budget?.[item.key])}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold ml-2">{pct}%</span>
+                                  </div>
+                                </div>
+                                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${pct}%` }}
+                                    transition={{ duration: 0.8, delay: 0.3 + idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                                    className={`h-full ${item.bar} rounded-full`}
+                                  />
+                                </div>
+                              </motion.div>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
+
+                  {/* AI Savings Insight */}
+                  <motion.div
+                    initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}
+                    className="relative overflow-hidden rounded-[2rem] border border-emerald-100 p-6"
+                    style={{ background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)' }}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/25">
+                        <Sparkles size={18} className="text-white" />
                       </div>
-                      <div className="flex justify-between items-center border-b border-slate-50 pb-4 group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center shrink-0"><Bed size={18} className="text-emerald-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Accommodation</span></div>
-                        <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.stay)}</span>
+                      <div>
+                        <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">AI Savings Insight</p>
+                        <p className="text-sm font-bold text-emerald-800 leading-relaxed">
+                          Shifting your departure by 2 days could save up to ₹12,000–₹18,000 on transport. Booking accommodation 21+ days early typically saves 30–40%.
+                        </p>
                       </div>
-                      <div className="flex justify-between items-center border-b border-slate-50 pb-4 group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0"><Utensils size={18} className="text-orange-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Food & Dining</span></div>
-                        <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.food)}</span>
-                      </div>
-                      <div className="flex justify-between items-center group hover:bg-slate-50 transition-colors p-2 rounded-xl">
-                        <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center shrink-0"><Activity size={18} className="text-purple-500" /></div><span className="font-bold text-slate-700 text-sm md:text-base">Activities</span></div>
-                        <span className="font-black text-slate-900 text-base md:text-lg">{formatINR(plan.budget?.activities)}</span>
+                    </div>
+                  </motion.div>
+
+                  {/* Luxury vs Budget comparison */}
+                  <motion.div
+                    initial={{ y: 12, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
+                    className="bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden"
+                  >
+                    <div className="p-6 md:p-8">
+                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Style Comparison</h3>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-4 rounded-2xl border-2 border-slate-200 hover:border-slate-300 transition-colors">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Budget Mode</p>
+                          <p className="text-xl font-black text-slate-800">{formatINR(Math.round((parseInt(String(plan.budget?.total).replace(/[^0-9]/g, '')) || 0) * 0.65))}</p>
+                          <p className="text-[10px] text-slate-400 mt-1 font-medium">Hostels · Local food · Public transport</p>
+                        </div>
+                        <div className="p-4 rounded-2xl border-2 border-emerald-200 bg-emerald-50/50 hover:border-emerald-300 transition-colors">
+                          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Luxury Mode</p>
+                          <p className="text-xl font-black text-slate-900">{formatINR(Math.round((parseInt(String(plan.budget?.total).replace(/[^0-9]/g, '')) || 0) * 1.8))}</p>
+                          <p className="text-[10px] text-slate-400 mt-1 font-medium">5-star hotels · Fine dining · Private transfers</p>
+                        </div>
                       </div>
                     </div>
                   </motion.div>

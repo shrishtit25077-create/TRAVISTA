@@ -84,9 +84,17 @@ const TripCard = ({ trip, idx, confirmDelete, navigate }) => {
         {/* Footer Actions */}
         <div className="pt-5 border-t border-slate-100 flex items-center justify-between mt-auto">
           {budgetFormatted ? (
-            <div className="flex items-center gap-1.5 text-emerald-600">
-              <DollarSign size={16} />
-              <span className="text-xs font-bold">{budgetFormatted} est.</span>
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-1.5 text-emerald-600">
+                <DollarSign size={14} />
+                <span className="text-xs font-bold">{budgetFormatted} est.</span>
+              </div>
+              {trip.savedAt && (
+                <span className="text-[10px] text-slate-300 font-medium flex items-center gap-1">
+                  <Clock size={10} />
+                  Saved {new Date(trip.savedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' })}
+                </span>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-1.5 text-slate-400">

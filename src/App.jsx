@@ -30,6 +30,7 @@ import TripPlan from './pages/TripPlan/TripPlan';
 import Translator from './pages/Translator/Translator';
 import Alerts from './pages/Alerts/Alerts';
 import PriceAlerts from './pages/PriceDrops/PriceAlerts';
+import FlightBooking from './pages/Flights/FlightBooking';
 
 // ─── Page transition config ────────────────────────────────────────────────
 const pageVariants = {
@@ -119,6 +120,7 @@ function AnimatedRoutes() {
           <Route path="itinerary/:id" element={<AnimatedPage><ItineraryDetail /></AnimatedPage>} />
           <Route path="bookings" element={<Navigate to="/itineraries" replace />} />
           <Route path="alerts" element={<AnimatedPage><Alerts /></AnimatedPage>} />
+          <Route path="flights" element={<AnimatedPage><FlightBooking /></AnimatedPage>} />
           <Route path="translator" element={<AnimatedPage><Translator /></AnimatedPage>} />
           <Route path="profile" element={<AnimatedPage><Profile /></AnimatedPage>} />
           <Route path="settings" element={<AnimatedPage><Settings /></AnimatedPage>} />

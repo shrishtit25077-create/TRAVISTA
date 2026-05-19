@@ -139,17 +139,40 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   const addItinerary = useCallback(async (trip) => {
-    const { saveTrip } = await import('../services/db');
+    const tripWithMeta = {
+      ...trip,
+      savedAt: trip.savedAt || new Date().toISOString(),
+    };
     try {
-      const saved = await saveTrip(trip);
+      // Try Firestore first (requires auth)
+      const { saveTrip } = await import('../services/db');
+      const saved = await saveTrip(tripWithMeta);
       setItineraries(prev => {
-        const updated = [saved, ...prev];
+        // Prevent duplicates by id
+        const filtered = prev.filter(t => String(t.id) !== String(trip.id));
+        const updated = [saved, ...filtered];
         localStorage.setItem("travista_itineraries", JSON.stringify(updated));
         return updated;
       });
-      import('react-hot-toast').then(toast => toast.default.success("Trip saved to itineraries!", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#064e3b', border: '1px solid #10b981' }}));
+      const { default: toast } = await import('react-hot-toast');
+      toast.success("Trip saved! View it in My Trips →", {
+        duration: 4000,
+        style: { background: '#fff', backdropFilter: 'blur(10px)', color: '#064e3b', border: '1px solid #10b981', fontWeight: 700 }
+      });
     } catch (err) {
-      import('react-hot-toast').then(toast => toast.default.error("Failed to save trip", { style: { background: 'rgba(255,255,255,0.8)', backdropFilter: 'blur(10px)', color: '#7f1d1d', border: '1px solid #ef4444' }}));
+      // Fallback: save to localStorage only
+      const localTrip = { ...tripWithMeta, id: trip.id || Date.now() };
+      setItineraries(prev => {
+        const filtered = prev.filter(t => String(t.id) !== String(localTrip.id));
+        const updated = [localTrip, ...filtered];
+        localStorage.setItem("travista_itineraries", JSON.stringify(updated));
+        return updated;
+      });
+      const { default: toast } = await import('react-hot-toast');
+      toast.success("Trip saved locally!", {
+        duration: 4000,
+        style: { background: '#fff', color: '#064e3b', border: '1px solid #10b981', fontWeight: 700 }
+      });
     }
   }, []);
 
